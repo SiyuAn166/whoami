@@ -442,8 +442,8 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
                             aria-label="Terminal command input"
                             autoFocus={!COARSE_POINTER}
                         />
-                        {caretAtEnd && <span className={`term-cursor ${isFocused ? 'active' : 'inactive'}`} aria-hidden="true" />}
-                        {caretAtEnd && ghost && <span style={{ color: 'var(--fg-dim)', whiteSpace: 'pre' }}>{ghost}</span>}
+                        {caretAtEnd && <span className={`term-cursor ${isFocused ? 'active' : 'inactive'}`} aria-hidden="true">{ghost[0]}</span>}
+                        {caretAtEnd && ghost && ghost.length > 1 && <span style={{ color: 'var(--fg-dim)', whiteSpace: 'pre' }}>{ghost.slice(1)}</span>}
                     </span>
                 </div>
 
@@ -466,9 +466,9 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
 
             {/* Block cursor styling (focused = solid, blurred = hollow). */}
             <style>{`
-                .term-cursor { display:inline-block; width:0.5em; height:1.05em; margin-left:1px; vertical-align:text-bottom; }
-                .term-cursor.active { background-color: var(--fg); animation: blink 1s steps(1) infinite; }
-                .term-cursor.inactive { border:1px solid var(--fg-dim); background:transparent; }
+                .term-cursor { display:inline-flex; align-items:center; justify-content:center; min-width:0.6em; height:1.05em; margin-left:1px; overflow:hidden; font-family:inherit; font-size:inherit; }
+                .term-cursor.active { background-color: var(--fg); color: var(--bg); }
+                .term-cursor.inactive { border:1px solid var(--fg-dim); background:transparent; color: var(--fg-dim); }
             `}</style>
         </>
     );
