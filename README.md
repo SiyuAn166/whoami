@@ -1,6 +1,8 @@
 # Terminal Portfolio
 
-A CRT-terminal-aesthetic personal portfolio built with **React + TypeScript + Tailwind CSS v3** (Vite).
+A **macOS Terminal.app**–style personal portfolio built with **React + TypeScript + Tailwind CSS v3** (Vite).
+
+The whole page is presented as a Terminal window on a macOS desktop: a translucent menu bar, a rounded window with traffic-light controls, a zsh prompt, and section content that types itself out as command output. Light / dark map to the "Basic" and "Pro" Terminal profiles.
 
 All content is data-driven — update a JSON file to change every word on the page without touching any component code.
 
@@ -193,17 +195,26 @@ A ready-to-use `data.json` with placeholder content is already at [`public/data.
 
 ## Theming
 
-The portfolio ships in **dark mode** (green accent `#22C55E`) by default.  
-The **Toggle_Power** switch in the top-right swaps to **light mode** (blue accent `#1D4ED8`).
+The portfolio ships in **dark mode** (macOS "Pro" profile — near-black body) by default.  
+The **appearance toggle** (☀ / ☾) in the menu bar swaps to **light mode** (macOS "Basic" profile — white body).
 
-All colors are driven by CSS custom properties in [`src/index.css`](src/index.css).  
-To change the accent colors, edit the `--accent` variables:
+All colors are driven by CSS custom properties (a small macOS-Terminal token system) in
+[`src/index.css`](src/index.css), defined per theme under `:root[data-theme='dark']` and
+`:root[data-theme='light']`. Key tokens:
 
 ```css
 /* src/index.css */
-:root[data-theme='dark']  { --accent: #22C55E; }
-:root[data-theme='light'] { --accent: #1D4ED8; }
+--bg            /* terminal body background */
+--bg-elev       /* elevated panels / cards   */
+--titlebar      /* window title + status bar  */
+--fg / --fg-dim /* primary / muted text       */
+--accent / --ok /* macOS green (prompt, active, success) */
+--info          /* macOS blue  (links & paths)           */
+--warn --error  /* macOS yellow / red                    */
 ```
+
+The traffic-light button colors (red `#ff5f57`, yellow `#febc2e`, green `#28c840`) are
+theme-independent, matching real macOS window controls.
 
 ---
 
@@ -213,25 +224,25 @@ To change the accent colors, edit the `--accent` variables:
 src/
 ├── config.ts                  ← GIST_URL lives here
 ├── types.ts                   ← PortfolioData TypeScript interface
-├── index.css                  ← CSS variables, keyframes, theme tokens
-├── App.tsx                    ← Root: fetches data, wires layout
+├── index.css                  ← macOS-Terminal tokens, window/menu-bar CSS, keyframes
+├── App.tsx                    ← Root: macOS desktop + menu bar + window chrome, wires layout
 ├── main.tsx                   ← Entry point, sets initial data-theme
 ├── hooks/
 │   ├── usePortfolioData.ts    ← Fetch + parse Gist JSON
-│   ├── useTheme.ts            ← Dark/light toggle, data-theme attribute
+│   ├── useTheme.ts            ← Dark/light (appearance) toggle, data-theme attribute
 │   └── useIntersectionObserver.ts  ← Scroll-reveal utility
 └── components/
-    ├── ScanlineOverlay.tsx    ← Fixed CRT scanline effect
-    ├── ThemeToggle.tsx        ← Top-right power switch button
-    ├── CommandLine.tsx        ← Reusable $ command line with typewriter
-    ├── RevealSection.tsx      ← IntersectionObserver fade-up wrapper
-    ├── HeroSection.tsx        ← whoami section with glitch title
-    ├── ExperienceSection.tsx  ← ls -la table of roles
-    ├── ProjectCard.tsx        ← Single ASCII-art project card
-    ├── ProjectsSection.tsx    ← view_projects grid
-    ├── SkillBar.tsx           ← Individual animated progress bar
-    ├── CapabilitiesSection.tsx ← stat capabilities grid
-    └── Footer.tsx             ← Blinking cursor + copyright
+    ├── CommandReveal.tsx      ← Types a zsh command, then reveals its "output"
+    ├── TerminalBanner.tsx     ← macOS shell greeting (Last login / neofetch)
+    ├── HeroSection.tsx        ← useHeroState: last-login + IP
+    ├── IdentitySection.tsx    ← whoami — neofetch-style identity panel
+    ├── ExperienceSection.tsx  ← box-drawing chain of roles
+    ├── ProjectCard.tsx        ← Single project card
+    ├── ProjectsSection.tsx    ← ls -la ~/projects grid
+    ├── CapabilitiesSection.tsx ← brew list --skills grid
+    ├── SkillBar.tsx           ← Standalone proficiency bar (optional)
+    ├── RevealSection.tsx      ← IntersectionObserver fade-up wrapper (optional)
+    └── Footer.tsx             ← StatusBar + interactive zsh TerminalInput
 public/
 └── data.json                  ← Sample data for local dev
 ```

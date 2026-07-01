@@ -27,31 +27,38 @@ export function ProjectCard({ project }: ProjectCardProps) {
             role={project.url ? 'link' : undefined}
             tabIndex={project.url ? 0 : undefined}
             onKeyDown={e => {
-                if (project.url && (e.key === 'Enter' || e.key === ' ')) handleClick();
+                if (project.url && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleClick();
+                }
             }}
         >
             {/* Header */}
             <div className="flex items-baseline justify-between gap-2 mb-2">
                 <div className="flex items-baseline gap-2 min-w-0 overflow-hidden">
                     <span
-                        className="text-[11px] font-bold uppercase tracking-widest flex-shrink-0"
-                        style={{ color: statusColor }}
-                    >
-                        [{project.status}]
-                    </span>
-                    <span
-                        className="font-bold text-[14px] uppercase tracking-tight truncate"
+                        className="font-semibold text-[14px] truncate"
                         style={{ color: 'var(--fg)' }}
                     >
                         {project.name}
                     </span>
-                    <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--fg-dim)' }}>
+                    <span className="text-[12px] flex-shrink-0" style={{ color: 'var(--fg-dim)' }}>
                         {project.version}
                     </span>
                 </div>
-                {project.url && (
-                    <span className="text-[13px] flex-shrink-0" style={{ color: 'var(--fg-dim)' }}>↗</span>
-                )}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span
+                        className="inline-block rounded-full"
+                        style={{ width: '7px', height: '7px', backgroundColor: statusColor }}
+                        aria-hidden="true"
+                    />
+                    <span className="text-[11px]" style={{ color: 'var(--fg-dim)' }}>
+                        {project.status}
+                    </span>
+                    {project.url && (
+                        <span className="text-[12px]" style={{ color: 'var(--info)' }}>↗</span>
+                    )}
+                </div>
             </div>
 
             {/* Description */}
@@ -69,23 +76,28 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </p>
 
             {/* Tags */}
-            <div className="flex flex-wrap gap-1 text-[11px] font-bold uppercase">
+            <div className="flex flex-wrap gap-1.5 text-[11px]">
                 {project.tags.map(tag => (
                     <span
                         key={tag}
-                        className="px-1.5 py-0.5"
+                        className="px-2 py-0.5 rounded-md"
                         style={{
-                            border: '1px solid var(--border-hi)',
+                            backgroundColor: 'var(--bg)',
+                            border: '1px solid var(--border)',
                             color: 'var(--fg-dim)',
                         }}
                     >
-                        #{tag}
+                        {tag}
                     </span>
                 ))}
                 {project.license && (
                     <span
-                        className="px-1.5 py-0.5 italic"
-                        style={{ border: '1px solid var(--border)', color: 'var(--fg-dim)' }}
+                        className="px-2 py-0.5 rounded-md"
+                        style={{
+                            backgroundColor: 'var(--bg)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--fg-dim)',
+                        }}
                     >
                         {project.license}
                     </span>

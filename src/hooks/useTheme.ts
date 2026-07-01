@@ -5,6 +5,7 @@ type Theme = 'dark' | 'light';
 interface UseThemeResult {
     theme: Theme;
     toggleTheme: () => void;
+    setTheme: (t: Theme) => void;
 }
 
 export function useTheme(): UseThemeResult {
@@ -18,5 +19,5 @@ export function useTheme(): UseThemeResult {
         setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
     }, []);
 
-    return { theme, toggleTheme };
+    return { theme, toggleTheme, setTheme };
 }

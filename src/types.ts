@@ -1,18 +1,20 @@
 export interface Meta {
-    /** Short system tag shown in the header, e.g. "DEBIAN_VIRTUAL_TERMINAL [TTY1]" */
+    /** Short system tag, e.g. "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64" */
     systemTag: string;
     /** Current system time string, auto-updating every second. Format: YYYY-MM-DD HH:MM:SS */
     time: string;
     /** Active session identifier */
     session: string;
-    /** First line of the welcome banner, e.g. "Welcome to TERMFOLIO v6.0.2" */
+    /** OS line of the welcome banner, e.g. "macOS Sequoia 15.5" */
     bannerTitle: string;
-    /** Second line of the welcome banner, e.g. "Running on: Linux termfolio 6.2.0-x86_64" */
+    /** Kernel line of the welcome banner, e.g. "Darwin 24.5.0 arm64" */
     bannerSystem: string;
     /** Copyright line shown in the footer, e.g. "© 2026 ARCHITECT_TTY_SESSION" */
     copyright: string;
     /** Location + crypto shown in footer, e.g. "Loc: 49.28° N, 123.12° W // Enc: AES-256-GCM" */
     location: string;
+    /** Optional desktop wallpaper image URL; falls back to the generated gradient. */
+    wallpaper?: string;
     /** Contact links configurable array */
     contactLinks?: Array<{ label: string; value: string }>;
     /** Terminal commands configuration (optional) */
@@ -20,8 +22,10 @@ export interface Meta {
 }
 
 export interface Identity {
-    /** Large hero title, e.g. "Principal_Systems_Engineer" */
+    /** Display name, e.g. "Siyu An" — rendered as the README H1 */
     title: string;
+    /** Short role subtitle shown as the README blockquote (optional) */
+    headline?: string;
     /** Tagline paragraph shown beneath the hero title */
     tagline: string;
 }

@@ -1,12 +1,12 @@
 {
     "meta": {
-        "systemTag": "DEBIAN_12.5_KNL_6.1.0-X86_64 [TTY1]",
+        "systemTag": "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64",
         "time": "12:00:00 08/03/2026",
-        "session": "ACTIVE_SESSION: visitor",
-        "bannerTitle": "Welcome to Termfolio v6.0.2",
-        "bannerSystem": "Termfolio OS 6.1.0-lts x86_64",
-        "copyright": "© 2026 TERMFOLIO // TERMINAL INTERFACE",
-        "location": "Loc: 49.2827° N, 123.1207° W // Enc: AES-256-GCM",
+        "session": "ttys000",
+        "bannerTitle": "macOS Sequoia 15.5",
+        "bannerSystem": "Darwin 24.5.0 arm64",
+        "copyright": "© 2026 Siyu An",
+        "location": "Vancouver, BC · 49.28° N, 123.12° W",
         "contactLinks": [
             {
                 "label": "Email",
@@ -19,23 +19,24 @@
         ],
         "commands": {
             "help": "Available commands: help, whoami, clear, contact, social, pwd, ls, date, uname, echo, exit",
-            "whoami": "SIYU AN // SOFTWARE ENGINEER // PLATFORM & CLOUD OPS",
+            "whoami": "siyu :: Software Engineer // Platform & Cloud Ops",
             "clear": "__CLEAR__",
-            "social": "→  github.com/siyuan166",
-            "pwd": "/home/guest",
-            "ls": "bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  srv  sys  tmp  usr  var",
-            "uname": "Linux termfolio 6.2.0-x86_64 #1 SMP x86_64 GNU/Linux",
-            "exit": "logout"
+            "social": "→  github.com/SiyuAn166",
+            "pwd": "/Users/siyu",
+            "ls": "Applications  Desktop  Documents  Downloads  Library  Movies  Music  Pictures  Public  projects",
+            "uname": "Darwin portfolio 24.5.0 Darwin Kernel Version 24.5.0 arm64",
+            "exit": "[Process completed]"
         }
     },
     "commandStrings": {
         "identity": "whoami",
-        "experience": "visualize --format chain ~/experience",
+        "experience": "cat ~/experience.log",
         "projects": "ls -la ~/projects",
-        "skills": "stats --visualize --skills"
+        "skills": "brew list --skills"
     },
     "identity": {
         "title": "Siyu An",
+        "headline": "Software Engineer · cloud-platform engineering & operations",
         "tagline": "I am a Software Engineer specializing in cloud‑platform engineering and operations. My primary focus is building, scaling and maintaining Kubernetes‑based infrastructures that power highly available, automated network and security services across hybrid and multi‑cloud environments. I work at the intersection of platform automation, cluster operations and cloud resource optimization—leveraging container orchestration (Kubernetes, Helm), observability pipelines and cost‑/performance‑driven decisions."
     },
     "experience": [
@@ -50,11 +51,11 @@
             "company": "Infoblox Canada Inc.",
             "dateRange": "08/2024 -> PRESENT",
             "highlights": [
-                "Designed and maintained DNS external logging workflows (DNStap/Syslog) as primary maintainer; coordinated with cross-functional teams to ensure secure data forwarding and audit compliance for 30+ enterprise clients.",
-                "Integrated third-party cloud services (Cloudflare, Akamai) into UDDI, delivering hybrid-cloud functionality for 200+ clients and driving 22% increase in adoption.",
-                "Implemented RPZ security mechanisms within UDDI cloud, enhancing DNS threat mitigation and system scalability across distributed clusters.",
-                "Optimized fragmented CI/CD pipelines by integrating MCP servers with GitHub Copilot; mentored team members on new workflow, cut manual steps by 80%.",
-                "Architected Golang-based CLI utility to address codebase import inconsistencies; facilitated team-wide adoption, boosting code review efficiency by 10%."
+                "Engineered a high-throughput DNS logging pipeline in Go (DNSTAP + syslog over TCP/TLS) with WAL-backed buffering to handle backpressure at 10K QPS, reducing log loss from 1% to <0.3% and cutting router CPU usage by 42%.",
+                "Orchestrated a CloudQuery-powered multi-cloud DNS state ingestion fabric integrating Cloudflare and Akamai to unify configuration topology across hybrid environments, operationalizing 200+ enterprise networks and driving a 22% uplift in feature adoption.",
+                "Extended BloxOne DDI by implementing RPZ-based DNS response filtering and Stub Zone support in Kubernetes-native Go services, improving security enforcement and zone resolution consistency across distributed deployments.",
+                "Introduced an MCP-powered CI/CD orchestration system that enables safe AI-assisted deployments through structured runbooks and guardrails, reducing manual release effort by 80% and improving cross-team release consistency.",
+                "Implemented a Go-based static analysis tool to analyze multi-repository dependency graphs and detect inconsistent imports across services, reducing cross-service review overhead and improving dependency alignment."
             ]
         },
         {
@@ -69,9 +70,9 @@
             "dateRange": "05/2023 -> 08/2023",
             "researchUrl": "https://doi.org/10.1109/IEEEDATA.2024.3471469",
             "highlights": [
-                "Co-authored research in Nature Scientific Data (SFU-EVP), focusing on large-scale data modeling for electric vehicle (EV) charging infrastructure.",
-                "Engineered ETL pipelines using Python and Pandas, handling 200M+ records and reducing data processing latency by 25%.",
-                "Streamlined data synchronization by building Web API Client, reducing manual data acquisition overhead by 40%."
+                "Co-authored a research publication in Nature Scientific Data, contributing to large-scale data modeling and analytics for EV charging infrastructure planning.",
+                "Designed and implemented ETL pipelines using Python and Pandas to process 200M+ records, reducing end-to-end data processing latency by 25%.",
+                "Developed a Web API client to automate external data synchronization workflows, reducing manual data acquisition effort by 40%."
             ]
         },
         {

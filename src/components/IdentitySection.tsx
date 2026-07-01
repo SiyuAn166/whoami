@@ -1,4 +1,3 @@
-import { ASCII_ART } from '../config/ascii';
 import type { ExperienceEntry, Identity, Meta } from '../types';
 
 interface IdentitySectionProps {
@@ -7,103 +6,66 @@ interface IdentitySectionProps {
     meta?: Meta;
 }
 
+/**
+ * The `cat README.md` / `whoami` output — a GitHub-style profile README
+ * rendered in the terminal palette: H1 name, blockquote headline, a
+ * location + status line, link buttons, and the bio.
+ */
 export function IdentitySection({ identity, experience, meta }: IdentitySectionProps) {
     const currentRole = experience.find(e => e.current)?.title ?? 'Software Engineer';
+    const headline = identity.headline ?? currentRole;
 
-    // Extract contact links from meta
-    const github = meta?.commands?.social?.replace('→', '').trim() ?? 'github.com/siyuan-an';
-    const email = meta?.contactLinks?.find(link => link.label === 'Email')?.value ?? 'siyu.an.dev@gmail.com';
-    const linkedin = meta?.contactLinks?.find(link => link.label === 'LinkedIn')?.value ?? 'linkedin.com/in/siyu-an-bc';
-
-    // neofetch-style: "siyu" @ "termfolio"
-    const [namePart, hostPart] = identity.title.toLowerCase().replace(' ', '@termfolio').split('@') as [string, string];
-    const separator = '─'.repeat(`${namePart}@${hostPart}`.length + 1);
+    const github = meta?.commands?.social?.replace('→', '').trim() ?? 'github.com/SiyuAn166';
+    const email = meta?.contactLinks?.find(l => l.label === 'Email')?.value ?? 'siyu.an166@gmail.com';
+    const linkedin = meta?.contactLinks?.find(l => l.label === 'LinkedIn')?.value ?? 'linkedin.com/in/siyu-an-bc';
 
     return (
-        <section>
-            <div className="flex flex-col md:flex-row gap-8 items-center md:items-stretch">
+        <section className="max-w-2xl">
+            {/* # H1 — name */}
+            <h1 style={{ fontSize: '26px', fontWeight: 700, color: 'var(--fg)', lineHeight: 1.2 }}>
+                {identity.title} <span aria-hidden>👋</span>
+            </h1>
+            <div style={{ height: 1, background: 'var(--border)', margin: '10px 0 14px' }} />
 
-                {/* ── Left: ASCII mountain art ── */}
-                <div className="w-full md:w-auto flex justify-center md:justify-start md:items-center flex-shrink-0">
-                    <pre
-                        aria-label="ASCII block letters"
-                        style={{
-                            color: 'var(--info)',
-                            fontFamily: 'inherit',
-                            fontSize: '13px',
-                            lineHeight: '1.2',
-                            userSelect: 'none',
-                            margin: 0,
-                        }}
-                    >
-                        {ASCII_ART}
-                    </pre>
-                </div>
+            {/* > blockquote — headline */}
+            <blockquote style={{ borderLeft: '3px solid var(--accent)', paddingLeft: '12px', margin: '0 0 16px', color: 'var(--fg-dim)' }}>
+                {headline}
+            </blockquote>
 
-                {/* ── Vertical divider — desktop only ── */}
-                <div
-                    className="hidden md:block w-px self-stretch"
-                    style={{ background: 'var(--border)' }}
-                />
-
-                {/* ── Right: neofetch-style identity panel ── */}
-                <div className="flex-1 min-w-0 font-mono text-[13px] flex flex-col justify-center gap-[2px]">
-
-                    {/* user@host header */}
-                    <div className="font-bold" style={{ fontSize: '15px' }}>
-                        <span>{namePart}</span>
-                        <span>@</span>
-                        <span>termfolio</span>
-                    </div>
-
-                    {/* separator */}
-                    <div style={{ fontSize: '13px', marginBottom: '4px' }}>
-                        {separator}
-                    </div>
-
-                    {/* info rows */}
-                    <NeoRow label="Role" value={currentRole} />
-                    <NeoRow label="Status" value="OPEN_TO_OPPORTUNITIES" warn />
-                    <NeoRow label="Location" value="Vancouver, BC, Canada" />
-                    <NeoRow label="Email" value={email} link emails />
-                    <NeoRow label="GitHub" value={github} link />
-                    <NeoRow label="LinkedIn" value={linkedin} link />
-
-                    {/* blank gap then bio */}
-                    <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-                        <p style={{ lineHeight: '1.65', wordBreak: 'break-word' }}>
-                            {identity.tagline}
-                        </p>
-                    </div>
-                </div>
+            {/* location · status */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5" style={{ marginBottom: '16px', color: 'var(--fg-dim)' }}>
+                <span>📍 Vancouver, BC, Canada</span>
+                <span className="inline-flex items-center gap-2">
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--ok)', display: 'inline-block', flexShrink: 0 }} aria-hidden />
+                    <span style={{ color: 'var(--ok)' }}>open to opportunities</span>
+                </span>
             </div>
+
+            {/* link buttons */}
+            <div className="flex flex-wrap gap-2" style={{ marginBottom: '18px' }}>
+                <LinkButton href={`https://${github}`} label="GitHub" />
+                <LinkButton href={`https://${linkedin}`} label="LinkedIn" />
+                <LinkButton href={`mailto:${email}`} label="Email" external={false} />
+            </div>
+
+            {/* bio */}
+            <p style={{ color: 'var(--fg-dim)', lineHeight: 1.75, wordBreak: 'break-word' }}>
+                {identity.tagline}
+            </p>
         </section>
     );
 }
 
-function NeoRow({ label, value, warn, link, emails }: {
-    label: string; value: string; warn?: boolean; link?: boolean; emails?: boolean;
-}) {
-    // neofetch style: "Label   : value" — label in cyan, colon dim, value in fg
-    const padded = label.padEnd(8); // longest label "LinkedIn" = 8 chars
+function LinkButton({ href, label, external = true }: { href: string; label: string; external?: boolean }) {
     return (
-        <div className="flex" style={{ lineHeight: '1.7' }}>
-            <span style={{ whiteSpace: 'pre', flexShrink: 0, fontWeight: 700 }}>
-                {padded}
-            </span>
-            <span style={{ whiteSpace: 'pre' }}>{' : '}</span>
-            {link ? (
-                <a
-                    href={emails ? `mailto:${value}` : `https://${value}`}
-                    target={emails ? undefined : "_blank"}
-                    rel={emails ? undefined : "noopener noreferrer"}
-                    style={{ wordBreak: 'break-all' }}
-                >
-                    {value} {emails ? '' : '↗'}
-                </a>
-            ) : (
-                <span style={{ wordBreak: 'break-all', color: warn ? 'var(--warning)' : undefined }}>{value}</span>
-            )}
-        </div>
+        <a
+            href={href}
+            target={external ? '_blank' : undefined}
+            rel={external ? 'noopener noreferrer' : undefined}
+            className="px-3 py-1 rounded-md inline-flex items-center gap-1.5"
+            style={{ background: 'var(--bg-elev)', border: '1px solid var(--border)', color: 'var(--info)', fontSize: '13px', textDecoration: 'none' }}
+        >
+            {label}{external && <span aria-hidden style={{ opacity: 0.7 }}>↗</span>}
+        </a>
     );
 }

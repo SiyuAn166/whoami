@@ -1,243 +1,152 @@
-import type { ReactNode } from 'react';
 import { useState } from 'react';
 import type { ExperienceEntry } from '../types';
 
-interface ExperienceSectionProps {
-    entries: ExperienceEntry[];
+function slugify(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-/** Opacity ladder: index 0 (current) = 100%, decays for older entries */
-const OPACITY_LEVELS = [1, 0.6, 0.4, 0.22];
+function parseMY(s: string): { m: number; y: number } | null {
+    const m = s.match(/(\d{1,2})\/(\d{4})/);
+    return m ? { m: +m[1], y: +m[2] } : null;
+}
 
-/** Number of highlights shown before the expand toggle appears */
-const PREVIEW_COUNT = 3;
+/** kubectl-style AGE from a "MM/YYYY -> MM/YYYY|PRESENT" range, e.g. "1y10mo". */
+function ageOf(range: string): string {
+    const [a, b = ''] = range.split(/->|–|—/).map(s => s.trim());
+    const start = parseMY(a);
+    if (!start) return '—';
+    const now = new Date();
+    const end = /present/i.test(b) || b === '' ? { m: now.getMonth() + 1, y: now.getFullYear() } : parseMY(b);
+    if (!end) return '—';
+    let months = (end.y - start.y) * 12 + (end.m - start.m);
+    if (months < 1) months = 1;
+    const y = Math.floor(months / 12), m = months % 12;
+    return [y ? `${y}y` : '', m ? `${m}mo` : (y ? '' : '0mo')].join('');
+}
 
-/** Long dash run — container clips overflow to fill any width */
-const DASHES = '─'.repeat(300);
+function fmtPeriod(d: string): string {
+    return d.replace(/\s*->\s*/g, ' — ').replace(/present/gi, 'present');
+}
 
-const BOX_CLR = 'var(--border-hi)';
-
-/**
- * A 1px vertical line drawn via background-image inside a 1ch-wide div.
- * The div stretches to the full flex-row height (align-self:stretch is the
- * flexbox default), so the line is continuous even when content wraps.
- * background-position:center aligns the 1px strip with the vertical stroke
- * of the ┌/└/├ corner glyphs used in BoxTop / BoxMid / BoxBot.
- */
-const SIDE_LINE: React.CSSProperties = {
-    flexShrink: 0,
-    width: '1ch',
-    backgroundImage: `linear-gradient(${BOX_CLR}, ${BOX_CLR})`,
-    backgroundSize: '1px 100%',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
+const COL = {
+    role: { flex: 1, minWidth: '15ch', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as React.CSSProperties,
+    status: { width: '12ch', flexShrink: 0 } as React.CSSProperties,
+    age: { width: '8ch', flexShrink: 0 } as React.CSSProperties,
+    chev: { width: '2ch', flexShrink: 0 } as React.CSSProperties,
 };
 
-/* ─────────────────────────────────────────────── */
-/*  Primitive box-drawing rows                     */
-/* ─────────────────────────────────────────────── */
+export function ExperienceSection({ entries }: { entries: ExperienceEntry[] }) {
+    // Size the NAME column to the longest pod name so rows align and nothing clips.
+    const nameCh = Math.max(8, ...entries.map(e => slugify(e.name).length)) + 2;
+    const nameStyle: React.CSSProperties = { width: `${nameCh}ch`, flexShrink: 0 };
 
-function BoxTop() {
     return (
-        <div className="flex overflow-hidden leading-none select-none">
-            <span style={{ color: BOX_CLR, flexShrink: 0 }}>┌</span>
-            <span aria-hidden style={{ color: BOX_CLR, flex: 1, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {DASHES}
-            </span>
-            <span style={{ color: BOX_CLR, flexShrink: 0 }}>┐</span>
-        </div>
-    );
-}
-
-function BoxMid() {
-    return (
-        <div className="flex overflow-hidden leading-none select-none">
-            <span style={{ color: BOX_CLR, flexShrink: 0 }}>├</span>
-            <span aria-hidden style={{ color: BOX_CLR, flex: 1, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {DASHES}
-            </span>
-            <span style={{ color: BOX_CLR, flexShrink: 0 }}>┤</span>
-        </div>
-    );
-}
-
-function BoxBot() {
-    return (
-        <div className="flex overflow-hidden leading-none select-none">
-            <span style={{ color: BOX_CLR, flexShrink: 0 }}>└</span>
-            <span aria-hidden style={{ color: BOX_CLR, flex: 1, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {DASHES}
-            </span>
-            <span style={{ color: BOX_CLR, flexShrink: 0 }}>┘</span>
-        </div>
-    );
-}
-
-function BoxRow({ children }: { children: ReactNode }) {
-    return (
-        <div className="flex">
-            {/* left side: 1px line centered in 1ch div — stretches with row height */}
-            <div aria-hidden style={SIDE_LINE} />
-            <div className="flex-1 px-2 min-w-0">{children}</div>
-            {/* right side: same trick */}
-            <div aria-hidden style={SIDE_LINE} />
-        </div>
-    );
-}
-
-/* ─────────────────────────────────────────────── */
-/*  Chain connector — arrow points UP              */
-/*  (oldest entry at bottom → newest at top)       */
-/* ─────────────────────────────────────────────── */
-
-function ChainConnector() {
-    return (
-        <div
-            className="flex flex-col items-center leading-tight py-0.5 select-none"
-            aria-hidden
-            style={{ color: BOX_CLR }}
-        >
-            <span>│</span>
-            <span>│</span>
-            <span>│</span>
-        </div>
-    );
-}
-
-/* ─────────────────────────────────────────────── */
-/*  Main section                                   */
-/* ─────────────────────────────────────────────── */
-
-export function ExperienceSection({ entries }: ExperienceSectionProps) {
-    return (
-        <section className="font-mono text-[13px]">
-            {entries.map((entry, i) => (
-                <div key={entry.name}>
-                    <EntryBlock entry={entry} index={i} />
-                    {i < entries.length - 1 && <ChainConnector />}
+        <section className="text-[13px]" style={{ overflowX: 'auto' }}>
+            <div style={{ minWidth: 'min-content' }}>
+                {/* header row */}
+                <div
+                    className="flex"
+                    style={{ gap: '2ch', padding: '2px 8px', color: 'var(--fg-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}
+                >
+                    <span style={nameStyle}>NAME</span>
+                    <span style={COL.role}>ROLE</span>
+                    <span style={COL.status}>STATUS</span>
+                    <span style={COL.age}>AGE</span>
+                    <span style={COL.chev} aria-hidden />
                 </div>
-            ))}
+
+                {entries.map(entry => <PodRow key={entry.name} entry={entry} nameStyle={nameStyle} />)}
+            </div>
+
+            <div style={{ color: 'var(--fg-dim)', marginTop: 10 }}>
+                {entries.length} roles · ▸ click a row to <span style={{ color: 'var(--info)' }}>kubectl describe</span>
+            </div>
         </section>
     );
 }
 
-/* ─────────────────────────────────────────────── */
-/*  Single entry block                             */
-/* ─────────────────────────────────────────────── */
+function PodRow({ entry, nameStyle }: { entry: ExperienceEntry; nameStyle: React.CSSProperties }) {
+    const [open, setOpen] = useState(false);
 
-interface EntryBlockProps {
-    entry: ExperienceEntry;
-    index: number;
-}
-
-function EntryBlock({ entry, index }: EntryBlockProps) {
-    const [expanded, setExpanded] = useState(false);
-    const [hovered, setHovered] = useState(false);
-
-    const isActive = !!entry.current;
-    const opacity = OPACITY_LEVELS[Math.min(index, OPACITY_LEVELS.length - 1)];
-
-    const name = (entry.name ?? 'UNKNOWN').toUpperCase();
-    const role = (entry.title ?? 'UNKNOWN').toUpperCase().replace(/\s+/g, '_');
-    const dateRange = (entry.dateRange ?? entry.timestamp).toUpperCase();
-
-    const highlights = entry.highlights ?? [];
-    const shown = expanded ? highlights : highlights.slice(0, PREVIEW_COUNT);
-    const remaining = highlights.length - PREVIEW_COUNT;
+    const running = !!entry.current;
+    const name = slugify(entry.name);
+    const status = running ? 'Running' : 'Completed';
+    const statusColor = running ? 'var(--ok)' : 'var(--fg-dim)';
+    const age = ageOf(entry.dateRange ?? entry.timestamp);
+    const toggle = () => setOpen(o => !o);
 
     return (
-        <div
-            className="transition-opacity duration-300"
-            style={{ opacity: hovered ? 1 : opacity }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-        >
-            {/* Date range header */}
+        <div>
             <div
-                className="mb-0.5 text-[12px] tracking-widest uppercase"
-                style={{ color: 'var(--fg-dim)' }}
+                className="flex kube-row"
+                role="button"
+                tabIndex={0}
+                aria-expanded={open}
+                onClick={toggle}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }}
+                style={{ gap: '2ch', padding: '4px 8px', cursor: 'pointer' }}
             >
-                [ {dateRange} ]
+                <span style={{ ...nameStyle, color: 'var(--info)' }}>{name}</span>
+                <span style={{ ...COL.role, color: 'var(--fg)' }}>{entry.title ?? 'Engineer'}</span>
+                <span style={{ ...COL.status, color: statusColor, display: 'inline-flex', alignItems: 'center', gap: '0.7ch' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor, display: 'inline-block', flexShrink: 0 }} aria-hidden />
+                    {status}
+                </span>
+                <span style={{ ...COL.age, color: 'var(--fg-dim)' }}>{age}</span>
+                <span style={{ ...COL.chev, color: 'var(--fg-dim)' }} aria-hidden>{open ? '▾' : '▸'}</span>
             </div>
 
-            <BoxTop />
+            {open && <Describe entry={entry} name={name} status={status} statusColor={statusColor} age={age} />}
+        </div>
+    );
+}
 
-            {/* Title row: NAME | ROLE  [ACTIVE] */}
-            <BoxRow>
-                <div className="flex items-center gap-2 py-0.5 flex-wrap">
-                    <span
-                        className="font-bold uppercase tracking-wider"
-                        style={{ color: isActive ? 'var(--fg)' : 'var(--fg-dim)' }}
-                    >
-                        {name}
-                    </span>
-                    <span style={{ color: BOX_CLR }}>|</span>
-                    <span
-                        className="uppercase tracking-wider"
-                        style={{ color: isActive ? 'var(--fg)' : 'var(--fg-dim)' }}
-                    >
-                        {role}
-                    </span>
-                    {isActive && (
-                        <span
-                            className="text-[11px] tracking-widest ml-auto"
-                            style={{ color: 'var(--warn)' }}
-                        >
-                            [ACTIVE]
-                        </span>
-                    )}
+function Describe({ entry, name, status, statusColor, age }: {
+    entry: ExperienceEntry; name: string; status: string; statusColor: string; age: string;
+}) {
+    const rows: [string, string, string?][] = [
+        ['Name', name],
+        ['Status', status, statusColor],
+        ['Role', entry.title ?? 'Engineer'],
+        ['Company', entry.company ?? entry.name],
+        ['Period', fmtPeriod(entry.dateRange ?? entry.timestamp)],
+        ['Age', age],
+    ];
+    return (
+        <div style={{ margin: '4px 0 14px', marginLeft: '8px', paddingLeft: '2ch', borderLeft: '2px solid var(--border-hi)' }}>
+            <div style={{ color: 'var(--fg-dim)', marginBottom: 6 }}>
+                <span style={{ color: 'var(--prompt-user)' }}>$</span> kubectl describe role/{name}
+            </div>
+            {rows.map(([k, v, c]) => (
+                <div key={k} className="flex">
+                    <span style={{ width: '11ch', flexShrink: 0, color: 'var(--fg-dim)' }}>{k}:</span>
+                    <span style={{ color: c ?? 'var(--fg)', wordBreak: 'break-word' }}>{v}</span>
                 </div>
-            </BoxRow>
-
-            <BoxMid />
-
-            {/* Highlight rows */}
-            {shown.map((h, j) => (
-                <BoxRow key={j}>
-                    <div
-                        className="py-px text-[12px] leading-snug"
-                        style={{ color: 'var(--fg-dim)' }}
-                    >
-                        <span className="mr-1.5" aria-hidden>•</span>
-                        {h}
-                    </div>
-                </BoxRow>
             ))}
 
-            {/* Research URL */}
+            <div style={{ marginTop: 8 }}>
+                <span style={{ color: 'var(--fg-dim)' }}>Highlights:</span>
+                {(entry.highlights ?? []).map((h, i) => (
+                    <div key={i} style={{ paddingLeft: '2ch', color: 'var(--fg-dim)', lineHeight: 1.6 }}>
+                        <span style={{ color: 'var(--accent)' }}>• </span>{h}
+                    </div>
+                ))}
+            </div>
+
             {entry.researchUrl && (
-                <BoxRow>
-                    <div className="py-px text-[12px]">
-                        <span style={{ color: 'var(--fg-dim)' }}>REF: </span>
-                        <a
-                            href={entry.researchUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            EXTERNAL_LINK ↗
-                        </a>
-                    </div>
-                </BoxRow>
+                <div style={{ marginTop: 6 }}>
+                    <span style={{ color: 'var(--fg-dim)' }}>Ref:        </span>
+                    <a
+                        href={entry.researchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ color: 'var(--info)' }}
+                    >
+                        publication ↗
+                    </a>
+                </div>
             )}
-
-            {/* Expand / collapse toggle */}
-            {highlights.length > PREVIEW_COUNT && (
-                <BoxRow>
-                    <div className="py-px">
-                        <button
-                            onClick={() => setExpanded(v => !v)}
-                            className="text-[12px] uppercase tracking-widest cursor-pointer hover:underline"
-                            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--fg-dim)' }}
-                            aria-expanded={expanded}
-                        >
-                            {expanded ? '[-] COLLAPSE' : `[+] ${remaining} MORE...`}
-                        </button>
-                    </div>
-                </BoxRow>
-            )}
-
-            <BoxBot />
         </div>
     );
 }

@@ -1,11 +1,11 @@
 import type { Skill } from '../types';
 
 function getStatus(level: number): string {
-    if (level >= 90) return '[OPTIMAL]';
-    if (level >= 80) return '[ACTIVE]';
-    if (level >= 70) return '[LOADED]';
-    if (level >= 60) return '[STABLE]';
-    return '[STANDBY]';
+    if (level >= 90) return 'expert';
+    if (level >= 80) return 'advanced';
+    if (level >= 70) return 'proficient';
+    if (level >= 60) return 'working';
+    return 'learning';
 }
 
 function getVersion(level: number): string {
@@ -27,21 +27,37 @@ export function CapabilitiesSection({ skills }: CapabilitiesSectionProps) {
                 {skills.map((skill, i) => (
                     <div
                         key={skill.name}
-                        className="relative border border-[var(--fg)] bg-[var(--bg)] text-[var(--fg)] p-2 min-h-[60px] flex flex-col justify-between hover:bg-[var(--fg)] hover:text-[var(--bg)] transition-colors cursor-crosshair"
+                        className="group rounded-md border border-[var(--border)] bg-[var(--bg-elev)] p-3 flex flex-col gap-2 transition-colors hover:border-[var(--border-hi)]"
                     >
-                        {/* Hex ID badge — explicit colors so they don't invert with parent hover */}
-                        <span
-                            className="absolute -top-2 -left-1 px-1 text-[10px] border border-[var(--fg)] bg-[var(--bg)] text-[var(--fg)]"
-                            aria-hidden="true"
+                        <div className="flex items-start justify-between gap-2">
+                            <span className="text-[13px] text-[var(--fg)] leading-tight">
+                                {skill.name}
+                            </span>
+                            <span
+                                className="shrink-0 rounded px-1.5 py-0.5 text-[10px] text-[var(--fg-dim)] bg-[var(--fg-faint)]"
+                                aria-hidden="true"
+                            >
+                                {hexId(i)}
+                            </span>
+                        </div>
+
+                        <div
+                            className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--fg-faint)]"
+                            role="progressbar"
+                            aria-label={`${skill.name} proficiency`}
+                            aria-valuenow={skill.level}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
                         >
-                            {hexId(i)}
-                        </span>
-                        <span className="font-black text-xs uppercase pt-1 tracking-tighter">
-                            {skill.name}
-                        </span>
-                        <div className="flex justify-between items-end mt-2 text-[10px] opacity-70">
-                            <span>{getVersion(skill.level)}</span>
+                            <div
+                                className="h-full rounded-full bg-[var(--accent)]"
+                                style={{ width: `${skill.level}%` }}
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-[var(--fg-dim)]">
                             <span>{getStatus(skill.level)}</span>
+                            <span>{getVersion(skill.level)}</span>
                         </div>
                     </div>
                 ))}
