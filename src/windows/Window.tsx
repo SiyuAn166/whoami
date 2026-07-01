@@ -1,0 +1,195 @@
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+    clamp, clampRect, COARSE, DOCK_H, HANDLES,
+    maxedRect,
+    MENUBAR_H,
+    MIN_H, MIN_W, vp,
+    type Rect, type WindowInstance,
+} from './windowTypes';
+
+interface WindowProps {
+    instance: WindowInstance;
+    focused: boolean;
+    onFocus: () => void;
+    onClose: () => void;
+    onMinimize: () => void;
+    onToggleMax: () => void;
+    onRectChange: (rect: Rect) => void;
+    /** Rendered below the content area, inside the window (e.g. a status bar). Optional. */
+    footer?: ReactNode;
+    children: ReactNode;
+}
+
+/** Close glyph — the × shown inside the red traffic light on hover */
+function CloseGlyph({ size = 8 }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path d="M2.5 2.5L7.5 7.5M7.5 2.5L2.5 7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+/** Minimize glyph — the – shown inside the yellow traffic light on hover */
+function MinimizeGlyph({ size = 8 }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path d="M2 5H8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+/** Zoom glyph — the two diagonal corner arrows shown inside the green traffic light on hover */
+function ZoomGlyph({ size = 8 }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path
+                d="M4 2H2V4M6 8H8V6"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+/**
+ * Generic macOS-style window chrome: titlebar, traffic lights, drag, resize,
+ * minimize/maximize/close. Knows nothing about what it contains — `children`
+ * is opaque app content. Any new app plugs into this unchanged.
+ */
+export function Window({ instance, focused, onFocus, onClose, onMinimize, onToggleMax, onRectChange, footer, children }: WindowProps) {
+    const [interacting, setInteracting] = useState(false);
+
+    const { state, rect, minSize, resizable = true } = instance;
+    const maximized = state === 'maximized';
+    const visible = state === 'normal' || state === 'maximized';
+    const geo = maximized ? maxedRect() : rect;
+
+    // Keep the window within the viewport when the browser is resized.
+    useEffect(() => {
+        const onResize = () => onRectChange(clampRect(rect, minSize));
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rect.w, rect.h]);
+
+    // Drag the window by its title bar.
+    const onTitlePointerDown = (e: React.PointerEvent) => {
+        if (maximized || COARSE) return;
+        if ((e.target as HTMLElement).closest('.traffic-lights')) return;
+        onFocus();
+        const sx = e.clientX, sy = e.clientY, r0 = { ...rect };
+        setInteracting(true);
+        const move = (ev: PointerEvent) => {
+            const { vw, vh } = vp();
+            onRectChange({
+                ...r0,
+                x: clamp(r0.x + ev.clientX - sx, 8, vw - 8 - r0.w),
+                y: clamp(r0.y + ev.clientY - sy, MENUBAR_H + 4, vh - DOCK_H - r0.h),
+            });
+        };
+        const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+            window.removeEventListener('pointercancel', up);
+            document.body.style.userSelect = '';
+            setInteracting(false);
+        };
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+        window.addEventListener('pointercancel', up);
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    };
+
+    // Resize the window from an edge/corner handle.
+    const startResize = (dir: string) => (e: React.PointerEvent) => {
+        if (maximized || COARSE) return;
+        e.stopPropagation();
+        e.preventDefault();
+        onFocus();
+        const sx = e.clientX, sy = e.clientY, r0 = { ...rect };
+        const L = dir.includes('w'), R = dir.includes('e'), T = dir.includes('n'), B = dir.includes('s');
+        setInteracting(true);
+        const move = (ev: PointerEvent) => {
+            const { vw, vh } = vp();
+            const minW = Math.min(minSize?.w ?? MIN_W, vw - 16), minH = Math.min(minSize?.h ?? MIN_H, vh - (MENUBAR_H + 4) - DOCK_H);
+            const dx = ev.clientX - sx, dy = ev.clientY - sy;
+            let { x, y, w, h } = r0;
+            if (R) w = clamp(r0.w + dx, minW, vw - 8 - r0.x);
+            if (B) h = clamp(r0.h + dy, minH, vh - DOCK_H - r0.y);
+            if (L) { const right = r0.x + r0.w; x = clamp(r0.x + dx, 8, right - minW); w = right - x; }
+            if (T) { const bottom = r0.y + r0.h; y = clamp(r0.y + dy, MENUBAR_H + 4, bottom - minH); h = bottom - y; }
+            onRectChange({ x, y, w, h });
+        };
+        const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+            window.removeEventListener('pointercancel', up);
+            document.body.style.userSelect = '';
+            setInteracting(false);
+        };
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+        window.addEventListener('pointercancel', up);
+        document.body.style.userSelect = 'none';
+    };
+
+    return (
+        <div
+            className={`mac-window${maximized ? ' is-maximized' : ''}${state === 'minimized' ? ' is-minimized' : ''}${state === 'closed' ? ' is-closed' : ''}`}
+            inert={!visible}
+            aria-hidden={!visible}
+            onPointerDownCapture={onFocus}
+            style={{
+                position: 'fixed',
+                left: geo.x,
+                top: geo.y,
+                width: geo.w,
+                height: geo.h,
+                zIndex: instance.zIndex,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
+                boxShadow: focused ? 'var(--window-shadow)' : 'var(--window-shadow-unfocused, var(--window-shadow))',
+                transition: interacting
+                    ? 'none'
+                    : 'left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease, transform 0.3s cubic-bezier(0.2,0.8,0.2,1), opacity 0.25s',
+            }}
+        >
+            <div
+                className="titlebar"
+                onPointerDown={onTitlePointerDown}
+                onDoubleClick={onToggleMax}
+                style={{ cursor: maximized || COARSE ? 'default' : 'grab' }}
+            >
+                <div className="traffic-lights">
+                    <button className="traffic-light tl-close" onClick={onClose} aria-label="Close window" title="Close"><CloseGlyph /></button>
+                    <button className="traffic-light tl-min" onClick={onMinimize} aria-label="Minimize window" title="Minimize"><MinimizeGlyph /></button>
+                    <button className="traffic-light tl-max" onClick={onToggleMax} aria-label="Zoom window" title="Zoom"><ZoomGlyph /></button>
+                </div>
+                <span className="titlebar-title">{instance.title}</span>
+            </div>
+
+            <main
+                className="window-body"
+                style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 22px', background: 'var(--bg)' }}
+            >
+                {children}
+            </main>
+
+            {footer}
+
+            {state === 'normal' && resizable && !COARSE && HANDLES.map(hd => (
+                <div
+                    key={hd.dir}
+                    data-dir={hd.dir}
+                    onPointerDown={startResize(hd.dir)}
+                    aria-hidden
+                    style={{ position: 'absolute', zIndex: 1, ...hd.style }}
+                />
+            ))}
+        </div>
+    );
+}

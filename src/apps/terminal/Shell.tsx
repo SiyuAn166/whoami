@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { PortfolioData } from '../types';
+import { ExperienceSection } from '../../components/ExperienceSection';
+import { IdentitySection } from '../../components/IdentitySection';
+import { ProjectsSection } from '../../components/ProjectsSection';
+import { CapabilitiesSection } from '../../components/SkillSection';
 import {
     buildFS, isDir, listDir, pathString, resolve, treeString, type VDir,
-} from '../shell/vfs';
-import { CapabilitiesSection } from './CapabilitiesSection';
-import { ExperienceSection } from './ExperienceSection';
-import { IdentitySection } from './IdentitySection';
+} from '../../shell/vfs';
+import type { PortfolioData } from '../../types';
 import { MatrixRain } from './MatrixRain';
-import { ProjectsSection } from './ProjectsSection';
 
 const USER = 'siyu';
 const HOST = 'portfolio';
@@ -287,41 +287,27 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
     const executeRef = useRef(execute);
     useEffect(() => { executeRef.current = execute; });
 
-    // ── Boot sequence: MOTD + auto-typed `whoami` ─────────────────────────
+    // ── Boot sequence: MOTD only ─────────────────────────────────────────────
     // StrictMode-safe: the first (discarded) dev mount is cancelled before it
     // marks `booted`, so the real mount runs the sequence exactly once.
     const bootedRef = useRef(false);
     useEffect(() => {
         if (bootedRef.current) return;
         let cancelled = false;
-        const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-        (async () => {
-            await sleep(0);
-            if (cancelled) return;
+        if (!cancelled) {
             bootedRef.current = true;
-
             const motd = (
                 <div style={{ color: 'var(--fg-dim)' }}>
                     <div>Last login: {nowString()} on ttys000</div>
                     <div style={{ marginTop: 4 }}>
                         Welcome to <span style={{ color: 'var(--accent)' }}>{USER}@{HOST}</span>. Type{' '}
-                        <span style={{ color: 'var(--info)' }}>help</span> or click a chip below to explore. 🧭
+                        <span style={{ color: 'var(--info)' }}>help</span> or click a chip below to explore.
                     </div>
                 </div>
             );
             setLines(l => [...l, { id: (idRef.current += 1), prompt: null, cmd: null, output: motd }]);
-            await sleep(550);
-            const cmd = 'cat README.md';
-            for (let i = 1; i <= cmd.length && !cancelled; i++) {
-                setInput(cmd.slice(0, i));
-                await sleep(38);
-            }
-            await sleep(200);
-            if (cancelled) return;
-            setInput('');
-            executeRef.current(cmd);
-        })();
+        }
 
         return () => { cancelled = true; };
     }, []);
@@ -397,7 +383,11 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
         <>
             {matrixOn && <MatrixRain onDone={() => { setMatrixOn(false); inputRef.current?.focus(); }} />}
 
-            <section className="text-[13px] leading-relaxed" onClick={() => inputRef.current?.focus()}>
+            <section
+                className="text-[13px] leading-relaxed"
+                onClick={() => inputRef.current?.focus()}
+                style={{ fontFamily: "Monaco, Consolas, 'Courier New', monospace" }}
+            >
                 {/* Scrollback */}
                 <div className="space-y-3">
                     {lines.map(line => (
