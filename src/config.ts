@@ -1,15 +1,16 @@
 /**
  * Data source URL configuration.
  *
- * Automatically switches between local dev data and production Gist based on build environment:
- *   - Development: /data.json from public/ folder (.env)
- *   - Production: GitHub Gist URL (.env.production)
+ * The app reads `VITE_GIST_URL` from the environment.
  *
- * To update the production Gist URL:
- *   1. Edit .env.production file
- *   2. Run: npm run build
- *   3. Deploy to GitHub Pages
+ * Behavior:
+ * - Local development: uses `VITE_GIST_URL` from `.env` if provided
+ * - Fallback: uses `/data.json` from the `public/` folder when `VITE_GIST_URL` is not set
+ * - Production: uses `VITE_GIST_URL` injected during the GitHub Actions build
  *
- * The data is fetched on every page load, so Gist changes are reflected immediately.
+ * Notes:
+ * - Do not commit real `.env` or `.env.production` files to the repo
+ * - Store the production value in GitHub Actions Variables
+ * - Changes to the Gist content are reflected on page load because the app fetches the JSON at runtime
  */
 export const GIST_URL = import.meta.env.VITE_GIST_URL || '/data.json';
