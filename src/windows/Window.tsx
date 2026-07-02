@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
     clamp, clampRect, COARSE, DOCK_H, HANDLES,
     maxedRect,
@@ -66,13 +66,16 @@ export function Window({ instance, focused, onFocus, onClose, onMinimize, onTogg
     const visible = state === 'normal' || state === 'maximized';
     const geo = maximized ? maxedRect() : rect;
 
-    // Keep the window within the viewport when the browser is resized.
+    // Always resize/clamp against the *latest* rect (position included), not a
+    // rect captured when width/height last changed — otherwise dragging a window
+    // and then resizing the browser snaps it back to its pre-drag position.
+    const rectRef = useRef(rect);
+    rectRef.current = rect;
     useEffect(() => {
-        const onResize = () => onRectChange(clampRect(rect, minSize));
+        const onResize = () => onRectChange(clampRect(rectRef.current, minSize));
         window.addEventListener('resize', onResize);
         return () => window.removeEventListener('resize', onResize);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [rect.w, rect.h]);
+    }, [minSize, onRectChange]);
 
     // Drag the window by its title bar.
     const onTitlePointerDown = (e: React.PointerEvent) => {

@@ -322,9 +322,12 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
         }
     }, [input]);
 
-    // Auto-scroll to the prompt as the scrollback grows.
+    // Auto-scroll to the prompt as the scrollback grows. Scroll only the terminal's
+    // own window body (not any ancestor scroll container) to avoid nudging the desktop.
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        const body = bottomRef.current?.closest('.window-body');
+        if (body) body.scrollTop = body.scrollHeight;
+        else bottomRef.current?.scrollIntoView({ block: 'end' });
     }, [lines]);
 
     const ghost = suggest(input, fs, cwd);
@@ -417,7 +420,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
                         <input
                             ref={inputRef}
                             value={input}
-                            onChange={e => { setInput(e.target.value); setCaretAtEnd(e.target.selectionStart === e.target.value.length); }}
+                            onChange={e => { setInput(e.target.value); setHistIndex(-1); setCaretAtEnd(e.target.selectionStart === e.target.value.length); }}
                             onKeyDown={handleKey}
                             onKeyUp={e => setCaretAtEnd(e.currentTarget.selectionStart === e.currentTarget.value.length)}
                             onSelect={e => setCaretAtEnd(e.currentTarget.selectionStart === e.currentTarget.value.length)}
@@ -557,7 +560,7 @@ function ContactCard({ data }: { data: PortfolioData }) {
             <div style={{ color: 'var(--accent)', fontWeight: 600, marginBottom: 6 }}>contact.vcf</div>
             {links.map(l => (
                 <ContactRow key={l.label} label={l.label} value={l.value}
-                    href={l.label.toLowerCase() === 'email' ? `mailto:${l.value}` : `https://${l.value}`} />
+                    href={l.label.toLowerCase() === 'email' ? `mailto:${l.value}` : /^https?:\/\//i.test(l.value) ? l.value : `https://${l.value}`} />
             ))}
             {github && <ContactRow label="GitHub" value={github} href={`https://${github}`} />}
         </div>
