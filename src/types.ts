@@ -19,6 +19,8 @@ export interface Meta {
     contactLinks?: Array<{ label: string; value: string }>;
     /** Terminal commands configuration (optional) */
     commands?: Record<string, string>;
+    /** Optional URL to a resume PDF file */
+    resumeUrl?: string;
 }
 
 export interface Identity {

@@ -436,6 +436,47 @@ body {
   line-height: 1.25;
 }
 
+/* --- Dock icon: name bubble on hover --- */
+.dock-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px) scale(0.96);
+  transform-origin: bottom center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--titlebar);
+  color: var(--fg);
+  border: 0px solid var(--border-hi);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms;
+  z-index: 100;
+}
+
+.dock-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--titlebar);
+}
+
+.dock-icon:hover .dock-tooltip,
+.dock-icon:focus-visible .dock-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+
 /* ─── Section reveal animation ──────────────────── */
 @keyframes reveal-in {
   from {
