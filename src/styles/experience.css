@@ -1,0 +1,237 @@
+/* ============================================================
+   Experience — Finder "column" (Miller) view (variant="finder").
+   Terminal (kubectl) view reuses .kube-row from components.css
+   plus inline styles in the component, so it needs no CSS here.
+   ============================================================ */
+
+.finder-miller {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .finder-miller {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+/* ── left column: role folders ── */
+.miller-col {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--bg);
+}
+
+@media (max-width: 640px) {
+  .miller-col {
+    max-height: 220px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+.miller-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+
+.miller-item+.miller-item {
+  margin-top: 2px;
+}
+
+.miller-item:hover {
+  background: var(--fg-faint);
+}
+
+.miller-item.is-sel {
+  background: var(--info);
+  color: #fff;
+}
+
+.finder-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.miller-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miller-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(40, 200, 64, 0.25);
+}
+
+.miller-item.is-sel .miller-live {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.miller-chev {
+  color: var(--fg-dim);
+  flex-shrink: 0;
+}
+
+.miller-item.is-sel .miller-chev {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── right column: detail (slides in on selection change) ── */
+.miller-detail {
+  overflow-y: auto;
+  padding: 22px;
+  background: var(--bg-elev);
+  animation: miller-slide 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes miller-slide {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.miller-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.miller-hero-icon svg {
+  width: 46px;
+  height: 46px;
+}
+
+.miller-hero-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 6px;
+}
+
+.miller-badge {
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: var(--fg-dim);
+  background: var(--fg-faint);
+  border: 1px solid var(--border);
+}
+
+.miller-badge.is-live {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: transparent;
+}
+
+.miller-meta {
+  display: grid;
+  gap: 9px;
+}
+
+.miller-meta-row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.miller-meta-row dt {
+  color: var(--fg-dim);
+}
+
+.miller-meta-row dd {
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.miller-hl {
+  margin-top: 18px;
+}
+
+.miller-hl-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-dim);
+  margin-bottom: 7px;
+}
+
+.miller-hl-item {
+  display: flex;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fg);
+  padding: 2px 0;
+}
+
+.miller-hl-item span {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.miller-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.miller-open {
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  text-decoration: none;
+  color: #fff;
+  background: var(--info);
+  border: 1px solid var(--info);
+  transition: filter 0.15s;
+}
+
+.miller-open:hover {
+  filter: brightness(1.08);
+}
+
+.miller-open.ghost {
+  color: var(--info);
+  background: transparent;
+}

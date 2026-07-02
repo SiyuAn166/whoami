@@ -1,192 +1,192 @@
 {
-    "meta": {
-        "systemTag": "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64",
-        "time": "12:00:00 08/03/2026",
-        "session": "ttys000",
-        "bannerTitle": "macOS Sequoia 15.5",
-        "bannerSystem": "Darwin 24.5.0 arm64",
-        "copyright": "© 2026 Siyu An",
-        "location": "Vancouver, BC · 49.28° N, 123.12° W",
-        "resumeUrl": "resume.pdf",
-        "contactLinks": [
-            {
-                "label": "Email",
-                "value": "siyu.an166@gmail.com"
-            },
-            {
-                "label": "LinkedIn",
-                "value": "linkedin.com/in/siyu-an-bc"
-            }
-        ],
-        "commands": {
-            "help": "Available commands: help, whoami, clear, contact, social, pwd, ls, date, uname, echo, exit",
-            "whoami": "siyu :: Software Engineer // Platform & Cloud Ops",
-            "clear": "__CLEAR__",
-            "social": "→  github.com/SiyuAn166",
-            "pwd": "/Users/siyu",
-            "ls": "Applications  Desktop  Documents  Downloads  Library  Movies  Music  Pictures  Public  projects",
-            "uname": "Darwin portfolio 24.5.0 Darwin Kernel Version 24.5.0 arm64",
-            "exit": "[Process completed]"
-        }
-    },
-    "commandStrings": {
-        "identity": "whoami",
-        "experience": "cat ~/experience.log",
-        "projects": "ls -la ~/projects",
-        "skills": "brew list --skills"
-    },
-    "identity": {
-        "title": "Siyu An",
-        "headline": "Software Engineer · cloud-platform engineering & operations",
-        "tagline": "I am a Software Engineer specializing in cloud‑platform engineering and operations. My primary focus is building, scaling and maintaining Kubernetes‑based infrastructures that power highly available, automated network and security services across hybrid and multi‑cloud environments. I work at the intersection of platform automation, cluster operations and cloud resource optimization—leveraging container orchestration (Kubernetes, Helm), observability pipelines and cost‑/performance‑driven decisions."
-    },
-    "experience": [
-        {
-            "permissions": "-rw-r--r--",
-            "owner": "siyu",
-            "size": "2048B",
-            "timestamp": "08/2024",
-            "name": "INFOBLOX",
-            "current": true,
-            "title": "Software Engineer",
-            "company": "Infoblox Canada Inc.",
-            "dateRange": "08/2024 -> PRESENT",
-            "highlights": [
-                "Engineered a high-throughput DNS logging pipeline in Go (DNSTAP + syslog over TCP/TLS) with WAL-backed buffering to handle backpressure at 10K QPS, reducing log loss from 1% to <0.3% and cutting router CPU usage by 42%.",
-                "Orchestrated a CloudQuery-powered multi-cloud DNS state ingestion fabric integrating Cloudflare and Akamai to unify configuration topology across hybrid environments, operationalizing 200+ enterprise networks and driving a 22% uplift in feature adoption.",
-                "Extended BloxOne DDI by implementing RPZ-based DNS response filtering and Stub Zone support in Kubernetes-native Go services, improving security enforcement and zone resolution consistency across distributed deployments.",
-                "Introduced an MCP-powered CI/CD orchestration system that enables safe AI-assisted deployments through structured runbooks and guardrails, reducing manual release effort by 80% and improving cross-team release consistency.",
-                "Implemented a Go-based static analysis tool to analyze multi-repository dependency graphs and detect inconsistent imports across services, reducing cross-service review overhead and improving dependency alignment."
-            ]
-        },
-        {
-            "permissions": "-rw-r--r--",
-            "owner": "siyu",
-            "size": "1024B",
-            "timestamp": "05/2023",
-            "name": "SFU_BIG_DATA_HUB",
-            "current": false,
-            "title": "Data Engineer Co-op",
-            "company": "Simon Fraser University's Big Data Hub",
-            "dateRange": "05/2023 -> 08/2023",
-            "researchUrl": "https://doi.org/10.1109/IEEEDATA.2024.3471469",
-            "highlights": [
-                "Co-authored a research publication in Nature Scientific Data, contributing to large-scale data modeling and analytics for EV charging infrastructure planning.",
-                "Designed and implemented ETL pipelines using Python and Pandas to process 200M+ records, reducing end-to-end data processing latency by 25%.",
-                "Developed a Web API client to automate external data synchronization workflows, reducing manual data acquisition effort by 40%."
-            ]
-        },
-        {
-            "permissions": "-rw-r--r--",
-            "owner": "siyu",
-            "size": "512B",
-            "timestamp": "03/2019",
-            "name": "BEST_ENERGY_EQUIPMENT",
-            "current": false,
-            "title": "Software Engineer",
-            "company": "Best Energy Equipment Co. Ltd.",
-            "dateRange": "03/2019 -> 10/2019",
-            "highlights": [
-                "Designed and deployed scalable architecture using Spring Boot, integrating MQTT server with web services, realized 7% cost savings and curtailed on-site maintenance by 40%.",
-                "Architected and implemented RESTful APIs fostering seamless communication among system components, optimizing data exchange and slashing integration time by 30%.",
-                "Leveraged Docker for seamless deployment, ensuring consistency and scalability across environments, reduced deployment errors by 25%.",
-                "Collaborated with cross-functional teams to align API design with project objectives, resulting in 20% improvement in project delivery time."
-            ]
-        }
+  "meta": {
+    "systemTag": "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64",
+    "time": "12:00:00 08/03/2026",
+    "session": "ttys000",
+    "bannerTitle": "macOS Sequoia 15.5",
+    "bannerSystem": "Darwin 24.5.0 arm64",
+    "copyright": "© 2026 Siyu An",
+    "location": "Vancouver, BC · 49.28° N, 123.12° W",
+    "resumeUrl": "resume.pdf",
+    "contactLinks": [
+      {
+        "label": "Email",
+        "value": "siyu.an166@gmail.com"
+      },
+      {
+        "label": "LinkedIn",
+        "value": "linkedin.com/in/siyu-an-bc"
+      }
     ],
-    "projects": [
-        {
-            "name": "GOARC_MCP",
-            "version": "v0.1.0",
-            "status": "ACTIVE",
-            "description": "GoArc is an architectural-aware Go static analysis server built on the Model Context Protocol (MCP). It gives AI assistants a `full-project radar` — deep visibility into package topology, call graphs, and architectural rules — so they can perform safe, informed refactoring across large Go codebases.",
-            "tags": [
-                "Go_Lang",
-                "Static_Analysis",
-                "Architecture_Governance",
-                "Graph_Theory"
-            ],
-            "license": "MIT_License",
-            "url": "https://github.com/SiyuAn166/goarc-mcp"
-        },
-        {
-            "name": "HELIX_ORM",
-            "version": "v1.4.2",
-            "status": "STABLE",
-            "description": "Type-safe database abstraction layer for Go with automatic migration generation and zero-reflection query building.",
-            "tags": [
-                "Go_Lang",
-                "PostgreSQL",
-                "SQLite"
-            ],
-            "license": "Apache-2.0",
-            "url": "https://github.com"
-        },
-        {
-            "name": "CIPHER_STREAM",
-            "version": "v0.9.0",
-            "status": "BETA",
-            "description": "Zero-knowledge encrypted real-time messaging protocol with forward secrecy and post-quantum key exchange.",
-            "tags": [
-                "TypeScript",
-                "WebCrypto",
-                "WASM"
-            ],
-            "license": "GPL-3.0"
-        },
-        {
-            "name": "KERNEL_WATCH",
-            "version": "v3.0.1",
-            "status": "ARCHIVED",
-            "description": "Linux kernel module for real-time syscall tracing and anomaly detection. Sub-microsecond latency overhead.",
-            "tags": [
-                "C_Lang",
-                "eBPF",
-                "Linux"
-            ],
-            "license": "GPL-2.0"
-        }
-    ],
-    "skills": [
-        {
-            "name": "Golang",
-            "level": 88
-        },
-        {
-            "name": "Java",
-            "level": 86
-        },
-        {
-            "name": "Python",
-            "level": 84
-        },
-        {
-            "name": "TypeScript",
-            "level": 82
-        },
-        {
-            "name": "Microservices",
-            "level": 88
-        },
-        {
-            "name": "Kubernetes",
-            "level": 85
-        },
-        {
-            "name": "Docker",
-            "level": 84
-        },
-        {
-            "name": "REST_APIs",
-            "level": 85
-        },
-        {
-            "name": "AWS",
-            "level": 80
-        },
-        {
-            "name": "CI_CD_Pipelines",
-            "level": 85
-        }
-    ]
+    "commands": {
+      "help": "Available commands: help, whoami, clear, contact, social, pwd, ls, date, uname, echo, exit",
+      "whoami": "siyu :: Software Engineer // Platform & Cloud Ops",
+      "clear": "__CLEAR__",
+      "social": "→  github.com/SiyuAn166",
+      "pwd": "/Users/siyu",
+      "ls": "Applications  Desktop  Documents  Downloads  Library  Movies  Music  Pictures  Public  projects",
+      "uname": "Darwin portfolio 24.5.0 Darwin Kernel Version 24.5.0 arm64",
+      "exit": "[Process completed]"
+    }
+  },
+  "commandStrings": {
+    "identity": "whoami",
+    "experience": "kubectl get roles -n siyu",
+    "projects": "kubectl get projects -n siyu",
+    "skills": "kubectl get skills -n siyu"
+  },
+  "identity": {
+    "title": "Siyu An",
+    "headline": "Software Engineer · cloud-platform engineering & operations",
+    "tagline": "I am a Software Engineer specializing in cloud‑platform engineering and operations. My primary focus is building, scaling and maintaining Kubernetes‑based infrastructures that power highly available, automated network and security services across hybrid and multi‑cloud environments. I work at the intersection of platform automation, cluster operations and cloud resource optimization—leveraging container orchestration (Kubernetes, Helm), observability pipelines and cost‑/performance‑driven decisions."
+  },
+  "experience": [
+    {
+      "permissions": "-rw-r--r--",
+      "owner": "siyu",
+      "size": "2048B",
+      "timestamp": "08/2024",
+      "name": "INFOBLOX",
+      "current": true,
+      "title": "Software Engineer",
+      "company": "Infoblox Canada Inc.",
+      "dateRange": "08/2024 -> PRESENT",
+      "highlights": [
+        "Engineered a high-throughput DNS logging pipeline in Go (DNSTAP + syslog over TCP/TLS) with WAL-backed buffering to handle backpressure at 10K QPS, reducing log loss from 1% to <0.3% and cutting router CPU usage by 42%.",
+        "Orchestrated a CloudQuery-powered multi-cloud DNS state ingestion fabric integrating Cloudflare and Akamai to unify configuration topology across hybrid environments, operationalizing 200+ enterprise networks and driving a 22% uplift in feature adoption.",
+        "Extended BloxOne DDI by implementing RPZ-based DNS response filtering and Stub Zone support in Kubernetes-native Go services, improving security enforcement and zone resolution consistency across distributed deployments.",
+        "Introduced an MCP-powered CI/CD orchestration system that enables safe AI-assisted deployments through structured runbooks and guardrails, reducing manual release effort by 80% and improving cross-team release consistency.",
+        "Implemented a Go-based static analysis tool to analyze multi-repository dependency graphs and detect inconsistent imports across services, reducing cross-service review overhead and improving dependency alignment."
+      ]
+    },
+    {
+      "permissions": "-rw-r--r--",
+      "owner": "siyu",
+      "size": "1024B",
+      "timestamp": "05/2023",
+      "name": "SFU_BIG_DATA_HUB",
+      "current": false,
+      "title": "Data Engineer Co-op",
+      "company": "Simon Fraser University's Big Data Hub",
+      "dateRange": "05/2023 -> 08/2023",
+      "researchUrl": "https://doi.org/10.1109/IEEEDATA.2024.3471469",
+      "highlights": [
+        "Co-authored a research publication in Nature Scientific Data, contributing to large-scale data modeling and analytics for EV charging infrastructure planning.",
+        "Designed and implemented ETL pipelines using Python and Pandas to process 200M+ records, reducing end-to-end data processing latency by 25%.",
+        "Developed a Web API client to automate external data synchronization workflows, reducing manual data acquisition effort by 40%."
+      ]
+    },
+    {
+      "permissions": "-rw-r--r--",
+      "owner": "siyu",
+      "size": "512B",
+      "timestamp": "03/2019",
+      "name": "BEST_ENERGY_EQUIPMENT",
+      "current": false,
+      "title": "Software Engineer",
+      "company": "Best Energy Equipment Co. Ltd.",
+      "dateRange": "03/2019 -> 10/2019",
+      "highlights": [
+        "Designed and deployed scalable architecture using Spring Boot, integrating MQTT server with web services, realized 7% cost savings and curtailed on-site maintenance by 40%.",
+        "Architected and implemented RESTful APIs fostering seamless communication among system components, optimizing data exchange and slashing integration time by 30%.",
+        "Leveraged Docker for seamless deployment, ensuring consistency and scalability across environments, reduced deployment errors by 25%.",
+        "Collaborated with cross-functional teams to align API design with project objectives, resulting in 20% improvement in project delivery time."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "GOARC_MCP",
+      "version": "v0.1.0",
+      "status": "ACTIVE",
+      "description": "GoArc is an architectural-aware Go static analysis server built on the Model Context Protocol (MCP). It gives AI assistants a `full-project radar` — deep visibility into package topology, call graphs, and architectural rules — so they can perform safe, informed refactoring across large Go codebases.",
+      "tags": [
+        "Go_Lang",
+        "Static_Analysis",
+        "Architecture_Governance",
+        "Graph_Theory"
+      ],
+      "license": "MIT_License",
+      "url": "https://github.com/SiyuAn166/goarc-mcp"
+    },
+    {
+      "name": "HELIX_ORM",
+      "version": "v1.4.2",
+      "status": "STABLE",
+      "description": "Type-safe database abstraction layer for Go with automatic migration generation and zero-reflection query building.",
+      "tags": [
+        "Go_Lang",
+        "PostgreSQL",
+        "SQLite"
+      ],
+      "license": "Apache-2.0",
+      "url": "https://github.com"
+    },
+    {
+      "name": "CIPHER_STREAM",
+      "version": "v0.9.0",
+      "status": "BETA",
+      "description": "Zero-knowledge encrypted real-time messaging protocol with forward secrecy and post-quantum key exchange.",
+      "tags": [
+        "TypeScript",
+        "WebCrypto",
+        "WASM"
+      ],
+      "license": "GPL-3.0"
+    },
+    {
+      "name": "KERNEL_WATCH",
+      "version": "v3.0.1",
+      "status": "ARCHIVED",
+      "description": "Linux kernel module for real-time syscall tracing and anomaly detection. Sub-microsecond latency overhead.",
+      "tags": [
+        "C_Lang",
+        "eBPF",
+        "Linux"
+      ],
+      "license": "GPL-2.0"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Golang",
+      "level": 88
+    },
+    {
+      "name": "Java",
+      "level": 86
+    },
+    {
+      "name": "Python",
+      "level": 84
+    },
+    {
+      "name": "TypeScript",
+      "level": 82
+    },
+    {
+      "name": "Microservices",
+      "level": 88
+    },
+    {
+      "name": "Kubernetes",
+      "level": 85
+    },
+    {
+      "name": "Docker",
+      "level": 84
+    },
+    {
+      "name": "REST_APIs",
+      "level": 85
+    },
+    {
+      "name": "AWS",
+      "level": 80
+    },
+    {
+      "name": "CI_CD_Pipelines",
+      "level": 85
+    }
+  ]
 }

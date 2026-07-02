@@ -1,0 +1,38 @@
+/* ─── Tailwind layers ────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Reset ──────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--sel-bg);
+  color: var(--sel-fg);
+}
+
+/* ─── Mobile: ≥16px input avoids iOS focus-zoom (sizer inherits, stays synced) ─── */
+@media (pointer: coarse) {
+  .shell-input-wrap {
+    font-size: 16px;
+  }
+}

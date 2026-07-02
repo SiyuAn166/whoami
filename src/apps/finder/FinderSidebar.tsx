@@ -1,8 +1,8 @@
-export type FinderSection = 'projects' | 'experience' | 'skills';
+export type FinderSection = 'experience' | 'projects' | 'skills';
 
 const ITEMS: { id: FinderSection; label: string; glyph: string }[] = [
-    { id: 'projects', label: 'Projects', glyph: '📁' },
     { id: 'experience', label: 'Experience', glyph: '🗂' },
+    { id: 'projects', label: 'Projects', glyph: '📁' },
     { id: 'skills', label: 'Skills', glyph: '⚙' },
 ];
 

@@ -59,9 +59,9 @@ export function buildFS(data: PortfolioData): VDir {
         name: '~',
         children: [
             { type: 'file', name: 'README.md', render: 'identity', text: data.identity.tagline },
-            { type: 'file', name: 'experience.log', render: 'experience' },
+            { type: 'file', name: 'experience.md', render: 'experience' },
             { type: 'dir', name: 'projects', children: projectDirs },
-            { type: 'file', name: 'skills.yaml', render: 'skills' },
+            { type: 'file', name: 'skills.md', render: 'skills' },
             { type: 'file', name: 'contact.vcf', render: 'contact' },
         ],
     };
@@ -90,7 +90,7 @@ export function resolve(root: VDir, cwd: string[], path: string): Resolved | nul
     const raw = path.trim();
     let segs: string[];
 
-    if (raw === '' ) {
+    if (raw === '') {
         segs = [...cwd];
     } else if (raw === '~' || raw === '/') {
         segs = [];

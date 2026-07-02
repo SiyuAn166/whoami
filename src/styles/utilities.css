@@ -1,0 +1,11 @@
+/* ─── Utility classes ────────────────────────────── */
+.text-fg    { color: var(--fg); }
+.text-mid   { color: var(--fg-dim); }
+.text-faint { color: var(--fg-faint); }
+.text-warn  { color: var(--warn); }
+.text-error { color: var(--error); }
+.text-info  { color: var(--info); }
+.text-accent { color: var(--accent); }
+.glow       { text-shadow: none; }
+.border-dim { border-color: var(--border); }
+.border-hi  { border-color: var(--border-hi); }

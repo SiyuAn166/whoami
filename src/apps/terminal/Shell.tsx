@@ -17,14 +17,14 @@ const HELP: { name: string; desc: string }[] = [
     { name: 'help', desc: 'list available commands' },
     { name: 'ls', desc: 'list directory contents — try `ls projects`' },
     { name: 'cd', desc: 'change directory — `cd projects`, `cd ..`' },
-    { name: 'cat', desc: 'print a file — `cat experience.log`' },
+    { name: 'cat', desc: 'print a file' },
     { name: 'tree', desc: 'show the whole filesystem' },
     { name: 'pwd', desc: 'print working directory' },
     { name: 'whoami', desc: 'print my profile (README.md)' },
-    { name: 'kubectl', desc: 'work history — `kubectl get roles`' },
-    { name: 'experience', desc: 'work history (alias of kubectl)' },
-    { name: 'projects', desc: 'project showcase' },
-    { name: 'skills', desc: 'technical skills' },
+    { name: 'kubectl', desc: 'k8s-style resources — `kubectl get roles|projects|skills`' },
+    { name: 'experience', desc: 'work history (alias of `kubectl get roles`)' },
+    { name: 'projects', desc: 'project showcase (alias of `kubectl get projects`)' },
+    { name: 'skills', desc: 'technical skills (alias of `kubectl get skills`)' },
     { name: 'contact', desc: 'how to reach me' },
     { name: 'open', desc: 'open a project link — `open goarc-mcp`' },
     { name: 'theme', desc: 'switch appearance — `theme light`' },
@@ -52,7 +52,7 @@ const FORTUNES = [
     'A distributed system is one where a machine you didn\'t know existed can break yours. — Lamport',
 ];
 
-const HINTS = ['cat README.md', 'ls projects', 'kubectl get roles', 'skills', 'open goarc-mcp', 'matrix', 'help'];
+const HINTS = ['cat README.md', 'kubectl get roles', 'kubectl get projects', 'kubectl get skills', 'open goarc-mcp', 'matrix', 'help'];
 
 /** Touch devices: skip autoFocus (so the boot animation + chips show before the keyboard pops). */
 const COARSE_POINTER = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
@@ -190,18 +190,26 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
                 output = <IdentitySection identity={data.identity} experience={data.experience} meta={data.meta} />;
                 break;
 
-            case 'kubectl':
+            case 'kubectl': {
+                // `kubectl get <resource>` — route by resource word, ignore flags like `-n siyu`.
+                const resource = args.find(a => /^(roles?|projects?|skills?)$/.test(a)) ?? 'roles';
+                if (/^proj/.test(resource)) output = <ProjectsSection projects={data.projects} variant="terminal" />;
+                else if (/^skill/.test(resource)) output = <CapabilitiesSection skills={data.skills} variant="terminal" />;
+                else output = <ExperienceSection entries={data.experience} variant="terminal" />;
+                break;
+            }
+
             case 'experience':
             case 'work':
-                output = <ExperienceSection entries={data.experience} />;
+                output = <ExperienceSection entries={data.experience} variant="terminal" />;
                 break;
 
             case 'projects':
-                output = <ProjectsSection projects={data.projects} />;
+                output = <ProjectsSection projects={data.projects} variant="terminal" />;
                 break;
 
             case 'skills':
-                output = <CapabilitiesSection skills={data.skills} />;
+                output = <CapabilitiesSection skills={data.skills} variant="terminal" />;
                 break;
 
             case 'contact':
@@ -472,9 +480,9 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
 function renderFile(render: string | undefined, text: string | undefined, data: PortfolioData): ReactNode {
     switch (render) {
         case 'identity': return <IdentitySection identity={data.identity} experience={data.experience} meta={data.meta} />;
-        case 'experience': return <ExperienceSection entries={data.experience} />;
-        case 'projects': return <ProjectsSection projects={data.projects} />;
-        case 'skills': return <CapabilitiesSection skills={data.skills} />;
+        case 'experience': return <ExperienceSection entries={data.experience} variant="terminal" />;
+        case 'projects': return <ProjectsSection projects={data.projects} variant="terminal" />;
+        case 'skills': return <CapabilitiesSection skills={data.skills} variant="terminal" />;
         case 'contact': return <ContactCard data={data} />;
         default: return <Text>{text ?? ''}</Text>;
     }
