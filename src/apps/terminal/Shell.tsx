@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { ExperienceSection } from '../../components/ExperienceSection';
 import { IdentitySection } from '../../components/IdentitySection';
 import { ProjectsSection } from '../../components/ProjectsSection';
-import { CapabilitiesSection } from '../../components/SkillSection';
+import { SkillSection } from '../../components/SkillSection';
 import {
     buildFS, isDir, listDir, pathString, resolve, treeString, type VDir,
 } from '../../shell/vfs';
@@ -194,7 +194,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
                 // `kubectl get <resource>` — route by resource word, ignore flags like `-n siyu`.
                 const resource = args.find(a => /^(roles?|projects?|skills?)$/.test(a)) ?? 'roles';
                 if (/^proj/.test(resource)) output = <ProjectsSection projects={data.projects} variant="terminal" />;
-                else if (/^skill/.test(resource)) output = <CapabilitiesSection skills={data.skills} variant="terminal" />;
+                else if (/^skill/.test(resource)) output = <SkillSection skills={data.skills} variant="terminal" />;
                 else output = <ExperienceSection entries={data.experience} variant="terminal" />;
                 break;
             }
@@ -209,7 +209,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
                 break;
 
             case 'skills':
-                output = <CapabilitiesSection skills={data.skills} variant="terminal" />;
+                output = <SkillSection skills={data.skills} variant="terminal" />;
                 break;
 
             case 'contact':
@@ -482,7 +482,7 @@ function renderFile(render: string | undefined, text: string | undefined, data: 
         case 'identity': return <IdentitySection identity={data.identity} experience={data.experience} meta={data.meta} />;
         case 'experience': return <ExperienceSection entries={data.experience} variant="terminal" />;
         case 'projects': return <ProjectsSection projects={data.projects} variant="terminal" />;
-        case 'skills': return <CapabilitiesSection skills={data.skills} variant="terminal" />;
+        case 'skills': return <SkillSection skills={data.skills} variant="terminal" />;
         case 'contact': return <ContactCard data={data} />;
         default: return <Text>{text ?? ''}</Text>;
     }

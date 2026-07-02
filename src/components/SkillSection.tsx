@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import '../styles/skills.css';
 import type { Skill } from '../types';
 
 /* ───────────────────────── shared ───────────────────────── */
@@ -23,12 +25,12 @@ const STATUS_COLORS: Record<string, string> = {
   learning: 'var(--fg-dim)',
 };
 
-interface CapabilitiesSectionProps {
+interface SkillSectionProps {
   skills: Skill[];
   variant?: 'finder' | 'terminal';
 }
 
-export function CapabilitiesSection({ skills, variant = 'terminal' }: CapabilitiesSectionProps) {
+export function SkillSection({ skills, variant = 'terminal' }: SkillSectionProps) {
   return variant === 'finder'
     ? <FinderSkills skills={skills} />
     : <TerminalSkills skills={skills} />;
@@ -37,8 +39,8 @@ export function CapabilitiesSection({ skills, variant = 'terminal' }: Capabiliti
 /* ═════════════════════════ TERMINAL — kubectl ═════════════════════════ */
 
 const SCOL = {
-  status: { width: '13ch', flexShrink: 0 } as React.CSSProperties,
-  proficiency: { flex: 1, minWidth: '20ch' } as React.CSSProperties,
+  status: { width: '13ch', flexShrink: 0 } as CSSProperties,
+  proficiency: { flex: 1, minWidth: '20ch' } as CSSProperties,
 };
 
 function bar(level: number): string {
@@ -48,7 +50,7 @@ function bar(level: number): string {
 
 function TerminalSkills({ skills }: { skills: Skill[] }) {
   const nameCh = Math.max(8, ...skills.map(s => slugify(s.name).length)) + 2;
-  const nameStyle: React.CSSProperties = { width: `${nameCh}ch`, flexShrink: 0 };
+  const nameStyle: CSSProperties = { width: `${nameCh}ch`, flexShrink: 0 };
 
   return (
     <section
@@ -89,39 +91,58 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
   );
 }
 
-/* ═════════════════════════ FINDER — widget tiles ═════════════════════════ */
+/* ═════════════════════════ FINDER — ring gauge cards ═════════════════════════
+   One considered design: each skill is a horizontal card with a native-feeling
+   circular proficiency ring (percentage in the center, tier-tinted) beside a
+   name-first text column. The ring is the hero signal; the monogram tints the
+   whole card via --tier. Rings animate in on mount.
+   ============================================================================ */
 
-const TIER_OF = (level: number): { label: string; color: string } => {
-  const st = getStatus(level);
-  return { label: st, color: STATUS_COLORS[st] };
-};
+const R = 19;                     // ring radius
+const C = 2 * Math.PI * R;        // circumference ≈ 119.38
 
 function FinderSkills({ skills }: { skills: Skill[] }) {
   return (
-    <section className="wg-wrap">
-      <div className="wg-grid">
+    <section className="sg-wrap">
+      <div className="sg-grid">
         {skills.map(s => {
-          const tier = TIER_OF(s.level);
+          const st = getStatus(s.level);
+          const color = STATUS_COLORS[st];
           const label = s.name.replace(/_/g, ' ');
           const initial = s.name.replace(/[^A-Za-z0-9]/g, '').charAt(0).toUpperCase();
+          const offset = C * (1 - Math.max(0, Math.min(100, s.level)) / 100);
           return (
-            <div className="wg-tile" key={s.name} style={{ ['--tier' as string]: tier.color }}>
-              <div className="wg-head">
-                <span className="wg-ico" style={{ background: tier.color }} aria-hidden>{initial}</span>
-                <div className="wg-headtext">
-                  <div className="wg-name" title={label}>{label}</div>
-                  <div className="wg-meta">
-                    <span className="wg-tier" style={{ color: tier.color }}>{tier.label}</span>
-                    <span className="wg-dot" aria-hidden>·</span>
-                    <span className="wg-pct">{s.level}%</span>
-                  </div>
-                </div>
+            <div className="sg-card" key={s.name} style={{ ['--tier' as string]: color }}>
+              <div
+                className="sg-ring"
+                role="progressbar"
+                aria-valuenow={s.level}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={label}
+              >
+                <svg width="52" height="52" viewBox="0 0 52 52">
+                  <circle className="sg-track" cx="26" cy="26" r={R} />
+                  <circle
+                    className="sg-prog"
+                    cx="26" cy="26" r={R}
+                    style={{
+                      strokeDasharray: C,
+                      strokeDashoffset: offset,
+                      ['--sg-c' as string]: `${C}`,
+                      ['--sg-off' as string]: `${offset}`,
+                    }}
+                  />
+                </svg>
+                <span className="sg-pct">{s.level}</span>
               </div>
-              <div className="wg-meter" role="progressbar" aria-valuenow={s.level} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
-                <span
-                  className="wg-fill"
-                  style={{ width: `${s.level}%`, ['--target-width' as string]: `${s.level}%`, background: tier.color }}
-                />
+
+              <div className="sg-text">
+                <div className="sg-name" title={label}>
+                  <span className="sg-mono" aria-hidden>{initial}</span>
+                  <span className="sg-label">{label}</span>
+                </div>
+                <span className="sg-tier">{st}</span>
               </div>
             </div>
           );
@@ -130,3 +151,6 @@ function FinderSkills({ skills }: { skills: Skill[] }) {
     </section>
   );
 }
+
+/* Back-compat alias for any existing imports. */
+export const CapabilitiesSection = SkillSection;

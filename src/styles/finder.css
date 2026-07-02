@@ -1,0 +1,174 @@
+/* ─── Finder app ─────────────────────────────────────
+   macOS-faithful Finder chrome: unified toolbar (in the titlebar row,
+   next to the traffic lights), Favorites sidebar, content pane and a
+   bottom breadcrumb path bar. Uses the shared theme tokens so it
+   recolors automatically in light/dark.
+   ──────────────────────────────────────────────────── */
+
+/* Unified toolbar — injected into .titlebar next to .traffic-lights */
+.finder-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 12px;
+  height: 100%;
+}
+.finder-tbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--titlebar-fg);
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s, opacity 0.12s;
+}
+.finder-tbtn:hover:not(:disabled) {
+  background: var(--fg-faint);
+  color: var(--fg);
+}
+.finder-tbtn.is-active {
+  color: var(--info);
+}
+.finder-tbtn:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+.finder-tsep {
+  width: 1px;
+  height: 16px;
+  margin: 0 5px;
+  background: var(--border);
+}
+.finder-toolbar-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--titlebar-fg);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 160px;
+}
+
+/* Root layout — cancels the window-body padding so chrome bleeds edge-to-edge */
+.finder {
+  display: flex;
+  align-items: stretch;
+  min-height: 100%;
+  margin: -20px -22px;
+}
+
+/* Favorites sidebar */
+.finder-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--menubar);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.finder-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-dim);
+  padding: 4px 8px 6px;
+  letter-spacing: 0.02em;
+}
+.finder-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+.finder-item:hover {
+  background: var(--fg-faint);
+}
+.finder-item.is-selected {
+  background: var(--sel-bg);
+}
+.finder-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--info);
+  flex-shrink: 0;
+}
+
+/* Content pane */
+.finder-pane {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 22px;
+}
+
+/* Bottom breadcrumb path bar (rendered as the window footer) */
+.finder-pathbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  background: var(--titlebar);
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--fg-dim);
+  user-select: none;
+}
+.finder-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.finder-crumb {
+  white-space: nowrap;
+}
+.finder-crumb-root {
+  display: inline-flex;
+  align-items: center;
+  color: var(--info);
+}
+.finder-crumb.is-current {
+  color: var(--fg);
+  font-weight: 500;
+}
+.finder-crumb-sep {
+  color: var(--fg-dim);
+  opacity: 0.7;
+}
+.finder-count {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Compact: drop the centered title padding on narrow windows */
+@media (max-width: 620px) {
+  .finder-toolbar-title { padding: 0 70px; }
+  .finder-sidebar { width: 168px; }
+}
