@@ -86,6 +86,7 @@ export function MenuBar({ appName, theme, onToggleTheme }: MenuBarProps) {
                 <span className="menu-item font-semibold hidden sm:inline">File</span>
                 <span className="menu-item font-semibold hidden sm:inline">Edit</span>
                 <span className="menu-item font-semibold hidden md:inline">View</span>
+                <span className="menu-item font-semibold hidden md:inline">Go</span>
                 <span className="menu-item font-semibold hidden md:inline">Window</span>
                 <span className="menu-item font-semibold hidden md:inline">Help</span>
             </div>

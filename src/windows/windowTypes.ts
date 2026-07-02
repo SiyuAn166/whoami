@@ -43,14 +43,14 @@ export const vp = () => ({ vw: window.innerWidth, vh: window.innerHeight });
 export const COARSE = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
 
 /** Default centered geometry for a freshly-opened window, offset slightly per open count so stacked windows are visible. */
-export function defaultRect(size?: Size, offset = 0): Rect {
+export function defaultRect(size?: Size, minSize?: Size, offset = 0): Rect {
     const { vw, vh } = vp();
     const w = Math.min(size?.w ?? DEFAULT_MAX_W, vw - 2 * EDGE);
-    const h = Math.max(size?.h ?? MIN_H, vh - (MENUBAR_H + TOP_GAP) - DOCK_H);
+    const h = Math.min(size?.h ?? MIN_H, vh - (MENUBAR_H + TOP_GAP) - DOCK_H);
     const baseX = Math.round((vw - w) / 2);
     const baseY = MENUBAR_H + TOP_GAP;
     const shift = offset * 28;
-    return clampRect({ x: baseX + shift, y: baseY + shift, w, h });
+    return clampRect({ x: baseX + shift, y: baseY + shift, w, h }, minSize);
 }
 
 export function maxedRect(): Rect {

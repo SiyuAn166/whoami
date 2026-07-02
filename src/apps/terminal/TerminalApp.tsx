@@ -12,6 +12,8 @@ export const terminalApp: AppDefinition = {
     icon: <TermGlyph />,
     showOnDesktop: true,
     title: `${SHELL_USER}@${SHELL_HOST} — zsh — 92×30`,
+    defaultSize: { w: 1040, h: 860 },
+    minSize: { w: 360, h: 300 },
     render: ({ data, theme, setTheme }) => <Shell data={data} theme={theme} setTheme={setTheme} />,
     renderFooter: ({ data }) => <StatusBar meta={data.meta} />,
 };

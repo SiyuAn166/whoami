@@ -8,7 +8,7 @@ export const finderApp: AppDefinition = {
     icon: <FinderGlyph />,
     showOnDesktop: true,
     title: 'Finder',
-    defaultSize: { w: 860, h: 260 },
-    minSize: { w: 560, h: 360 },
+    defaultSize: { w: 860, h: 560 },
+    minSize: { w: 360, h: 360 },
     render: ({ data }) => <FinderContent data={data} />,
 };

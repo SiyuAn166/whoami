@@ -46,7 +46,7 @@ export function useWindowManager(ctx: AppRenderContext): UseWindowManagerResult 
         }
 
         const id = `${appId}-${nextInstanceId++}`;
-        const rect = defaultRect(app.defaultSize, openCount);
+        const rect = defaultRect(app.defaultSize, app.minSize, openCount);
         const instance: WindowInstance = {
             id,
             appId,
