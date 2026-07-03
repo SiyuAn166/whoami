@@ -13,13 +13,20 @@
   background-attachment: fixed;
 }
 
-/* ---- Aurora flow: two animated blob layers, always behind all content ----
-   Each layer runs TWO parallel animations:
-     - a "drift" that translates/scales/rotates the whole layer, and
-     - a "morph" that moves & resizes each blob independently
-       (per-layer background-position + background-size lists),
-   so the blobs slide relative to one another and the overall shape
-   organically changes instead of moving rigidly.                          */
+/* ---- Aurora glow: two STATIC blurred blob layers, always behind all content ----
+   NOTE (perf): these layers used to run infinite `aurora-drift-*` + `aurora-morph-*`
+   animations. `aurora-morph-*` animated background-position/background-size, which are
+   paint-triggering (not GPU-composited): every frame re-painted a >full-screen layer
+   AND re-ran a 40–50px blur, which in turn forced all 6 backdrop-filter panels
+   (menu bar, dock, widgets) to recompute their blur every frame — pinning the CPU
+   even at idle. The aurora is now static, so at idle nothing repaints.
+
+   Want gentle motion back? Re-add ONLY a slow transform drift (transform is
+   GPU-composited), never the background-* morph, e.g.:
+     animation: aurora-drift-a 60s ease-in-out infinite alternate;
+     will-change: transform;
+   (Motion will still keep the backdrop blurs busy while it moves, so keep it slow.)
+*/
 .mac-desktop::before,
 .mac-desktop::after {
   content: "";
@@ -29,11 +36,9 @@
   /* below menubar / windows / dock / widgets */
   pointer-events: none;
   background-repeat: no-repeat;
-  will-change: transform, background-position, background-size;
   mix-blend-mode: screen;
   /* additive glow over the dark base */
 }
-
 .mac-desktop::before {
   background-image:
     radial-gradient(circle, var(--info) 0%, transparent 58%),
@@ -49,11 +54,8 @@
     58% 82%;
   opacity: 0.5;
   filter: blur(40px) saturate(140%);
-  animation:
-    aurora-drift-a 34s ease-in-out infinite alternate,
-    aurora-morph-a 23s ease-in-out infinite alternate;
+  transform: translate3d(-3%, 2%, 0) scale(1.1);
 }
-
 .mac-desktop::after {
   background-image:
     radial-gradient(circle, var(--info) 0%, transparent 58%),
@@ -69,131 +71,7 @@
     54% 16%;
   opacity: 0.42;
   filter: blur(50px) saturate(140%);
-  animation:
-    aurora-drift-b 46s ease-in-out infinite alternate,
-    aurora-morph-b 31s ease-in-out infinite alternate;
-}
-
-/* whole-layer drift */
-@keyframes aurora-drift-a {
-  0% {
-    transform: translate3d(-6%, -4%, 0) scale(1.05) rotate(0deg);
-  }
-
-  50% {
-    transform: translate3d(6%, 5%, 0) scale(1.18) rotate(6deg);
-  }
-
-  100% {
-    transform: translate3d(-3%, 7%, 0) scale(1.08) rotate(-4deg);
-  }
-}
-
-@keyframes aurora-drift-b {
-  0% {
-    transform: translate3d(5%, 4%, 0) scale(1.1) rotate(0deg);
-  }
-
-  50% {
-    transform: translate3d(-6%, -5%, 0) scale(1.22) rotate(-7deg);
-  }
-
-  100% {
-    transform: translate3d(4%, -3%, 0) scale(1.12) rotate(5deg);
-  }
-}
-
-/* per-blob position + size morph (each gradient layer moves/grows on its own) */
-@keyframes aurora-morph-a {
-  0% {
-    background-position:
-      18% 22%,
-      78% 30%,
-      58% 82%;
-    background-size:
-      60% 60%,
-      66% 66%,
-      70% 70%;
-  }
-
-  33% {
-    background-position:
-      34% 40%,
-      60% 14%,
-      40% 66%;
-    background-size:
-      78% 78%,
-      50% 50%,
-      84% 84%;
-  }
-
-  66% {
-    background-position:
-      10% 60%,
-      88% 46%,
-      70% 92%;
-    background-size:
-      52% 52%,
-      80% 80%,
-      60% 60%;
-  }
-
-  100% {
-    background-position:
-      28% 30%,
-      70% 24%,
-      50% 78%;
-    background-size:
-      70% 70%,
-      62% 62%,
-      74% 74%;
-  }
-}
-
-@keyframes aurora-morph-b {
-  0% {
-    background-position:
-      80% 68%,
-      24% 74%,
-      54% 16%;
-    background-size:
-      64% 64%,
-      58% 58%,
-      72% 72%;
-  }
-
-  33% {
-    background-position:
-      64% 52%,
-      40% 88%,
-      38% 30%;
-    background-size:
-      50% 50%,
-      76% 76%,
-      58% 58%;
-  }
-
-  66% {
-    background-position:
-      90% 80%,
-      14% 60%,
-      66% 8%;
-    background-size:
-      76% 76%,
-      52% 52%,
-      82% 82%;
-  }
-
-  100% {
-    background-position:
-      74% 62%,
-      30% 78%,
-      48% 22%;
-    background-size:
-      62% 62%,
-      66% 66%,
-      68% 68%;
-  }
+  transform: translate3d(3%, -2%, 0) scale(1.14);
 }
 
 /* Light theme: tint (multiply) instead of glow, a touch softer */
@@ -201,11 +79,9 @@
 :root[data-theme="light"] .mac-desktop::after {
   mix-blend-mode: multiply;
 }
-
 :root[data-theme="light"] .mac-desktop::before {
   opacity: 0.38;
 }
-
 :root[data-theme="light"] .mac-desktop::after {
   opacity: 0.3;
 }
@@ -216,14 +92,6 @@
   display: none;
 }
 
-/* Respect reduced-motion: keep the color, stop the drift */
-@media (prefers-reduced-motion: reduce) {
-  .mac-desktop::before,
-  .mac-desktop::after {
-    animation: none;
-  }
-}
-
 /* Dark scrim over a user-supplied wallpaper photo, for window/menu contrast */
 .wallpaper-tint {
   position: fixed;
@@ -232,7 +100,6 @@
   z-index: 0;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.12));
 }
-
 :root[data-theme="light"] .wallpaper-tint {
   background: linear-gradient(
     180deg,

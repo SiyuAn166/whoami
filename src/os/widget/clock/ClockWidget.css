@@ -34,19 +34,36 @@
 }
 
 .wgt-clock-tick--major {
-  stroke: var(--error);
-  stroke-width: 1.2;
+  stroke: var(--fg);
+  stroke-width: 2.2;
   stroke-linecap: round;
 }
 
 .wgt-clock-num {
-  font-size: 9px;
-  fill: var(--fg-dim);
-  font-weight: 700;
+  font-size: 16px;
+  fill: var(--fg);
+  font-weight: 600;
+}
+
+/* ── Hands: rotated purely by CSS transform (GPU-composited, no React re-render).
+   Each hand is drawn pointing up; --delay fast-forwards the spin to "now",
+   and it then keeps perfect real time on its own. ── */
+.wgt-clock-spin {
+  transform-box: view-box;
+  transform-origin: center;
+  animation: wgt-clock-spin var(--dur) linear infinite;
+  animation-delay: var(--delay, 0s);
+  will-change: transform;
+}
+
+@keyframes wgt-clock-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .wgt-clock-hour {
-  fill: var(--default);
+  fill: var(--fg);
 }
 
 .wgt-clock-min {
@@ -86,4 +103,13 @@
 .wgt-clock-loc {
   font-size: 11px;
   color: var(--fg-dim);
+}
+
+/* Motion-sensitive users: freeze the sweep, but still show the correct time
+   via the static --angle fallback computed at mount. */
+@media (prefers-reduced-motion: reduce) {
+  .wgt-clock-spin {
+    animation: none;
+    transform: rotate(var(--angle, 0deg));
+  }
 }

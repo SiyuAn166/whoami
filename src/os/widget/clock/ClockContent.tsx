@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { WidgetRenderContext } from "../types";
 import "./ClockWidget.css";
 
@@ -8,18 +14,19 @@ function hand(cx: number, cy: number, r: number, angleDeg: number) {
   return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
 }
 
-/** A tapered hand as a slim quadrilateral from a back-tail to the tip. */
+/** A tapered hand as a slim quadrilateral, drawn pointing straight up (12 o'clock).
+ *  It is rotated to the current time purely via CSS transform, so the geometry
+ *  is computed exactly once — never per frame. */
 function taperedHand(
   cx: number,
   cy: number,
   len: number,
   tail: number,
   half: number,
-  angleDeg: number,
 ) {
-  const tip = hand(cx, cy, len, angleDeg);
-  const back = hand(cx, cy, tail, angleDeg + 180);
-  const perp = hand(0, 0, half, angleDeg + 90);
+  const tip = hand(cx, cy, len, 0);
+  const back = hand(cx, cy, tail, 180);
+  const perp = hand(0, 0, half, 90);
   return [
     `${back.x - perp.x},${back.y - perp.y}`,
     `${tip.x - perp.x * 0.35},${tip.y - perp.y * 0.35}`,
@@ -28,53 +35,48 @@ function taperedHand(
   ].join(" ");
 }
 
-function ClockFace({ now }: { now: Date }) {
-  const cx = 100,
-    cy = 100;
-  const s = now.getSeconds() + now.getMilliseconds() / 1000;
-  const m = now.getMinutes() + s / 60;
-  const h = (now.getHours() % 12) + m / 60;
+const CX = 100;
+const CY = 100;
 
-  const secA = s * 6;
-  const minA = m * 6;
-  const hourA = h * 30;
+/* ── Static geometry — built once at module load, never re-rendered ───────── */
+const TICKS = Array.from({ length: 60 }, (_, i) => {
+  const major = i % 5 === 0;
+  const outer = hand(CX, CY, 90, i * 6);
+  const inner = hand(CX, CY, major ? 80 : 85, i * 6);
+  return { i, major, x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y };
+});
+const NUMS = Array.from({ length: 12 }, (_, k) => {
+  const n = k + 1;
+  const p = hand(CX, CY, 62, n * 30);
+  return { n, x: p.x, y: p.y };
+});
+const HOUR_PTS = taperedHand(CX, CY, 50, 14, 3.4);
+const MIN_PTS = taperedHand(CX, CY, 72, 18, 2.4);
+const SEC_TIP = hand(CX, CY, 78, 0); // (100, 22)
+const SEC_TAIL = hand(CX, CY, 20, 180); // (100, 120)
 
-  const ticks = [];
-  for (let i = 0; i < 60; i++) {
-    const major = i % 5 === 0;
-    const outer = hand(cx, cy, 90, i * 6);
-    const inner = hand(cx, cy, major ? 80 : 85, i * 6);
-    ticks.push(
-      <line
-        key={i}
-        x1={inner.x}
-        y1={inner.y}
-        x2={outer.x}
-        y2={outer.y}
-        className={major ? "wgt-clock-tick--major" : "wgt-clock-tick"}
-      />,
-    );
-  }
+/** Turn an elapsed-seconds value + full-cycle length into the CSS variables that
+ *  position a hand: a negative delay "fast-forwards" the 0→360° spin to now. */
+function spinVars(elapsedSec: number, cycleSec: number): CSSProperties {
+  return {
+    "--dur": `${cycleSec}s`,
+    "--delay": `${-elapsedSec}s`,
+    "--angle": `${(elapsedSec / cycleSec) * 360}deg`, // static fallback (reduced-motion)
+  } as CSSProperties;
+}
 
-  const nums = [];
-  for (let n = 1; n <= 12; n++) {
-    const p = hand(cx, cy, 62, n * 30);
-    nums.push(
-      <text
-        key={n}
-        x={p.x}
-        y={p.y}
-        className="wgt-clock-num"
-        textAnchor="middle"
-        dominantBaseline="central"
-      >
-        {n}
-      </text>,
-    );
-  }
-
-  const secTip = hand(cx, cy, 78, secA);
-  const secTail = hand(cx, cy, 20, secA + 180);
+/** The dial. Rendered ONCE; the three hands sweep forever on CSS transforms. */
+function ClockFace({ start }: { start: Date }) {
+  const spin = useMemo(() => {
+    const sec = start.getSeconds() + start.getMilliseconds() / 1000;
+    const minElapsed = start.getMinutes() * 60 + sec; // within the 3600s cycle
+    const hrElapsed = (start.getHours() % 12) * 3600 + minElapsed; // within 43200s
+    return {
+      hour: spinVars(hrElapsed, 43200),
+      min: spinVars(minElapsed, 3600),
+      sec: spinVars(sec, 60),
+    };
+  }, [start]);
 
   return (
     <svg
@@ -94,53 +96,63 @@ function ClockFace({ now }: { now: Date }) {
           <stop offset="42%" stopColor="#fff" stopOpacity="0.03" />
           <stop offset="100%" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
-        <filter id="clkShadow" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow
-            dx="0"
-            dy="1.2"
-            stdDeviation="1.6"
-            floodColor="#000"
-            floodOpacity="0.45"
-          />
-        </filter>
       </defs>
 
-      <circle cx={cx} cy={cy} r="94" className="wgt-clock-bezel" />
-      <circle cx={cx} cy={cy} r="90" fill="url(#clkFace)" />
-      <circle cx={cx} cy={cy} r="90" className="wgt-clock-ring" />
+      <circle cx={CX} cy={CY} r="94" className="wgt-clock-bezel" />
+      <circle cx={CX} cy={CY} r="90" fill="url(#clkFace)" />
+      <circle cx={CX} cy={CY} r="90" className="wgt-clock-ring" />
 
-      {ticks}
-      {nums}
-
-      <g filter="url(#clkShadow)">
-        <polygon
-          points={taperedHand(cx, cy, 50, 14, 3.4, hourA)}
-          className="wgt-clock-hour"
+      {TICKS.map((t) => (
+        <line
+          key={t.i}
+          x1={t.x1}
+          y1={t.y1}
+          x2={t.x2}
+          y2={t.y2}
+          className={t.major ? "wgt-clock-tick--major" : "wgt-clock-tick"}
         />
-        <polygon
-          points={taperedHand(cx, cy, 72, 18, 2.4, minA)}
-          className="wgt-clock-min"
+      ))}
+
+      {NUMS.map(({ n, x, y }) => (
+        <text
+          key={n}
+          x={x}
+          y={y}
+          className="wgt-clock-num"
+          textAnchor="middle"
+          dominantBaseline="central"
+        >
+          {n}
+        </text>
+      ))}
+
+      {/* Hands — pure CSS transforms, GPU-composited, zero per-frame React work */}
+      <g className="wgt-clock-spin" style={spin.hour}>
+        <polygon points={HOUR_PTS} className="wgt-clock-hour" />
+      </g>
+      <g className="wgt-clock-spin" style={spin.min}>
+        <polygon points={MIN_PTS} className="wgt-clock-min" />
+      </g>
+      <g className="wgt-clock-spin" style={spin.sec}>
+        <line
+          x1={SEC_TAIL.x}
+          y1={SEC_TAIL.y}
+          x2={SEC_TIP.x}
+          y2={SEC_TIP.y}
+          className="wgt-clock-sec"
+        />
+        <circle
+          cx={SEC_TIP.x}
+          cy={SEC_TIP.y}
+          r="2.4"
+          className="wgt-clock-sec-dot"
         />
       </g>
-      <line
-        x1={secTail.x}
-        y1={secTail.y}
-        x2={secTip.x}
-        y2={secTip.y}
-        className="wgt-clock-sec"
-      />
-      <circle
-        cx={secTip.x}
-        cy={secTip.y}
-        r="2.4"
-        className="wgt-clock-sec-dot"
-      />
 
-      <circle cx={cx} cy={cy} r="5.5" className="wgt-clock-hub" />
-      <circle cx={cx} cy={cy} r="2.2" className="wgt-clock-hub-in" />
-
+      <circle cx={CX} cy={CY} r="5.5" className="wgt-clock-hub" />
+      <circle cx={CX} cy={CY} r="2.2" className="wgt-clock-hub-in" />
       <ellipse
-        cx={cx}
+        cx={CX}
         cy="72"
         rx="72"
         ry="46"
@@ -152,16 +164,15 @@ function ClockFace({ now }: { now: Date }) {
 }
 
 export function ClockContent({ ctx }: { ctx: WidgetRenderContext }) {
-  const [now, setNow] = useState(() => new Date());
-  const raf = useRef<number>(0);
+  // Frozen at mount: the hands are driven entirely by CSS and stay accurate in
+  // real time, so this never needs to change.
+  const startRef = useRef<Date>(new Date());
 
+  // The ONLY thing React updates now is the date label — once every 30s, not 60fps.
+  const [dateNow, setDateNow] = useState(() => new Date());
   useEffect(() => {
-    const tick = () => {
-      setNow(new Date());
-      raf.current = requestAnimationFrame(tick);
-    };
-    raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
+    const id = window.setInterval(() => setDateNow(new Date()), 30_000);
+    return () => window.clearInterval(id);
   }, []);
 
   let place = (ctx.data.meta.location || "").split("·")[0].trim();
@@ -174,7 +185,8 @@ export function ClockContent({ ctx }: { ctx: WidgetRenderContext }) {
     /* keep meta.location fallback */
   }
   if (!place) place = "Local";
-  const date = now.toLocaleDateString([], {
+
+  const date = dateNow.toLocaleDateString([], {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -182,7 +194,7 @@ export function ClockContent({ ctx }: { ctx: WidgetRenderContext }) {
 
   return (
     <div className="wgt-clock">
-      <ClockFace now={now} />
+      <ClockFace start={startRef.current} />
       <div className="wgt-clock-meta">
         <div className="wgt-clock-date">{date}</div>
         <div className="wgt-clock-loc">
