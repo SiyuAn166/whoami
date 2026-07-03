@@ -1,10 +1,8 @@
-# Terminal Portfolio
+# whoami — macOS Desktop Portfolio
 
-A **macOS Terminal.app**–style personal portfolio built with **React + TypeScript + Tailwind CSS v3** (Vite).
+A **macOS desktop simulator** built with **React 19 + TypeScript + Tailwind CSS v3** (Vite). The entire portfolio is presented as an interactive desktop environment with menu bar, dock, and windowed applications.
 
-The whole page is presented as a Terminal window on a macOS desktop: a translucent menu bar, a rounded window with traffic-light controls, a zsh prompt, and section content that types itself out as command output. Light / dark map to the "Basic" and "Pro" Terminal profiles.
-
-All content is data-driven — update a JSON file to change every word on the page without touching any component code.
+All content is **100% data-driven** via a single `data.json` file. Update it to customize system metadata, identity, experience, projects, and skills — no component code changes required.
 
 ---
 
@@ -19,166 +17,186 @@ Open [http://localhost:5173](http://localhost:5173).
 
 ---
 
-## How Content Works
+## How It Works
 
-The app fetches a single JSON file at runtime.  
-The source URL is defined in **one place**: [`src/config.ts`](src/config.ts).
+The desktop environment renders with a **menu bar**, **dock**, and **windowed applications**. All portfolio content (identity, experience, projects, skills) is loaded from a single JSON file at runtime.
 
-```ts
-// src/config.ts
-export const GIST_URL = '/data.json';   // ← change this
-```
+### Core Elements
 
-**Two options:**
+- **Menu Bar** — System metadata (time, session, system tag) and appearance toggle (☀/☾)
+- **Dock** — Application launcher at the bottom
+- **Windows** — Draggable, resizable, focusable application windows with title bars and controls
+- **Wallpaper** — Optional custom background (defaults to macOS gradient)
 
-| Option | When to use |
-|--------|-------------|
-| `public/data.json` (default) | Local dev and self-hosted deployments |
-| GitHub Gist raw URL | Update content without rebuilding |
+### Data-Driven Everything
 
-### Using a GitHub Gist
-
-1. Go to [https://gist.github.com](https://gist.github.com) and create a **public** Gist.
-2. Name the file exactly **`data.json`**.
-3. Paste your JSON (see schema below).
-4. Click **Create public gist**.
-5. Click the **Raw** button — copy the URL. It looks like:
-   ```
-   https://gist.githubusercontent.com/YOUR_USER/GIST_ID/raw/FILE_HASH/data.json
-   ```
-6. Paste it in `src/config.ts`:
-   ```ts
-   export const GIST_URL = 'https://gist.githubusercontent.com/...';
-   ```
-7. Rebuild or re-run `npm run dev`.
-
-> **To update your portfolio later:** simply edit the Gist content. The page fetches fresh data on every visit — no rebuild needed.
+All content (system info, identity, career history, projects, skills) comes from a **single `data.json` file**. The portfolio interprets this data at runtime and renders the appropriate UI. To update your portfolio, simply edit the JSON and refresh — no rebuild required if using a live Gist.
 
 ---
 
-## `data.json` — Full Schema Reference
+## `data.json` — Complete Schema
 
-Below is the complete structure with every field documented.
+Every field shown below is live-rendered in the desktop UI. Update the JSON to change the entire portfolio.
 
 ```jsonc
 {
   // ─── meta ────────────────────────────────────────────────────────────────
   "meta": {
-    // Header badge shown top-left, e.g. "DEBIAN_VIRTUAL_TERMINAL [TTY1]"
+    // System identification string shown in the menu bar (top-left).
+    // e.g. "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64"
     "systemTag": "string",
 
-    // Uptime text shown top-right, e.g. "142d 06h 12m"
-    "uptime": "string",
+    // Live system time shown in the menu bar (HH:MM:SS format).
+    // Updated every 1 second in the UI.
+    "time": "string",
 
-    // Load average shown top-right, e.g. "0.12 0.08 0.01"
-    "load": "string",
+    // Active session identifier, e.g. "ttys000"
+    "session": "string",
 
-    // Lines revealed one-by-one during the animated boot sequence.
-    // The LAST line is styled as the "ready" line (green, italic, underlined).
-    // Use standard [ OK ] / [ ERR ] / [ WARN ] prefixes for aesthetics.
-    "bootMessages": [
-      "[ OK ] Initializing Portfolio Kernel v6.0.2...",
-      "[ OK ] Mounting /dev/identity as Read-Only...",
-      "System ready. Welcome back, Architect."
-    ],
+    // macOS welcome banner line 1, e.g. "macOS Sequoia 15.5"
+    "bannerTitle": "string",
 
-    // Copyright line in the footer, e.g. "© 2026 YOUR_NAME // ALL RIGHTS RESERVED"
+    // macOS welcome banner line 2, e.g. "Darwin 24.5.0 arm64"
+    "bannerSystem": "string",
+
+    // Copyright footer, e.g. "© 2026 Your Name"
     "copyright": "string",
 
-    // Location + encryption note in the footer.
-    // Use " // " as a separator for the two parts.
-    // e.g. "Loc: 49.28° N, 123.12° W // Enc: AES-256-GCM"
-    "location": "string"
+    // Location + coordinates shown in the footer.
+    // Format: "City, Country · Coordinates" 
+    // e.g. "Vancouver, BC · 49.28° N, 123.12° W"
+    "location": "string",
+
+    // Optional URL to a custom desktop wallpaper.
+    // If omitted, uses a generated macOS Big Sur–style gradient.
+    "wallpaper"?: "string",
+
+    // Array of contact link objects shown when `contact` command is run.
+    "contactLinks"?: [
+      { "label": "Email", "value": "email@example.com" },
+      { "label": "LinkedIn", "value": "linkedin.com/in/your-profile" }
+    ],
+
+    // Command registry: maps command names to output strings.
+    // Special value "__CLEAR__" triggers terminal clear.
+    "commands"?: {
+      "whoami": "Your Name :: Your Role",
+      "help": "Available commands: help, whoami, clear, ...",
+      "ls": "Documents  Downloads  Projects  ...",
+      "pwd": "/Users/your-name",
+      "exit": "[Process completed]"
+    },
+
+    // Optional URL to a resume PDF file.
+    // If provided, a "Resume" link appears in the identity section.
+    "resumeUrl"?: "resume.pdf",
+
+    // Nested namespace for terminal commands (alternative structure).
+    "commandStrings"?: {
+      "identity": "whoami",
+      "experience": "kubectl get roles -n siyu",
+      "projects": "kubectl get projects -n siyu",
+      "skills": "kubectl get skills -n siyu"
+    }
   },
 
   // ─── identity ────────────────────────────────────────────────────────────
   "identity": {
-    // Large hero heading. Use underscores instead of spaces for the terminal look.
-    // e.g. "Principal_Systems_Engineer"
-    "title": "string",
+    // Full name displayed as the H1 hero title.
+    "title": "Siyu An",
 
-    // Paragraph shown below the title. One or two sentences.
-    "tagline": "string"
+    // Optional short headline (role subtitle).
+    "headline"?: "Software Engineer · cloud-platform engineering & operations",
+
+    // Bio paragraph shown below the title.
+    "tagline": "I am a Software Engineer specializing in..."
   },
 
   // ─── experience ──────────────────────────────────────────────────────────
-  // Rows in the `ls -la` styled table. Ordered newest → oldest.
+  // Array of job/role entries. Ordered newest → oldest (current role first).
+  // Displayed in table format in the Terminal or Finder.
   "experience": [
     {
-      // Unix permission string (freeform, no validation).
-      // drwxr-xr-x = directory/role   -rwxr--r-- = file/contract
-      "permissions": "drwxr-xr-x",
+      // Unix-style permission string (aesthetic only), e.g. "drwxr-xr-x"
+      "permissions": "string",
 
-      // Owner column — typically "admin" for senior roles, "user" for junior.
-      "owner": "admin",
+      // Owner column, typically "siyu" or "admin"
+      "owner": "string",
 
-      // File size column — purely decorative, e.g. "2048B", "1024B"
-      "size": "2048B",
+      // File size (aesthetic), e.g. "2048B"
+      "size": "string",
 
-      // Date column — e.g. "MAR 2024", "JUN 2022"
-      "timestamp": "MAR 2024",
+      // Date in short form, e.g. "08/2024"
+      "timestamp": "string",
 
-      // Entry label shown in the Name column.
-      // Use SCREAMING_SNAKE_CASE with a leading slash.
-      // e.g. "/LEAD_ARCHITECT_COMPANY_NAME"
-      "name": "/LEAD_ARCHITECT_LAB_01",
+      // Entry name shown in table view, e.g. "INFOBLOX"
+      "name": "string",
 
-      // (optional) If true, this row is highlighted in accent color.
-      // Mark your current/most-recent role.
-      "current": true,
+      // If true, this role is highlighted as the current/active one.
+      "current"?: "boolean",
 
-      // (optional) URL to open when clicking the entry name.
-      // Only applies when current = true.
-      "url": "https://example.com"
+      // Full job title, e.g. "Software Engineer"
+      "title"?: "string",
+
+      // Company or organization name, e.g. "Infoblox Canada Inc."
+      "company"?: "string",
+
+      // Human-readable date range, e.g. "08/2024 -> PRESENT"
+      "dateRange"?: "string",
+
+      // Array of bullet-point achievements / responsibilities.
+      "highlights"?: [
+        "Achievement 1",
+        "Achievement 2"
+      ],
+
+      // Optional URL (e.g., company site or research publication DOI)
+      "url"?: "string"
     }
     // ... more entries
   ],
 
   // ─── projects ────────────────────────────────────────────────────────────
-  // Each entry renders as an ASCII-art project card with hover effects.
-  // The card grid is 1-column on mobile, 2-column on large screens.
+  // Array of project portfolio entries.
+  // Each renders as a card with ASCII-art styling.
   "projects": [
     {
-      // Project system name in SCREAMING_SNAKE_CASE.
-      // Appears in the ASCII box header.
-      "name": "ONYX_PROTOCOL",
+      // Project system name, e.g. "GOARC_MCP"
+      "name": "string",
 
-      // Semantic version string shown next to the name.
-      "version": "v2.1.0",
+      // Semantic version, e.g. "v0.1.0"
+      "version": "string",
 
-      // Short status label shown in the ASCII box header (right side).
-      // Suggested values: ACTIVE | STABLE | BETA | ARCHIVED | WIP
-      "status": "ACTIVE",
+      // Status label, e.g. "ACTIVE", "BETA", "ARCHIVED"
+      "status": "string",
 
-      // One-to-two sentence description of what the project does.
+      // One-to-two sentence description.
       "description": "string",
 
-      // Filled accent-colored badge(s) shown below the description.
-      // Use underscores instead of spaces, e.g. ["Rust_Lang", "WebRTC", "P2P"]
-      "tags": ["Rust_Lang", "WebRTC"],
+      // Tech badges shown below description.
+      // Use underscores instead of spaces, e.g. "Go_Lang", "Kubernetes"
+      "tags": ["string", "string"],
 
-      // (optional) License identifier rendered as an italic badge.
-      // e.g. "MIT_License", "Apache-2.0", "GPL-3.0"
-      "license": "MIT_License",
+      // License identifier, e.g. "MIT_License"
+      "license"?: "string",
 
-      // (optional) URL opened when the user clicks the card.
-      "url": "https://github.com/you/project"
+      // Optional URL opened when clicking the project card.
+      "url"?: "string"
     }
-    // ... up to 4 projects recommended for layout balance
+    // ... up to 4 projects recommended
   ],
 
   // ─── skills ──────────────────────────────────────────────────────────────
-  // Each entry renders as an animated progress bar.
-  // Bars animate from 0% to `level` on scroll-into-view.
-  // Grid is 1-column on mobile, 2-column on sm+.
+  // Array of skill/proficiency entries.
+  // Each renders as an animated progress bar in the Finder or Terminal output.
   "skills": [
     {
-      // Display name — use underscores, e.g. "Rust_Core", "Go_Routine"
-      "name": "Rust_Core",
+      // Skill name, e.g. "Go_Lang", "Kubernetes"
+      "name": "string",
 
-      // Proficiency level 0–100 (integer).
-      // Rendered as a percentage label and bar width.
-      "level": 95
+      // Proficiency level: 0–100 (integer).
+      // Rendered as a percentage bar and numerical label.
+      "level": "number"
     }
     // ... 6–10 skills recommended
   ]
@@ -189,32 +207,28 @@ Below is the complete structure with every field documented.
 
 ## Complete Example
 
-A ready-to-use `data.json` with placeholder content is already at [`public/data.json`](public/data.json).
+A production-ready `data.json` with real portfolio content is at [`public/data.json`](public/data.json).
 
 ---
 
 ## Theming
 
-The portfolio ships in **dark mode** (macOS "Pro" profile — near-black body) by default.  
-The **appearance toggle** (☀ / ☾) in the menu bar swaps to **light mode** (macOS "Basic" profile — white body).
+The desktop ships in **dark mode** by default (matching macOS Sequoia Pro terminal profile).  
+The **appearance toggle** (☀ / ☾) in the menu bar switches between light and dark themes — persisted to localStorage.
 
-All colors are driven by CSS custom properties (a small macOS-Terminal token system) in
-[`src/index.css`](src/index.css), defined per theme under `:root[data-theme='dark']` and
-`:root[data-theme='light']`. Key tokens:
+Colors are driven by CSS custom properties defined in [`src/styles/tokens.css`](src/styles/tokens.css):
 
 ```css
-/* src/index.css */
---bg            /* terminal body background */
---bg-elev       /* elevated panels / cards   */
---titlebar      /* window title + status bar  */
---fg / --fg-dim /* primary / muted text       */
---accent / --ok /* macOS green (prompt, active, success) */
---info          /* macOS blue  (links & paths)           */
---warn --error  /* macOS yellow / red                    */
+--bg              /* main terminal/window background */
+--bg-elev         /* elevated surfaces (menu bar, dock) */
+--titlebar        /* window title bar */
+--fg / --fg-dim   /* primary / secondary text */
+--accent          /* macOS green (active state, successful) */
+--info            /* macOS blue (links, info) */
+--warn / --error  /* macOS yellow / red */
 ```
 
-The traffic-light button colors (red `#ff5f57`, yellow `#febc2e`, green `#28c840`) are
-theme-independent, matching real macOS window controls.
+Traffic light button colors (red `#ff5f57`, yellow `#febc2e`, green `#28c840`) match real macOS window controls.
 
 ---
 
@@ -222,99 +236,79 @@ theme-independent, matching real macOS window controls.
 
 ```
 src/
-├── config.ts                  ← GIST_URL lives here
-├── types.ts                   ← PortfolioData TypeScript interface
-├── index.css                  ← macOS-Terminal tokens, window/menu-bar CSS, keyframes
-├── App.tsx                    ← Root: macOS desktop + menu bar + window chrome, wires layout
-├── main.tsx                   ← Entry point, sets initial data-theme
+├── config.ts                    ← Data source URL
+├── types/
+│   └── portfolio.ts             ← TypeScript interfaces for data.json
+├── styles/
+│   ├── tokens.css               ← Design tokens (colors, spacing, typography)
+│   ├── base.css                 ← Global resets
+│   ├── keyframes.css            ← Animations
+│   └── misc.css                 ← Utility styles
 ├── hooks/
-│   ├── usePortfolioData.ts    ← Fetch + parse Gist JSON
-│   ├── useTheme.ts            ← Dark/light (appearance) toggle, data-theme attribute
-│   └── useIntersectionObserver.ts  ← Scroll-reveal utility
-└── components/
-    ├── CommandReveal.tsx      ← Types a zsh command, then reveals its "output"
-    ├── TerminalBanner.tsx     ← macOS shell greeting (Last login / neofetch)
-    ├── HeroSection.tsx        ← useHeroState: last-login + IP
-    ├── IdentitySection.tsx    ← whoami — neofetch-style identity panel
-    ├── ExperienceSection.tsx  ← box-drawing chain of roles
-    ├── ProjectCard.tsx        ← Single project card
-    ├── ProjectsSection.tsx    ← ls -la ~/projects grid
-    ├── CapabilitiesSection.tsx ← brew list --skills grid
-    ├── SkillBar.tsx           ← Standalone proficiency bar (optional)
-    ├── RevealSection.tsx      ← IntersectionObserver fade-up wrapper (optional)
-    └── Footer.tsx             ← StatusBar + interactive zsh TerminalInput
+│   ├── usePortfolioData.ts      ← Fetch and cache portfolio JSON
+│   ├── useTheme.ts              ← Theme toggle with localStorage
+│   └── useIntersectionObserver.ts ← Scroll-based animations
+├── App.tsx                      ← Root component
+├── main.tsx                     ← Entry point
+├── os/                          ← Operating system UI layer
+│   ├── desktop/                 ← Desktop, menu bar, dock
+│   ├── window/                  ← Window management (drag, resize, focus)
+│   └── widget/                  ← System widgets
+├── apps/                        ← Windowed applications
+│   ├── registry.ts              ← App definitions
+│   ├── terminal/                ← Terminal app
+│   ├── finder/                  ← File browser app
+│   └── preview/                 ← Document viewer app
 public/
-└── data.json                  ← Sample data for local dev
+└── data.json                    ← Portfolio data
 ```
 
 ---
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server at [http://localhost:5173](http://localhost:5173) |
-| `npm run build` | Build for production into `dist/` |
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Start Vite dev server at [http://localhost:5173](http://localhost:5173) |
+| `npm run build` | Compile TypeScript + bundle for production into `dist/` |
 | `npm run preview` | Preview the production build locally |
+| `npm run typecheck` | Run TypeScript type checker (no emit) |
+| `npm run lint` | Run ESLint on source code |
+| `npm run lint:fix` | Auto-fix linting issues |
+| `npm run format` | Auto-format code (Prettier) |
+| `npm run format:check` | Check if code is properly formatted |
+| `npm run check` | Run format check + lint + typecheck (full CI suite) |
 
+---
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Scripts
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Start Vite dev server at [http://localhost:5173](http://localhost:5173) |
+| `npm run build` | Compile TypeScript + bundle for production into `dist/` |
+| `npm run preview` | Preview the production build locally |
+| `npm run typecheck` | Run TypeScript type checker |
+| `npm run lint` | Run ESLint on source code |
+| `npm run lint:fix` | Auto-fix linting issues |
+| `npm run format` | Auto-format code (Prettier) |
+| `npm run check` | Run format + lint + typecheck (full CI suite) |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Customizing Content
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Edit [`public/data.json`](public/data.json) to update:
+- System metadata (time, session, system tag, location)
+- Identity (name, headline, tagline)
+- Experience (job history with highlights)
+- Projects (portfolio projects with descriptions and links)
+- Skills (proficiency areas)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The app fetches this JSON at runtime, so changes are reflected immediately.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## License
+
+Built with React 19, TypeScript, Tailwind CSS v3, and Vite.
