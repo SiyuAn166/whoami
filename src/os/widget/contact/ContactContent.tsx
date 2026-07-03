@@ -53,21 +53,24 @@ export function ContactContent({ ctx }: { ctx: WidgetRenderContext }) {
   const links = buildLinks(ctx);
   return (
     <div className="wgt-contact">
-      {links.map((l) => (
-        <a
-          className="wgt-contact-link"
-          key={l.label}
-          href={l.href}
-          target="_blank"
-          rel="noreferrer"
-          title={l.label}
-          aria-label={l.label}
-        >
-          <span className="wgt-contact-glyph" aria-hidden>
-            <Icon kind={l.icon} />
-          </span>
-        </a>
-      ))}
+      <div className="wgt-contact-title">LET'S CONTACT</div>
+      <div className="wgt-contact-links">
+        {links.map((l) => (
+          <a
+            className="wgt-contact-link"
+            key={l.label}
+            href={l.href}
+            target="_blank"
+            rel="noreferrer"
+            title={l.label}
+            aria-label={l.label}
+          >
+            <span className="wgt-contact-glyph" aria-hidden>
+              <Icon kind={l.icon} />
+            </span>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }

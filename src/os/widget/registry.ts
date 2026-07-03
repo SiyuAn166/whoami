@@ -28,10 +28,10 @@ export const WIDGETS = CATALOG;
 
 /** Widgets placed on the desktop on first load */
 export const DEFAULT_ACTIVE_WIDGET_IDS: string[] = [
+  contactWidget.id,
   // clockWidget.id,
   // skillsWidget.id,
   // featuredProjectWidget.id,
-  // contactWidget.id,
 ];
 
 export function getWidget(id: string): WidgetDefinition | undefined {

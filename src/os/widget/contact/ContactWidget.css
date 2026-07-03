@@ -1,9 +1,25 @@
 /* Contact widget styles */
 .wgt-contact {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
   height: 100%;
+}
+
+.wgt-contact-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  opacity: 0.4;
+  align-self: center;
+}
+
+.wgt-contact-links {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
 }
 
 .wgt-contact-link {
@@ -16,6 +32,9 @@
   color: var(--fg);
   background: var(--fg-faint);
   text-decoration: none;
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease;
 }
 
 .wgt-contact-link:hover {

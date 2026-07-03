@@ -6,6 +6,15 @@ export type Link = {
   icon: "email" | "linkedin" | "github" | "link";
 };
 
+// Normalize a raw value into a valid absolute href.
+// data.json stores links without a protocol (e.g. "linkedin.com/in/..."),
+// which the browser would otherwise treat as a relative path.
+function normalizeUrl(value: string): string {
+  const v = value.trim();
+  if (/^(https?:\/\/|mailto:)/i.test(v)) return v;
+  return `https://${v}`;
+}
+
 export function buildLinks(ctx: WidgetRenderContext): Link[] {
   const contactLinks = ctx.data?.meta?.contactLinks ?? [];
   const githubCommand = ctx.data?.meta?.commands?.social
@@ -23,10 +32,16 @@ export function buildLinks(ctx: WidgetRenderContext): Link[] {
 
   const out: Link[] = [];
   if (email)
-    out.push({ href: `mailto:${email}`, label: "Email", icon: "email" });
+    out.push({ href: `mailto:${email.trim()}`, label: "Email", icon: "email" });
   if (linkedin)
-    out.push({ href: linkedin, label: "LinkedIn", icon: "linkedin" });
-  if (github) out.push({ href: github, label: "GitHub", icon: "github" });
-  if (website) out.push({ href: website, label: "Website", icon: "link" });
+    out.push({
+      href: normalizeUrl(linkedin),
+      label: "LinkedIn",
+      icon: "linkedin",
+    });
+  if (github)
+    out.push({ href: normalizeUrl(github), label: "GitHub", icon: "github" });
+  if (website)
+    out.push({ href: normalizeUrl(website), label: "Website", icon: "link" });
   return out;
 }
