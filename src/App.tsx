@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Desktop } from './desktop/Desktop';
+import { Desktop } from './os/desktop/Desktop';
 import './index.css';
 
 function App() {

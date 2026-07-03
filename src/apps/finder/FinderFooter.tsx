@@ -1,4 +1,4 @@
-import type { PortfolioData } from '../../types';
+import type { PortfolioData } from '../../types/portfolio';
 import { useFinderNav, SECTION_LABEL } from './finderNav';
 
 /**

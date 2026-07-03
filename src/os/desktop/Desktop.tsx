@@ -1,8 +1,8 @@
-import { getApp } from '../apps/registry';
-import { usePortfolioData } from '../hooks/usePortfolioData';
-import { useTheme } from '../hooks/useTheme';
-import { useWindowManager } from '../windows/WindowManager';
-import { WidgetLayer } from '../widgets/WidgetLayer';
+import { getApp } from '../../apps/registry';
+import { usePortfolioData } from '../../hooks/usePortfolioData';
+import { useTheme } from '../../hooks/useTheme';
+import { useWindowManager } from '../window/WindowManager';
+import { WidgetLayer } from '../widget/WidgetLayer';
 import { Dock } from './Dock';
 import { MenuBar } from './MenuBar';
 /** The main view of the site: menu bar, desktop icons, windows, and dock.

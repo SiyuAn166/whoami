@@ -1,12 +1,12 @@
-import { clockWidget } from './items/ClockWidget';
-import { contactWidget } from './items/ContactWidget';
-import { featuredProjectWidget } from './items/FeaturedProjectWidget';
-import { skillsWidget } from './items/SkillsWidget';
+import { clockWidget } from './item/ClockWidget';
+import { contactWidget } from './item/ContactWidget';
+import { featuredProjectWidget } from './item/FeaturedProjectWidget';
+import { skillsWidget } from './item/SkillsWidget';
 import type { WidgetDefinition } from './types';
 // Optional extras — uncomment to place on the desktop:
-// import { calendarWidget } from './items/CalendarWidget';
-// import { stickyNoteWidget } from './items/StickyNoteWidget';
-// import { terminalTipWidget } from './items/TerminalTipWidget';
+// import { calendarWidget } from './item/CalendarWidget';
+// import { stickyNoteWidget } from './item/StickyNoteWidget';
+// import { terminalTipWidget } from './item/TerminalTipWidget';
 
 /** Single source of truth for every desktop widget. Mirrors apps/registry. */
 export const WIDGETS: WidgetDefinition[] = [

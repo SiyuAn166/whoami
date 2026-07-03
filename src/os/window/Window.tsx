@@ -5,7 +5,7 @@ import {
   MENUBAR_H,
   MIN_H, MIN_W, vp,
   type Rect, type WindowInstance,
-} from './windowTypes';
+} from './types';
 
 interface WindowProps {
   instance: WindowInstance;

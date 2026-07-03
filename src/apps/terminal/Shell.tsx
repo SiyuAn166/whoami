@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ExperienceSection } from '../../components/ExperienceSection';
-import { IdentitySection } from '../../components/IdentitySection';
-import { ProjectsSection } from '../../components/ProjectsSection';
-import { SkillSection } from '../../components/SkillSection';
+import { ExperienceSection } from '../finder/section/ExperienceSection';
+import { IdentitySection } from '../finder/section/IdentitySection';
+import { ProjectsSection } from '../finder/section/ProjectsSection';
+import { SkillSection } from '../finder/section/SkillSection';
 import {
     buildFS, isDir, listDir, pathString, resolve, treeString, type VDir,
-} from '../../shell/vfs';
-import type { PortfolioData } from '../../types';
+} from './vfs';
+import type { PortfolioData } from '../../types/portfolio';
 import { MatrixRain } from './MatrixRain';
 
 const USER = 'siyu';

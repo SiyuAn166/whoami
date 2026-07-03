@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ExperienceEntry } from '../types';
+import type { ExperienceEntry } from '../../../types/portfolio';
 
 /* ───────────────────────── shared helpers ───────────────────────── */
 

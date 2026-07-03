@@ -1,7 +1,7 @@
-import { ExperienceSection } from '../../components/ExperienceSection';
-import { ProjectsSection } from '../../components/ProjectsSection';
-import { CapabilitiesSection } from '../../components/SkillSection';
-import type { PortfolioData } from '../../types';
+import { ExperienceSection } from './section/ExperienceSection';
+import { ProjectsSection } from './section/ProjectsSection';
+import { CapabilitiesSection } from './section/SkillSection';
+import type { PortfolioData } from '../../types/portfolio';
 import { FinderSidebar } from './FinderSidebar';
 import { useFinderNav } from './finderNav';
 import '../../styles/finder.css';

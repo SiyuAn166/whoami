@@ -1,4 +1,4 @@
-import type { PortfolioData } from '../types';
+import type { PortfolioData } from '../../types/portfolio';
 
 /** A file whose `cat` output is a rendered React section rather than text. */
 export type RenderKind = 'identity' | 'experience' | 'projects' | 'skills' | 'contact';

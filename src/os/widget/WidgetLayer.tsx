@@ -1,7 +1,7 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import type { AppRenderContext } from '../apps/types';
-import '../styles/widgets.css';
+import type { AppRenderContext } from '../../apps/types';
+import '../../styles/widgets.css';
 import { WidgetFrame } from './WidgetFrame';
 import { WIDGETS } from './registry';
 import type { WidgetRenderContext, WidgetSize } from './types';

@@ -1,8 +1,8 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { getApp } from '../apps/registry';
-import type { AppRenderContext } from '../apps/types';
+import { getApp } from '../../apps/registry';
+import type { AppRenderContext } from '../../apps/types';
 import { Window } from './Window';
-import { defaultRect, type Rect, type WindowInstance } from './windowTypes';
+import { defaultRect, type Rect, type WindowInstance } from './types';
 
 interface UseWindowManagerResult {
   instances: WindowInstance[];
