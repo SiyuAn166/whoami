@@ -1,4 +1,5 @@
 import type { WidgetDefinition, WidgetRenderContext } from '../types';
+import './TerminalTipWidget.css';
 
 function TerminalContent({ ctx }: { ctx: WidgetRenderContext }) {
   const who = ctx.data.meta.commands?.whoami ?? ctx.data.identity.title;

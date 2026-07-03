@@ -1,8 +1,8 @@
 /* ─── Finder app ─────────────────────────────────────
    macOS-faithful Finder chrome: unified toolbar (in the titlebar row,
-   next to the traffic lights), Favorites sidebar, content pane and a
-   bottom breadcrumb path bar. Uses the shared theme tokens so it
-   recolors automatically in light/dark.
+   next to the traffic lights), content pane and a bottom breadcrumb
+   path bar. Favorites sidebar rules live in ./FinderSidebar.css.
+   Uses the shared theme tokens so it recolors automatically in light/dark.
    ──────────────────────────────────────────────────── */
 
 /* Unified toolbar — injected into .titlebar next to .traffic-lights */
@@ -67,58 +67,6 @@
   margin: -20px -22px;
 }
 
-/* Favorites sidebar */
-.finder-sidebar {
-  width: 200px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--border);
-  background: var(--menubar);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-  padding: 12px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.finder-group-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--fg-dim);
-  padding: 4px 8px 6px;
-  letter-spacing: 0.02em;
-}
-.finder-item {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--fg);
-  border-radius: 6px;
-  padding: 5px 8px;
-  font-size: 13px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.12s;
-}
-.finder-item:hover {
-  background: var(--fg-faint);
-}
-.finder-item.is-selected {
-  background: var(--sel-bg);
-}
-.finder-item-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  color: var(--info);
-  flex-shrink: 0;
-}
-
 /* Content pane */
 .finder-pane {
   flex: 1;
@@ -170,5 +118,4 @@
 /* Compact: drop the centered title padding on narrow windows */
 @media (max-width: 620px) {
   .finder-toolbar-title { padding: 0 70px; }
-  .finder-sidebar { width: 168px; }
 }

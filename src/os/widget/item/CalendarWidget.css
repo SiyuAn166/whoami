@@ -1,0 +1,27 @@
+/* ─── Calendar ───────────────────────────────────────────────────────────── */
+.wgt-cal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.wgt-cal-month {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--error);
+}
+
+.wgt-cal-day {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.wgt-cal-weekday {
+  font-size: 12.5px;
+  color: var(--fg-dim);
+}

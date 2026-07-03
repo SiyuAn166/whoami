@@ -1,7 +1,7 @@
 /* ============================================================
    Projects — Finder "Launchpad" icon grid + Quick Look card
    (variant="finder"). The kubectl terminal view reuses
-   .kube-row from components.css, so needs no CSS here.
+   .kube-row from ../../../styles/misc.css, so needs no CSS here.
    ============================================================ */
 
 .lp-wrap {

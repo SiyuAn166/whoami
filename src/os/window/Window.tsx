@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import './Window.css';
 import {
   clamp, clampRect, COARSE, DOCK_H, HANDLES,
   maxedRect,

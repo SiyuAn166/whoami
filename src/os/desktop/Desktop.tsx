@@ -5,6 +5,8 @@ import { useWindowManager } from '../window/WindowManager';
 import { WidgetLayer } from '../widget/WidgetLayer';
 import { Dock } from './Dock';
 import { MenuBar } from './MenuBar';
+import './Desktop.css';
+import './DesktopIcons.css';
 /** The main view of the site: menu bar, desktop icons, windows, and dock.
  */
 export function Desktop() {

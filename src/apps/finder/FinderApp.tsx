@@ -1,4 +1,5 @@
 import type { AppDefinition } from '../types';
+import './finder.css';
 import { FinderContent } from './FinderContent';
 import { FinderFooter } from './FinderFooter';
 import { FinderToolbar } from './FinderToolbar';

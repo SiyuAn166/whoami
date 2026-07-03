@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Desktop } from './os/desktop/Desktop';
-import './index.css';
 
 function App() {
     // Prevent the default context menu from appearing anywhere in the app.

@@ -1,4 +1,5 @@
 import type { WidgetDefinition, WidgetRenderContext } from '../types';
+import './StickyNoteWidget.css';
 
 function NoteContent({ ctx }: { ctx: WidgetRenderContext }) {
   const first = (ctx.data.identity.tagline || '').split('.')[0].trim();

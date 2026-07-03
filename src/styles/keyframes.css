@@ -1,0 +1,46 @@
+/* ─── Shared keyframes (used by multiple components) ────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes progressFill {
+  from { width: 0; }
+  to   { width: var(--target-width); }
+}
+
+/* ─── Terminal block cursor (shared utility class) ───────────────────────── */
+.cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  background: var(--fg);
+  vertical-align: sub;
+  flex-shrink: 0;
+  animation: blink 1s steps(1) infinite;
+}
+
+/* ─── Respect reduced-motion: kill blink, reveal, and cursor animation ───
+   Cross-component selector list — kept here rather than split across
+   several different component CSS files, since it's a single global
+   media-query rule that must stay in one cascade position. */
+@media (prefers-reduced-motion: reduce) {
+  .cursor,
+  .term-cursor.active,
+  .reveal-content {
+    animation: none !important;
+  }
+  /* No genie/zoom motion for window or dock */
+  .mac-window,
+  .dock,
+  .dock-icon {
+    transition: none !important;
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { WidgetDefinition, WidgetRenderContext } from '../types';
+import './SkillsWidget.css';
 
 const R = 20;
 const C = 2 * Math.PI * R;

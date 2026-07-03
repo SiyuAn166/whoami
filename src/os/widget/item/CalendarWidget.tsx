@@ -1,4 +1,5 @@
 import type { WidgetDefinition } from '../types';
+import './CalendarWidget.css';
 
 function CalendarContent() {
   const now = new Date();

@@ -1,7 +1,7 @@
 /* ============================================================
    Experience — Finder "column" (Miller) view (variant="finder").
-   Terminal (kubectl) view reuses .kube-row from components.css
-   plus inline styles in the component, so it needs no CSS here.
+   Terminal (kubectl) view reuses .kube-row from ../../../styles/misc.css,
+   plus inline styles in the component, so it needs no other CSS here.
    ============================================================ */
 
 .finder-miller {

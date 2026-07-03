@@ -1,0 +1,46 @@
+/* ─── Desktop widget layer ───────────────────────────────────────────────
+   Right-aligned column of macOS-style widgets. Sits above the wallpaper and
+   below any open windows (windows render later in the DOM at matching z-index,
+   so they paint on top). The layer itself is click-through; only cards catch
+   pointer events. All colors use existing theme tokens. */
+.wgt-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* click-through; only cards catch pointer events */
+}
+
+/* Draggable wrapper — one per widget. Positioned via translate3d from JS.
+   Snaps to an invisible 20px grid on release so cards line up with each other. */
+.wgt-drag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  touch-action: none;
+  /* let us own the drag gesture on touch */
+  cursor: grab;
+  will-change: transform;
+}
+
+.wgt-drag.dragging {
+  cursor: grabbing;
+  z-index: 50;
+}
+
+/* No lift animation while grabbing, and freeze the card's own transition. */
+.wgt-drag.dragging .wgt {
+  transform: none;
+  transition: none;
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+/* ─── Responsive: hide widgets on narrow screens (they'd cover content) ───── */
+@media (max-width: 900px) {
+  .wgt-layer {
+    display: none;
+  }
+}

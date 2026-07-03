@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import './WidgetFrame.css';
 import type { WidgetSize, WidgetVariant } from './types';
 
 interface WidgetFrameProps {
@@ -14,7 +15,7 @@ interface WidgetFrameProps {
 /**
  * The shared shell for every widget: liquid-glass material, rounded corners,
  * shadow, size tier and optional header. Individual widgets only supply
- * content; all chrome lives here + in styles/widgets.css.
+ * content; all chrome lives here + in ./WidgetFrame.css.
  */
 export function WidgetFrame({
   size,

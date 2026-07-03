@@ -1,5 +1,6 @@
 import { APPS } from '../../apps/registry';
 import { Icon } from './Icon';
+import './Dock.css';
 
 interface DockProps {
     isOpen: (appId: string) => boolean;

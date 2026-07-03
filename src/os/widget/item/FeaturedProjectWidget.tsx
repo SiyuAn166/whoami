@@ -1,4 +1,5 @@
 import type { WidgetDefinition, WidgetRenderContext } from '../types';
+import './FeaturedProjectWidget.css';
 
 function FeaturedContent({ ctx }: { ctx: WidgetRenderContext }) {
   const p = ctx.data.projects[0];

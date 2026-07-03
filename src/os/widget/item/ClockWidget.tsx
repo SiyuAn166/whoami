@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { WidgetDefinition, WidgetRenderContext } from '../types';
+import './ClockWidget.css';
 
 /** Polar → cartesian on a clock face. angleDeg: 0 = 12 o'clock, clockwise. */
 function hand(cx: number, cy: number, r: number, angleDeg: number) {

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import '../../../styles/skills.css';
+import './SkillSection.css';
 import type { Skill } from '../../../types/portfolio';
 
 /* ───────────────────────── shared ───────────────────────── */

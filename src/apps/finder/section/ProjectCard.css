@@ -10,14 +10,3 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
 }
-
-/* ─── Terminal experience rows (variant="terminal") ── */
-.kube-row {
-  border-radius: 6px;
-  transition: background-color 0.12s;
-}
-.kube-row:hover,
-.kube-row:focus-visible {
-  background: var(--fg-faint);
-  outline: none;
-}

@@ -4,7 +4,7 @@
    circular proficiency ring (percentage in the center). The ring
    is the hero proficiency signal and animates in on mount; the
    monogram + tier tint the card via --tier.
-   The kubectl terminal view reuses .kube-row from components.css.
+   The kubectl terminal view reuses .kube-row from ../../../styles/misc.css.
    ============================================================ */
 
 .sg-wrap {

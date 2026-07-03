@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import './MenuBar.css';
 
 function MenuClock() {
     const [time, setTime] = useState('');

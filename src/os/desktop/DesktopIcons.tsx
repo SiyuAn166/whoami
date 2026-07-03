@@ -1,5 +1,6 @@
 import { APPS } from '../../apps/registry';
 import { Icon } from './Icon';
+import './DesktopIcons.css';
 
 interface DesktopIconsProps {
     openApp: (appId: string) => void;

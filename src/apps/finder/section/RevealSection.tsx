@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { useIntersectionObserver } from '../../../hooks/useIntersectionObserver';
+import './RevealSection.css';
 
 interface RevealSectionProps {
     children: ReactNode;

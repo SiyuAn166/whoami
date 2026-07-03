@@ -9,3 +9,16 @@
 .glow       { text-shadow: none; }
 .border-dim { border-color: var(--border); }
 .border-hi  { border-color: var(--border-hi); }
+
+/* ─── Terminal experience rows (variant="terminal") ──
+   Shared by ExperienceSection, ProjectSection, and SkillSection — kept here
+   rather than duplicated/owned by a single component. */
+.kube-row {
+  border-radius: 6px;
+  transition: background-color 0.12s;
+}
+.kube-row:hover,
+.kube-row:focus-visible {
+  background: var(--fg-faint);
+  outline: none;
+}

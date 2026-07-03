@@ -1,4 +1,5 @@
 import { navigateTo, useFinderNav, SECTION_LABEL, type FinderSection } from './finderNav';
+import './FinderSidebar.css';
 
 export type { FinderSection };
 

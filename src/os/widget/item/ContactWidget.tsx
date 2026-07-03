@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { WidgetDefinition, WidgetRenderContext } from '../types';
+import './ContactWidget.css';
 
 type IconKind = 'email' | 'linkedin' | 'github' | 'link';
 
