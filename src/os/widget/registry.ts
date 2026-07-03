@@ -1,24 +1,41 @@
+// src/os/widget/registry.ts
 import { clockWidget } from "./clock/ClockWidget";
-import { contactWidget } from "./contact/ContactWidget";
-import { featuredProjectWidget } from "./featured/FeaturedProjectWidget";
 import { skillsWidget } from "./skills/SkillsWidget";
+import { featuredProjectWidget } from "./featured/FeaturedProjectWidget";
+import { contactWidget } from "./contact/ContactWidget";
+// Previously optional extras — now imported so they can be added at runtime
+// from the "Add Widgets" gallery (they are NOT active by default, see below).
+import { calendarWidget } from "./calendar/CalendarWidget";
+import { stickyNoteWidget } from "./sticky/StickyNoteWidget";
+import { terminalTipWidget } from "./terminal/TerminalTipWidget";
 import type { WidgetDefinition } from "./types";
-// Optional extras — uncomment to place on the desktop:
-// import { calendarWidget } from './calendar/CalendarWidget';
-// import { stickyNoteWidget } from './sticky/StickyNoteWidget';
-// import { terminalTipWidget } from './terminal/TerminalTipWidget';
 
-/** Single source of truth for every desktop widget. Mirrors apps/registry. */
-export const WIDGETS: WidgetDefinition[] = [
+/**
+ * Single source of truth for every desktop widget — the full "Add Widgets"
+ * catalog. Mirrors apps/registry. Which of these are actually on the desktop is
+ * decided at runtime by `activeIds` (see useActiveWidgets), NOT by this array.
+ */
+export const CATALOG: WidgetDefinition[] = [
   clockWidget,
   skillsWidget,
   featuredProjectWidget,
   contactWidget,
-  // calendarWidget,
-  // stickyNoteWidget,
-  // terminalTipWidget,
+  calendarWidget,
+  stickyNoteWidget,
+  terminalTipWidget,
+];
+
+/** Back-compat alias for existing imports. WidgetLayer now filters by activeIds. */
+export const WIDGETS = CATALOG;
+
+/** Widgets placed on the desktop on first load (the old hard-coded set). */
+export const DEFAULT_ACTIVE_WIDGET_IDS: string[] = [
+  clockWidget.id,
+  skillsWidget.id,
+  featuredProjectWidget.id,
+  contactWidget.id,
 ];
 
 export function getWidget(id: string): WidgetDefinition | undefined {
-  return WIDGETS.find((w) => w.id === id);
+  return CATALOG.find((w) => w.id === id);
 }

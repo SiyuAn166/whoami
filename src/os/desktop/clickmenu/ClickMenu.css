@@ -1,0 +1,95 @@
+/* src/os/desktop/clickmenu/ClickMenu.css
+ * macOS Sequoia context menu. Chrome uses SF Pro (system font), NOT monospace.
+ * Reuses index.css tokens (--fg); only menu vibrancy/selection tokens added here.
+ */
+:root[data-theme="dark"] {
+  --clickmenu-bg: rgba(44, 46, 52, 0.62);
+  --clickmenu-stroke: rgba(255, 255, 255, 0.14);
+  --clickmenu-sel: #0a63e6;
+  --clickmenu-sel-fg: #fff;
+}
+:root[data-theme="light"] {
+  --clickmenu-bg: rgba(246, 246, 248, 0.72);
+  --clickmenu-stroke: rgba(0, 0, 0, 0.1);
+  --clickmenu-sel: #0a63e6;
+  --clickmenu-sel-fg: #fff;
+}
+
+.clickmenu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 216px;
+  padding: 5px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
+    sans-serif;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--clickmenu-bg);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 0.5px solid var(--clickmenu-stroke);
+  border-radius: 9px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.44),
+    0 0 0 0.5px rgba(0, 0, 0, 0.2);
+  animation: clickmenu-in 0.1s ease;
+}
+@keyframes clickmenu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.clickmenu__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 5px;
+  cursor: default;
+}
+.clickmenu__icon {
+  width: 17px;
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.85;
+}
+.clickmenu__label {
+  flex: 1;
+}
+.clickmenu__shortcut {
+  font-size: 12px;
+  opacity: 0.55;
+}
+.clickmenu__item:hover {
+  background: var(--clickmenu-sel);
+  color: var(--clickmenu-sel-fg);
+}
+.clickmenu__item:hover .clickmenu__icon,
+.clickmenu__item:hover .clickmenu__shortcut {
+  color: var(--clickmenu-sel-fg);
+  opacity: 0.9;
+}
+.clickmenu__item.is-disabled {
+  opacity: 0.38;
+}
+.clickmenu__item.is-disabled:hover {
+  background: transparent;
+  color: var(--fg);
+}
+.clickmenu__sep {
+  height: 0.5px;
+  background: var(--clickmenu-stroke);
+  margin: 5px 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .clickmenu {
+    animation: none;
+  }
+}

@@ -3,11 +3,13 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { AppRenderContext } from "../../apps/types";
 import "./WidgetLayer.css";
 import { WidgetFrame } from "./WidgetFrame";
-import { WIDGETS } from "./registry";
+import { CATALOG, DEFAULT_ACTIVE_WIDGET_IDS } from "./registry";
 import type { WidgetRenderContext, WidgetSize } from "./types";
 
 interface WidgetLayerProps extends AppRenderContext {
   openApp: (appId: string) => void;
+  /** Widget ids currently on the desktop. Defaults to the built-in set. */
+  activeIds?: string[];
 }
 
 /** Invisible grid the widgets snap to on release, so they line up with each
@@ -64,9 +66,10 @@ function loadSaved(): PosMap {
  */
 export function WidgetLayer(props: WidgetLayerProps) {
   const ctx: WidgetRenderContext = props;
+  const active = props.activeIds ?? DEFAULT_ACTIVE_WIDGET_IDS;
 
-  const visible = WIDGETS.filter((w) =>
-    w.enabled ? w.enabled(ctx) : true,
+  const visible = CATALOG.filter(
+    (w) => active.includes(w.id) && (w.enabled ? w.enabled(ctx) : true),
   ).sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
 
   // Compute the default left-column layout, then let saved positions override.
@@ -120,6 +123,27 @@ export function WidgetLayer(props: WidgetLayerProps) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // When a widget is added at runtime (activeIds grows), give any card that has
+  // no position yet a default slot in the left column, stacked below the rest —
+  // so newly-added widgets never pile up on top of each other.
+  useLayoutEffect(() => {
+    setPositions((prev) => {
+      const missing = visible.filter((w) => !prev[w.id]);
+      if (missing.length === 0) return prev;
+      const next = { ...prev };
+      let y = MARGIN.top;
+      for (const w of visible) {
+        if (next[w.id]) y = Math.max(y, next[w.id].y + TIER_H[w.size] + 16);
+      }
+      for (const w of missing) {
+        next[w.id] = w.defaultPos ?? { x: MARGIN.left, y };
+        y += TIER_H[w.size] + 16;
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible.map((w) => w.id).join(",")]);
 
   const sizeOf = useCallback((id: string): { w: number; h: number } => {
     const el = layerRef.current?.querySelector<HTMLElement>(

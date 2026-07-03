@@ -1,8 +1,11 @@
 import { getApp } from "../../apps/registry";
 import { usePortfolioData } from "../../hooks/usePortfolioData";
 import { useTheme } from "../../hooks/useTheme";
+import { DEFAULT_ACTIVE_WIDGET_IDS } from "../widget/registry";
+import { useActiveWidgets } from "../widget/useActiveWidgets";
 import { WidgetLayer } from "../widget/WidgetLayer";
 import { useWindowManager } from "../window/WindowManager";
+import { DesktopClickMenu } from "./clickmenu/DesktopClickMenu";
 import "./Desktop.css";
 import "./DesktopIcons.css";
 import { Dock } from "./dock/Dock";
@@ -64,11 +67,13 @@ function DesktopReady({
   setTheme,
 }: DesktopReadyProps) {
   const wm = useWindowManager({ data, theme, setTheme });
+  const { activeIds, addWidget } = useActiveWidgets(DEFAULT_ACTIVE_WIDGET_IDS);
+  const widgetCtx = { data, theme, setTheme, openApp: wm.openApp };
   const focusedApp = wm.instances.find((w) => w.id === wm.focusedId);
   const menuBarAppName =
     (focusedApp && getApp(focusedApp.appId)?.name) ?? "Finder";
   return (
-    <div
+    <DesktopClickMenu
       className="mac-desktop"
       style={
         data.meta.wallpaper
@@ -79,6 +84,10 @@ function DesktopReady({
             }
           : undefined
       }
+      ctx={widgetCtx}
+      activeIds={activeIds}
+      onAddWidget={addWidget}
+      onToggleTheme={toggleTheme}
     >
       {data.meta.wallpaper && <div className="wallpaper-tint" aria-hidden />}
       <MenuBar
@@ -92,9 +101,10 @@ function DesktopReady({
         theme={theme}
         setTheme={setTheme}
         openApp={wm.openApp}
+        activeIds={activeIds}
       />
       {wm.render()}
       <Dock isOpen={wm.isOpen} openApp={wm.openApp} />
-    </div>
+    </DesktopClickMenu>
   );
 }

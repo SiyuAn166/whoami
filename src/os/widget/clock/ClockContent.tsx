@@ -1,5 +1,6 @@
 import {
   type CSSProperties,
+  memo,
   useEffect,
   useMemo,
   useRef,
@@ -65,22 +66,13 @@ function spinVars(elapsedSec: number, cycleSec: number): CSSProperties {
   } as CSSProperties;
 }
 
-/** The dial. Rendered ONCE; the three hands sweep forever on CSS transforms. */
-function ClockFace({ start }: { start: Date }) {
-  const spin = useMemo(() => {
-    const sec = start.getSeconds() + start.getMilliseconds() / 1000;
-    const minElapsed = start.getMinutes() * 60 + sec; // within the 3600s cycle
-    const hrElapsed = (start.getHours() % 12) * 3600 + minElapsed; // within 43200s
-    return {
-      hour: spinVars(hrElapsed, 43200),
-      min: spinVars(minElapsed, 3600),
-      sec: spinVars(sec, 60),
-    };
-  }, [start]);
-
+/* ── The DIAL: everything static. Painted exactly once, then memoized so it is
+ *    never rebuilt or repainted again — not even when the date label ticks.
+ *    The hands are NOT in here (see below), so this raster stays frozen. ───── */
+const ClockDial = memo(function ClockDial() {
   return (
     <svg
-      className="wgt-clock-face"
+      className="wgt-clock-layer"
       viewBox="0 0 200 200"
       role="img"
       aria-label="Analog clock"
@@ -91,11 +83,6 @@ function ClockFace({ start }: { start: Date }) {
           <stop offset="55%" stopColor="var(--fg)" stopOpacity="0.02" />
           <stop offset="100%" stopColor="#000" stopOpacity="0.18" />
         </radialGradient>
-        <linearGradient id="clkGlass" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fff" stopOpacity="0.22" />
-          <stop offset="42%" stopColor="#fff" stopOpacity="0.03" />
-          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
       </defs>
 
       <circle cx={CX} cy={CY} r="94" className="wgt-clock-bezel" />
@@ -125,15 +112,77 @@ function ClockFace({ start }: { start: Date }) {
           {n}
         </text>
       ))}
+    </svg>
+  );
+});
 
-      {/* Hands — pure CSS transforms, GPU-composited, zero per-frame React work */}
-      <g className="wgt-clock-spin" style={spin.hour}>
+/* ── The CAP: hub + glass sheen. Static, sits on TOP of the hands so the
+ *    z-order (dial → hour → min → sec → hub → glass) matches the original. ── */
+const ClockCap = memo(function ClockCap() {
+  return (
+    <svg
+      className="wgt-clock-layer wgt-clock-cap"
+      viewBox="0 0 200 200"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="clkGlass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.22" />
+          <stop offset="42%" stopColor="#fff" stopOpacity="0.03" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <circle cx={CX} cy={CY} r="5.5" className="wgt-clock-hub" />
+      <circle cx={CX} cy={CY} r="2.2" className="wgt-clock-hub-in" />
+      <ellipse cx={CX} cy="72" rx="72" ry="46" fill="url(#clkGlass)" />
+    </svg>
+  );
+});
+
+/** A single hand lives in its OWN <svg> overlay → its own GPU compositor layer.
+ *  Rotating it is a composite-only op: no paint, and the dial never repaints. */
+function Hand({
+  vars,
+  children,
+}: {
+  vars: CSSProperties;
+  children: React.ReactNode;
+}) {
+  return (
+    <svg
+      className="wgt-clock-layer wgt-clock-hand"
+      viewBox="0 0 200 200"
+      style={vars}
+      aria-hidden
+    >
+      {children}
+    </svg>
+  );
+}
+
+/** The moving parts. Rebuilt only when `start` changes (i.e. never in practice),
+ *  so the three overlay layers are set up once and then animate on their own. */
+const ClockHands = memo(function ClockHands({ start }: { start: Date }) {
+  const spin = useMemo(() => {
+    const sec = start.getSeconds() + start.getMilliseconds() / 1000;
+    const minElapsed = start.getMinutes() * 60 + sec; // within the 3600s cycle
+    const hrElapsed = (start.getHours() % 12) * 3600 + minElapsed; // within 43200s
+    return {
+      hour: spinVars(hrElapsed, 43200),
+      min: spinVars(minElapsed, 3600),
+      sec: spinVars(sec, 60),
+    };
+  }, [start]);
+
+  return (
+    <>
+      <Hand vars={spin.hour}>
         <polygon points={HOUR_PTS} className="wgt-clock-hour" />
-      </g>
-      <g className="wgt-clock-spin" style={spin.min}>
+      </Hand>
+      <Hand vars={spin.min}>
         <polygon points={MIN_PTS} className="wgt-clock-min" />
-      </g>
-      <g className="wgt-clock-spin" style={spin.sec}>
+      </Hand>
+      <Hand vars={spin.sec}>
         <line
           x1={SEC_TAIL.x}
           y1={SEC_TAIL.y}
@@ -147,21 +196,10 @@ function ClockFace({ start }: { start: Date }) {
           r="2.4"
           className="wgt-clock-sec-dot"
         />
-      </g>
-
-      <circle cx={CX} cy={CY} r="5.5" className="wgt-clock-hub" />
-      <circle cx={CX} cy={CY} r="2.2" className="wgt-clock-hub-in" />
-      <ellipse
-        cx={CX}
-        cy="72"
-        rx="72"
-        ry="46"
-        fill="url(#clkGlass)"
-        pointerEvents="none"
-      />
-    </svg>
+      </Hand>
+    </>
   );
-}
+});
 
 export function ClockContent({ ctx }: { ctx: WidgetRenderContext }) {
   // Frozen at mount: the hands are driven entirely by CSS and stay accurate in
@@ -194,7 +232,11 @@ export function ClockContent({ ctx }: { ctx: WidgetRenderContext }) {
 
   return (
     <div className="wgt-clock">
-      <ClockFace start={startRef.current} />
+      <div className="wgt-clock-dial">
+        <ClockDial />
+        <ClockHands start={startRef.current} />
+        <ClockCap />
+      </div>
       <div className="wgt-clock-meta">
         <div className="wgt-clock-date">{date}</div>
         <div className="wgt-clock-loc">

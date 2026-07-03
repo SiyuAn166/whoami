@@ -1,4 +1,8 @@
-/* ─── Clock widget visuals ───────────────────────────────────────────────── */
+/* ─── Clock widget visuals ─────────────────────────────────────────────────
+   Same pixels as before. Only the layering changed so the CPU cost drops to
+   near zero: the dial is painted ONCE, each hand is its own GPU compositor
+   layer (transform = composite, no paint), and the whole widget is skipped
+   entirely while off-screen. ─────────────────────────────────────────────── */
 .wgt-clock {
   display: flex;
   flex-direction: column;
@@ -9,10 +13,26 @@
   text-align: center;
 }
 
-.wgt-clock-face {
+/* The dial "stage" — 128px box that stacks the static dial, the 3 hand layers,
+   and the static cap. content-visibility skips all of it (paint + animations)
+   when scrolled out of view; the fixed intrinsic size keeps layout stable. */
+.wgt-clock-dial {
+  position: relative;
   width: 128px;
   height: 128px;
+  content-visibility: auto;
+  contain-intrinsic-size: 128px 128px;
+}
+
+/* Every layer (dial, each hand, cap) is a full-box overlay sharing one origin,
+   so the coordinate spaces line up exactly with the old single-SVG version. */
+.wgt-clock-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: block;
+  overflow: visible; /* let the seconds-hand glow spill like before */
 }
 
 .wgt-clock-bezel {
@@ -45,12 +65,12 @@
   font-weight: 600;
 }
 
-/* ── Hands: rotated purely by CSS transform (GPU-composited, no React re-render).
-   Each hand is drawn pointing up; --delay fast-forwards the spin to "now",
-   and it then keeps perfect real time on its own. ── */
-.wgt-clock-spin {
-  transform-box: view-box;
-  transform-origin: center;
+/* ── Hands: each in its own overlay <svg>, rotated purely by CSS transform.
+   will-change promotes each to its own compositor layer, so a hand moving
+   NEVER repaints the dial — it is a pure composite. --delay fast-forwards the
+   0→360° spin to "now", then it keeps perfect real time on its own. ── */
+.wgt-clock-hand {
+  transform-origin: 50% 50%;
   animation: wgt-clock-spin var(--dur) linear infinite;
   animation-delay: var(--delay, 0s);
   will-change: transform;
@@ -106,10 +126,12 @@
 }
 
 /* Motion-sensitive users: freeze the sweep, but still show the correct time
-   via the static --angle fallback computed at mount. */
+   via the static --angle fallback computed at mount. Also drop will-change so
+   the idle layers cost nothing. */
 @media (prefers-reduced-motion: reduce) {
-  .wgt-clock-spin {
+  .wgt-clock-hand {
     animation: none;
     transform: rotate(var(--angle, 0deg));
+    will-change: auto;
   }
 }
