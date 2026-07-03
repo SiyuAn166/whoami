@@ -23,6 +23,10 @@
   transition: background-color 0.15s;
 }
 
+.menu-item--apple svg {
+  transform: translateY(-1px);
+}
+
 .menu-bar .menu-item:hover {
   background: var(--fg-faint);
 }

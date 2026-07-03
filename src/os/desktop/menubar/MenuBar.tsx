@@ -96,7 +96,7 @@ export function MenuBar({ appName, theme, onToggleTheme }: MenuBarProps) {
   return (
     <div className="menu-bar">
       <div className="flex items-center gap-0.5">
-        <span className="menu-item" aria-hidden>
+        <span className="menu-item menu-item--apple" aria-hidden>
           <AppleGlyph />
         </span>
         <span className="menu-item font-bold">{appName}</span>
