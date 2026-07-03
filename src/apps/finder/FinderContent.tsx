@@ -1,5 +1,5 @@
 import { ExperienceSection } from './section/ExperienceSection';
-import { ProjectsSection } from './section/ProjectsSection';
+import { ProjectSection } from './section/ProjectSection';
 import { CapabilitiesSection } from './section/SkillSection';
 import type { PortfolioData } from '../../types/portfolio';
 import { FinderSidebar } from './FinderSidebar';
@@ -13,7 +13,7 @@ export function FinderContent({ data }: { data: PortfolioData }) {
       {sidebarOpen && <FinderSidebar />}
       <div className="finder-pane">
         {section === 'experience' && <ExperienceSection entries={data.experience} variant="finder" />}
-        {section === 'projects' && <ProjectsSection projects={data.projects} variant="finder" />}
+        {section === 'projects' && <ProjectSection projects={data.projects} variant="finder" />}
         {section === 'skills' && <CapabilitiesSection skills={data.skills} variant="finder" />}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ExperienceSection } from '../finder/section/ExperienceSection';
 import { IdentitySection } from '../finder/section/IdentitySection';
-import { ProjectsSection } from '../finder/section/ProjectsSection';
+import { ProjectSection } from '../finder/section/ProjectSection';
 import { SkillSection } from '../finder/section/SkillSection';
 import {
     buildFS, isDir, listDir, pathString, resolve, treeString, type VDir,
@@ -193,7 +193,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
             case 'kubectl': {
                 // `kubectl get <resource>` — route by resource word, ignore flags like `-n siyu`.
                 const resource = args.find(a => /^(roles?|projects?|skills?)$/.test(a)) ?? 'roles';
-                if (/^proj/.test(resource)) output = <ProjectsSection projects={data.projects} variant="terminal" />;
+                if (/^proj/.test(resource)) output = <ProjectSection projects={data.projects} variant="terminal" />;
                 else if (/^skill/.test(resource)) output = <SkillSection skills={data.skills} variant="terminal" />;
                 else output = <ExperienceSection entries={data.experience} variant="terminal" />;
                 break;
@@ -205,7 +205,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
                 break;
 
             case 'projects':
-                output = <ProjectsSection projects={data.projects} variant="terminal" />;
+                output = <ProjectSection projects={data.projects} variant="terminal" />;
                 break;
 
             case 'skills':
@@ -481,7 +481,7 @@ function renderFile(render: string | undefined, text: string | undefined, data: 
     switch (render) {
         case 'identity': return <IdentitySection identity={data.identity} experience={data.experience} meta={data.meta} />;
         case 'experience': return <ExperienceSection entries={data.experience} variant="terminal" />;
-        case 'projects': return <ProjectsSection projects={data.projects} variant="terminal" />;
+        case 'projects': return <ProjectSection projects={data.projects} variant="terminal" />;
         case 'skills': return <SkillSection skills={data.skills} variant="terminal" />;
         case 'contact': return <ContactCard data={data} />;
         default: return <Text>{text ?? ''}</Text>;

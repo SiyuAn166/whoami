@@ -34,7 +34,7 @@ function initials(name: string): string {
 
 export type ProjectsVariant = 'finder' | 'terminal';
 
-export function ProjectsSection({
+export function ProjectSection({
   projects,
   variant = 'terminal',
 }: {
