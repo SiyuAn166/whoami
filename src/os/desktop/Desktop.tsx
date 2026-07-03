@@ -67,7 +67,9 @@ function DesktopReady({
   setTheme,
 }: DesktopReadyProps) {
   const wm = useWindowManager({ data, theme, setTheme });
-  const { activeIds, addWidget } = useActiveWidgets(DEFAULT_ACTIVE_WIDGET_IDS);
+  const { activeIds, addWidget, removeWidget } = useActiveWidgets(
+    DEFAULT_ACTIVE_WIDGET_IDS,
+  );
   const widgetCtx = { data, theme, setTheme, openApp: wm.openApp };
   const focusedApp = wm.instances.find((w) => w.id === wm.focusedId);
   const menuBarAppName =
@@ -87,6 +89,7 @@ function DesktopReady({
       ctx={widgetCtx}
       activeIds={activeIds}
       onAddWidget={addWidget}
+      onRemoveWidget={removeWidget}
       onToggleTheme={toggleTheme}
     >
       {data.meta.wallpaper && <div className="wallpaper-tint" aria-hidden />}

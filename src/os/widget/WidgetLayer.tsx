@@ -3,12 +3,12 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { AppRenderContext } from "../../apps/types";
 import "./WidgetLayer.css";
 import { WidgetFrame } from "./WidgetFrame";
-import { CATALOG, DEFAULT_ACTIVE_WIDGET_IDS } from "./registry";
+import { WIDGETS } from "./registry";
 import type { WidgetRenderContext, WidgetSize } from "./types";
 
 interface WidgetLayerProps extends AppRenderContext {
   openApp: (appId: string) => void;
-  /** Widget ids currently on the desktop. Defaults to the built-in set. */
+  /** ids currently on the desktop. Omit ⇒ show all (back-compat). */
   activeIds?: string[];
 }
 
@@ -61,16 +61,18 @@ function loadSaved(): PosMap {
  * to a left-side column, can be dragged anywhere, and snap to an invisible grid
  * on release (so they align with one another). Dropped cards that would overlap
  * a neighbour are pushed to the nearest free grid cell, so widgets never cover
- * one another. Positions persist per-widget in localStorage. Adding a widget
- * still requires no change here.
+ * one another. Positions persist per-widget in localStorage. Which widgets are
+ * shown is driven by `activeIds` (Add/Remove Widgets).
  */
 export function WidgetLayer(props: WidgetLayerProps) {
   const ctx: WidgetRenderContext = props;
-  const active = props.activeIds ?? DEFAULT_ACTIVE_WIDGET_IDS;
+  const { activeIds } = props;
 
-  const visible = CATALOG.filter(
-    (w) => active.includes(w.id) && (w.enabled ? w.enabled(ctx) : true),
-  ).sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
+  const visible = WIDGETS.filter((w) =>
+    activeIds ? activeIds.includes(w.id) : true,
+  )
+    .filter((w) => (w.enabled ? w.enabled(ctx) : true))
+    .sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
 
   // Compute the default left-column layout, then let saved positions override.
   const [positions, setPositions] = useState<PosMap>(() => {
@@ -96,54 +98,6 @@ export function WidgetLayer(props: WidgetLayerProps) {
   } | null>(null);
   const suppressClick = useRef(false);
   const layerRef = useRef<HTMLDivElement>(null);
-
-  // Right-anchored widgets: measure real width after first layout and pin to the
-  // right edge — avoids hard-coding any widget width. Skips ones already saved.
-  useLayoutEffect(() => {
-    const saved = loadSaved();
-    setPositions((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      for (const w of visible) {
-        if (w.defaultAnchor !== "right" || saved[w.id]) continue;
-        const { w: width } = sizeOf(w.id);
-        const x = window.innerWidth - width - MARGIN.right;
-        const p = clampXY(
-          width,
-          sizeOf(w.id).h,
-          x,
-          prev[w.id]?.y ?? MARGIN.top,
-        );
-        if (prev[w.id]?.x !== p.x) {
-          next[w.id] = { ...next[w.id], ...p };
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // When a widget is added at runtime (activeIds grows), give any card that has
-  // no position yet a default slot in the left column, stacked below the rest —
-  // so newly-added widgets never pile up on top of each other.
-  useLayoutEffect(() => {
-    setPositions((prev) => {
-      const missing = visible.filter((w) => !prev[w.id]);
-      if (missing.length === 0) return prev;
-      const next = { ...prev };
-      let y = MARGIN.top;
-      for (const w of visible) {
-        if (next[w.id]) y = Math.max(y, next[w.id].y + TIER_H[w.size] + 16);
-      }
-      for (const w of missing) {
-        next[w.id] = w.defaultPos ?? { x: MARGIN.left, y };
-        y += TIER_H[w.size] + 16;
-      }
-      return next;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible.map((w) => w.id).join(",")]);
 
   const sizeOf = useCallback((id: string): { w: number; h: number } => {
     const el = layerRef.current?.querySelector<HTMLElement>(
@@ -172,11 +126,57 @@ export function WidgetLayer(props: WidgetLayerProps) {
     [sizeOf, clampXY],
   );
 
+  // Right-anchored widgets: measure real width after first layout and pin to the
+  // right edge — avoids hard-coding any widget width. Skips ones already saved.
+  useLayoutEffect(() => {
+    const saved = loadSaved();
+    setPositions((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const w of visible) {
+        if (w.defaultAnchor !== "right" || saved[w.id]) continue;
+        const { w: width } = sizeOf(w.id);
+        const x = window.innerWidth - width - MARGIN.right;
+        const p = clampXY(
+          width,
+          sizeOf(w.id).h,
+          x,
+          prev[w.id]?.y ?? MARGIN.top,
+        );
+        if (prev[w.id]?.x !== p.x) {
+          next[w.id] = { ...next[w.id], ...p };
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When a widget is newly added (activeIds grows), give it a default left-column
+  // slot if it has no position yet, so it appears instead of stacking at (0,0).
+  useLayoutEffect(() => {
+    setPositions((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      let y = MARGIN.top;
+      for (const w of visible) {
+        if (next[w.id]) {
+          y = Math.max(y, next[w.id].y + TIER_H[w.size] + 16);
+          continue;
+        }
+        next[w.id] = w.defaultPos ?? { x: MARGIN.left, y };
+        y += TIER_H[w.size] + 16;
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIds]);
+
   /**
    * Given a desired (already-snapped) position for `id`, return the nearest
-   * grid position that doesn't overlap any other card. Searches outward in
-   * expanding square rings, so the card lands as close as possible to where
-   * it was dropped.
+   * grid position that doesn't overlap any other card.
    */
   const resolveCollision = useCallback(
     (id: string, desired: Pos, all: PosMap): Pos => {
@@ -191,29 +191,24 @@ export function WidgetLayer(props: WidgetLayerProps) {
       }
       const free = (x: number, y: number): boolean => {
         const c = clampXY(w, h, x, y);
-        // Reject if the clamp had to move it (would push off-screen) is fine —
-        // we test the clamped rect for overlaps.
         const rect: Rect = { x: c.x, y: c.y, w, h };
         return !others.some((o) => overlaps(rect, o));
       };
       if (free(desired.x, desired.y))
         return clampXY(w, h, desired.x, desired.y);
 
-      // Expanding-ring search on the grid around the desired cell.
       const maxRing = Math.ceil(
         Math.max(window.innerWidth, window.innerHeight) / GRID,
       );
       for (let r = 1; r <= maxRing; r++) {
         const step = r * GRID;
-        // Candidates ordered roughly by proximity: the 4 axis points first, then corners.
         const ring: Pos[] = [];
         for (let d = -r; d <= r; d++) {
-          ring.push({ x: desired.x + d * GRID, y: desired.y - step }); // top edge
-          ring.push({ x: desired.x + d * GRID, y: desired.y + step }); // bottom edge
-          ring.push({ x: desired.x - step, y: desired.y + d * GRID }); // left edge
-          ring.push({ x: desired.x + step, y: desired.y + d * GRID }); // right edge
+          ring.push({ x: desired.x + d * GRID, y: desired.y - step });
+          ring.push({ x: desired.x + d * GRID, y: desired.y + step });
+          ring.push({ x: desired.x - step, y: desired.y + d * GRID });
+          ring.push({ x: desired.x + step, y: desired.y + d * GRID });
         }
-        // Prefer candidates closest to the desired point.
         ring.sort(
           (a, b) =>
             Math.hypot(a.x - desired.x, a.y - desired.y) -
@@ -223,7 +218,6 @@ export function WidgetLayer(props: WidgetLayerProps) {
           if (free(cand.x, cand.y)) return clampXY(w, h, cand.x, cand.y);
         }
       }
-      // Fallback: nowhere free (shouldn't happen) — keep desired, clamped.
       return clampXY(w, h, desired.x, desired.y);
     },
     [visible, sizeOf, clampXY],
@@ -232,9 +226,6 @@ export function WidgetLayer(props: WidgetLayerProps) {
   const onPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>, id: string) => {
       if (e.button !== 0) return;
-      // Don't capture the pointer or flag a drag yet — a plain click must reach
-      // the inner links/buttons natively. We only take over once the pointer
-      // actually travels past CLICK_SLOP (see onPointerMove).
       const cur = positions[id] ?? { x: MARGIN.left, y: MARGIN.top };
       drag.current = {
         id,
@@ -257,9 +248,7 @@ export function WidgetLayer(props: WidgetLayerProps) {
       const dx = e.clientX - d.startX;
       const dy = e.clientY - d.startY;
       if (!d.moved) {
-        if (Math.hypot(dx, dy) <= CLICK_SLOP) return; // still a potential click
-        // Crossed the threshold: NOW it's a real drag. Take over the pointer so
-        // moving fast outside the card keeps tracking, and flag the drag.
+        if (Math.hypot(dx, dy) <= CLICK_SLOP) return;
         d.moved = true;
         try {
           (e.currentTarget as HTMLElement).setPointerCapture(d.pointerId);
@@ -280,16 +269,13 @@ export function WidgetLayer(props: WidgetLayerProps) {
       drag.current = null;
       setDraggingId(null);
       if (!d) return;
-      // We only ever captured the pointer once a real drag started.
       if (d.moved) {
         try {
           (e.currentTarget as HTMLElement).releasePointerCapture?.(d.pointerId);
         } catch {
           /* noop */
         }
-      }
-      if (d.moved) {
-        suppressClick.current = true; // swallow the click that follows a drag
+        suppressClick.current = true;
         const cur = positions[d.id] ?? { x: MARGIN.left, y: MARGIN.top };
         const snapped = clamp(d.id, snap(cur.x), snap(cur.y));
         const resolved = resolveCollision(d.id, snapped, positions);
