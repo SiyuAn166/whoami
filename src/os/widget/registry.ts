@@ -1,11 +1,9 @@
 // src/os/widget/registry.ts
-import { clockWidget } from "./clock/ClockWidget";
-import { skillsWidget } from "./skills/SkillsWidget";
-import { featuredProjectWidget } from "./featured/FeaturedProjectWidget";
-import { contactWidget } from "./contact/ContactWidget";
-// Previously optional extras — now imported so they can be added at runtime
-// from the "Add Widgets" gallery (they are NOT active by default, see below).
 import { calendarWidget } from "./calendar/CalendarWidget";
+import { clockWidget } from "./clock/ClockWidget";
+import { contactWidget } from "./contact/ContactWidget";
+import { featuredProjectWidget } from "./featured/FeaturedProjectWidget";
+import { skillsWidget } from "./skills/SkillsWidget";
 import { stickyNoteWidget } from "./sticky/StickyNoteWidget";
 import { terminalTipWidget } from "./terminal/TerminalTipWidget";
 import type { WidgetDefinition } from "./types";
@@ -28,12 +26,12 @@ export const CATALOG: WidgetDefinition[] = [
 /** Back-compat alias for existing imports. WidgetLayer now filters by activeIds. */
 export const WIDGETS = CATALOG;
 
-/** Widgets placed on the desktop on first load (the old hard-coded set). */
+/** Widgets placed on the desktop on first load */
 export const DEFAULT_ACTIVE_WIDGET_IDS: string[] = [
-  clockWidget.id,
-  skillsWidget.id,
-  featuredProjectWidget.id,
-  contactWidget.id,
+  // clockWidget.id,
+  // skillsWidget.id,
+  // featuredProjectWidget.id,
+  // contactWidget.id,
 ];
 
 export function getWidget(id: string): WidgetDefinition | undefined {
