@@ -1,12 +1,12 @@
 import { getApp } from "../../apps/registry";
 import { usePortfolioData } from "../../hooks/usePortfolioData";
 import { useTheme } from "../../hooks/useTheme";
-import { useWindowManager } from "../window/WindowManager";
 import { WidgetLayer } from "../widget/WidgetLayer";
-import { Dock } from "./Dock";
-import { MenuBar } from "./MenuBar";
+import { useWindowManager } from "../window/WindowManager";
 import "./Desktop.css";
 import "./DesktopIcons.css";
+import { Dock } from "./dock/Dock";
+import { MenuBar } from "./menubar/MenuBar";
 /** The main view of the site: menu bar, desktop icons, windows, and dock.
  */
 export function Desktop() {
