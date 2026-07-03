@@ -1,0 +1,4 @@
+/* Block cursor styling (focused = solid, blurred = hollow). */
+.term-cursor { display:inline-flex; align-items:center; justify-content:center; min-width:0.6em; height:1.05em; margin-left:1px; overflow:hidden; font-family:inherit; font-size:inherit; }
+.term-cursor.active { background-color: var(--fg); color: var(--bg); }
+.term-cursor.inactive { border:1px solid var(--fg-dim); background:transparent; color: var(--fg-dim); }
