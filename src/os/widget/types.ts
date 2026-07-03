@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react';
-import type { AppRenderContext } from '../../apps/types';
+import type { ReactNode } from "react";
+import type { AppRenderContext } from "../../apps/types";
 
 /** Widget size tiers — mirror macOS small / medium / large tiles. */
-export type WidgetSize = 'small' | 'medium' | 'wide' | 'large';
+export type WidgetSize = "small" | "medium" | "wide" | "large";
 
 /** Frame skin. `glass` = liquid glass (default), `note` = sticky note,
  *  `terminal` = near-black + phosphor-green monospace. */
-export type WidgetVariant = 'glass' | 'note' | 'terminal';
+export type WidgetVariant = "glass" | "note" | "terminal";
 
 /**
  * Context every widget receives. Extends the app render context (data / theme)
@@ -36,7 +36,7 @@ export interface WidgetDefinition {
   defaultPos?: { x: number; y: number };
   /** Anchor the initial position to the right edge instead of x from defaultPos.
    *  The real width is measured after render, so no hard-coded widget width. */
-  defaultAnchor?: 'left' | 'right';
+  defaultAnchor?: "left" | "right";
   /** Hide the widget dynamically (e.g. when the backing data is missing). */
   enabled?: (ctx: WidgetRenderContext) => boolean;
   /** Optional click handler — makes the whole card an activatable button. */

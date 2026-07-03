@@ -1,0 +1,29 @@
+/* Contact widget styles */
+.wgt-contact {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 100%;
+}
+
+.wgt-contact-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--fg);
+  background: var(--fg-faint);
+  text-decoration: none;
+}
+
+.wgt-contact-link:hover {
+  transform: translateY(-1px);
+}
+
+.wgt-contact-glyph {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}

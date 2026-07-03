@@ -1,0 +1,35 @@
+/* ─── Terminal tip ───────────────────────────────────────────────────────── */
+.wgt--terminal {
+  border-color: rgba(45, 200, 74, 0.28);
+  background-color: rgba(12, 14, 12, 0.9);
+  background-image: none;
+  color: var(--accent);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.wgt-term {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+}
+
+.wgt-term-prompt {
+  color: var(--ok);
+  margin-right: 8px;
+}
+
+.wgt-term-out {
+  color: #cfe9cf;
+  padding-left: 18px;
+}
+
+.wgt-term-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 2px;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  animation: blink 1s steps(1) infinite;
+}

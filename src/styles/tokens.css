@@ -1,5 +1,5 @@
 /* ─── Font ───────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap");
 
 /* ─── macOS Terminal Color Profiles ─────────────────
    dark  ≈ Terminal.app "Pro"   (near-black body)
@@ -8,7 +8,7 @@
    Legacy token names (--fg, --border, --warn, …) are kept
    so existing components recolor automatically.
 */
-:root[data-theme='dark'] {
+:root[data-theme="dark"] {
   /* surfaces */
   --desktop-a: #2a2440;
   --desktop-b: #11131f;
@@ -22,9 +22,9 @@
   /* text */
   --fg: #e6e6e6;
   --fg-dim: #9a9aa0;
-  --fg-faint: rgba(230, 230, 230, 0.10);
+  --fg-faint: rgba(230, 230, 230, 0.1);
   /* lines */
-  --border: rgba(255, 255, 255, 0.10);
+  --border: rgba(255, 255, 255, 0.1);
   --border-hi: rgba(255, 255, 255, 0.22);
   /* ANSI-ish accents */
   --accent: #2dc84a;
@@ -37,17 +37,18 @@
   --prompt-user: #28c840;
   --prompt-path: #5ac8fa;
   /* selection */
-  --sel-bg: rgba(90, 200, 250, 0.30);
+  --sel-bg: rgba(90, 200, 250, 0.3);
   --sel-fg: #ffffff;
   /* effects */
-  --window-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
+  --window-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
   --glow: none;
   --glow-strong: none;
   --boot-fg: #d0d0d0;
   color-scheme: dark;
 }
 
-:root[data-theme='light'] {
+:root[data-theme="light"] {
   /* surfaces */
   --desktop-a: #e9eefc;
   --desktop-b: #c8d6f3;
@@ -63,7 +64,7 @@
   --fg-dim: #6e6e73;
   --fg-faint: rgba(0, 0, 0, 0.05);
   /* lines */
-  --border: rgba(0, 0, 0, 0.10);
+  --border: rgba(0, 0, 0, 0.1);
   --border-hi: rgba(0, 0, 0, 0.18);
   /* ANSI-ish accents */
   --accent: #1a7f37;
@@ -79,7 +80,8 @@
   --sel-bg: rgba(0, 113, 227, 0.18);
   --sel-fg: #1d1d1f;
   /* effects */
-  --window-shadow: 0 24px 60px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.12);
+  --window-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.12);
   --glow: none;
   --glow-strong: none;
   --boot-fg: #1d1d1f;

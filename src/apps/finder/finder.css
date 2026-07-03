@@ -26,7 +26,10 @@
   background: transparent;
   color: var(--titlebar-fg);
   cursor: pointer;
-  transition: background-color 0.12s, color 0.12s, opacity 0.12s;
+  transition:
+    background-color 0.12s,
+    color 0.12s,
+    opacity 0.12s;
 }
 
 .finder-tbtn:hover:not(:disabled) {

@@ -1,0 +1,72 @@
+/* ─── Featured project ───────────────────────────────────────────────────── */
+.wgt-featured {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.wgt-featured-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wgt-featured-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.wgt-featured-status {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 6px;
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+}
+
+.wgt-featured-status[data-status="beta"] {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+}
+
+.wgt-featured-status[data-status="archived"] {
+  color: var(--fg-dim);
+  background: var(--fg-faint);
+}
+
+.wgt-featured-desc {
+  font-size: 12px;
+  color: var(--fg-dim);
+  line-height: 1.45;
+  margin: 0;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wgt-featured-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wgt-tag {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--info);
+  background: color-mix(in srgb, var(--info) 15%, transparent);
+}
+
+.wgt-featured-cta {
+  margin-top: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--info);
+}

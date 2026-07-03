@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
-import type { PortfolioData } from '../types/portfolio';
-import type { Size } from '../os/window/types';
+import type { ReactNode } from "react";
+import type { PortfolioData } from "../types/portfolio";
+import type { Size } from "../os/window/types";
 
-export type Theme = 'dark' | 'light';
+export type Theme = "dark" | "light";
 
 export interface AppRenderContext {
   data: PortfolioData;

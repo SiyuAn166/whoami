@@ -1,38 +1,38 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 interface UseIntersectionObserverOptions {
-    threshold?: number;
-    rootMargin?: string;
-    /** Once visible, never go back to invisible */
-    once?: boolean;
+  threshold?: number;
+  rootMargin?: string;
+  /** Once visible, never go back to invisible */
+  once?: boolean;
 }
 
 export function useIntersectionObserver<T extends Element>(
-    options: UseIntersectionObserverOptions = {},
+  options: UseIntersectionObserverOptions = {},
 ): [RefObject<T | null>, boolean] {
-    const { threshold = 0.15, rootMargin = '0px', once = true } = options;
-    const ref = useRef<T | null>(null);
-    const [isVisible, setIsVisible] = useState(false);
+  const { threshold = 0.15, rootMargin = "0px", once = true } = options;
+  const ref = useRef<T | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
 
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    if (once) observer.disconnect();
-                } else if (!once) {
-                    setIsVisible(false);
-                }
-            },
-            { threshold, rootMargin },
-        );
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          if (once) observer.disconnect();
+        } else if (!once) {
+          setIsVisible(false);
+        }
+      },
+      { threshold, rootMargin },
+    );
 
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [threshold, rootMargin, once]);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold, rootMargin, once]);
 
-    return [ref, isVisible];
+  return [ref, isVisible];
 }

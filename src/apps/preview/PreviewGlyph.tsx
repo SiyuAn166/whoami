@@ -1,6 +1,13 @@
 export function PreviewGlyph() {
   return (
-    <svg width="90%" height="90%" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-label="Preview" role="img">
+    <svg
+      width="90%"
+      height="90%"
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="Preview"
+      role="img"
+    >
       <defs>
         <linearGradient id="pv-bg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#eaf1fb" />
@@ -29,13 +36,37 @@ export function PreviewGlyph() {
           <stop offset="1" stopColor="#7fb4ff" stopOpacity="0.35" />
         </radialGradient>
         <filter id="pv-shadow" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="10" stdDeviation="14" floodColor="#1c2740" floodOpacity="0.22" />
+          <feDropShadow
+            dx="0"
+            dy="10"
+            stdDeviation="14"
+            floodColor="#1c2740"
+            floodOpacity="0.22"
+          />
         </filter>
-        <filter id="pv-loupe-shadow" x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="4" dy="8" stdDeviation="10" floodColor="#1c2740" floodOpacity="0.30" />
+        <filter
+          id="pv-loupe-shadow"
+          x="-40%"
+          y="-40%"
+          width="180%"
+          height="180%"
+        >
+          <feDropShadow
+            dx="4"
+            dy="8"
+            stdDeviation="10"
+            floodColor="#1c2740"
+            floodOpacity="0.30"
+          />
         </filter>
         <filter id="pv-app-shadow" x="-25%" y="-25%" width="150%" height="150%">
-          <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#1d51b9" floodOpacity="0.28" />
+          <feDropShadow
+            dx="0"
+            dy="8"
+            stdDeviation="12"
+            floodColor="#1d51b9"
+            floodOpacity="0.28"
+          />
         </filter>
         <clipPath id="pv-squircle">
           <rect x="16" y="16" width="480" height="480" rx="112" ry="112" />
@@ -44,24 +75,82 @@ export function PreviewGlyph() {
 
       {/* App squircle */}
       <g filter="url(#pv-app-shadow)">
-        <rect x="16" y="16" width="480" height="480" rx="112" ry="112" fill="url(#pv-bg)" />
+        <rect
+          x="16"
+          y="16"
+          width="480"
+          height="480"
+          rx="112"
+          ry="112"
+          fill="url(#pv-bg)"
+        />
       </g>
-      <rect x="16" y="16" width="480" height="480" rx="112" ry="112" fill="none" stroke="#7d90b3" strokeOpacity="0.45" strokeWidth="1.5" />
-      <rect x="17.5" y="17.5" width="477" height="477" rx="110.5" ry="110.5" fill="none" stroke="#ffffff" strokeOpacity="0.65" strokeWidth="1.5" />
+      <rect
+        x="16"
+        y="16"
+        width="480"
+        height="480"
+        rx="112"
+        ry="112"
+        fill="none"
+        stroke="#7d90b3"
+        strokeOpacity="0.45"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="17.5"
+        y="17.5"
+        width="477"
+        height="477"
+        rx="110.5"
+        ry="110.5"
+        fill="none"
+        stroke="#ffffff"
+        strokeOpacity="0.65"
+        strokeWidth="1.5"
+      />
 
       <g clipPath="url(#pv-squircle)">
         {/* Résumé page */}
         <g filter="url(#pv-shadow)">
-          <rect x="132" y="96" width="214" height="300" rx="16" fill="url(#pv-page)" stroke="#dfe3ea" strokeWidth="1.5" />
+          <rect
+            x="132"
+            y="96"
+            width="214"
+            height="300"
+            rx="16"
+            fill="url(#pv-page)"
+            stroke="#dfe3ea"
+            strokeWidth="1.5"
+          />
         </g>
 
         {/* Header band + avatar */}
-        <path d="M132 112 a16 16 0 0 1 16 -16 h182 a16 16 0 0 1 16 16 v56 h-214 z" fill="url(#pv-header)" />
+        <path
+          d="M132 112 a16 16 0 0 1 16 -16 h182 a16 16 0 0 1 16 16 v56 h-214 z"
+          fill="url(#pv-header)"
+        />
         <circle cx="176" cy="140" r="20" fill="#ffffff" fillOpacity="0.95" />
         <circle cx="176" cy="133" r="7" fill="#2a7fff" />
         <path d="M164 152 a12 10 0 0 1 24 0 z" fill="#2a7fff" />
-        <rect x="210" y="128" width="104" height="9" rx="4.5" fill="#ffffff" fillOpacity="0.95" />
-        <rect x="210" y="146" width="70" height="7" rx="3.5" fill="#ffffff" fillOpacity="0.7" />
+        <rect
+          x="210"
+          y="128"
+          width="104"
+          height="9"
+          rx="4.5"
+          fill="#ffffff"
+          fillOpacity="0.95"
+        />
+        <rect
+          x="210"
+          y="146"
+          width="70"
+          height="7"
+          rx="3.5"
+          fill="#ffffff"
+          fillOpacity="0.7"
+        />
 
         {/* Body text lines */}
         <g fill="#d7dce4">
@@ -82,13 +171,28 @@ export function PreviewGlyph() {
       {/* Magnifying loupe */}
       <g filter="url(#pv-loupe-shadow)">
         {/* Handle */}
-        <rect x="356" y="356" width="44" height="150" rx="22" transform="rotate(-45 378 431)" fill="url(#pv-handle)" />
+        <rect
+          x="356"
+          y="356"
+          width="44"
+          height="150"
+          rx="22"
+          transform="rotate(-45 378 431)"
+          fill="url(#pv-handle)"
+        />
         {/* Ring */}
         <circle cx="322" cy="322" r="96" fill="url(#pv-ring)" />
         <circle cx="322" cy="322" r="72" fill="#f2f5f9" />
         <circle cx="322" cy="322" r="72" fill="url(#pv-glass)" />
         {/* Glass shine */}
-        <path d="M280 292 a68 68 0 0 1 60 -34" fill="none" stroke="#ffffff" strokeOpacity="0.85" strokeWidth="10" strokeLinecap="round" />
+        <path
+          d="M280 292 a68 68 0 0 1 60 -34"
+          fill="none"
+          stroke="#ffffff"
+          strokeOpacity="0.85"
+          strokeWidth="10"
+          strokeLinecap="round"
+        />
       </g>
     </svg>
   );

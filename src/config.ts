@@ -13,4 +13,4 @@
  * - Store the production value in GitHub Actions Variables
  * - Changes to the Gist content are reflected on page load because the app fetches the JSON at runtime
  */
-export const GIST_URL = import.meta.env.VITE_GIST_URL || '/data.json';
+export const GIST_URL = import.meta.env.VITE_GIST_URL || "/data.json";

@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import './WidgetFrame.css';
-import type { WidgetSize, WidgetVariant } from './types';
+import type { ReactNode } from "react";
+import "./WidgetFrame.css";
+import type { WidgetSize, WidgetVariant } from "./types";
 
 interface WidgetFrameProps {
   size: WidgetSize;
@@ -19,13 +19,13 @@ interface WidgetFrameProps {
  */
 export function WidgetFrame({
   size,
-  variant = 'glass',
+  variant = "glass",
   title,
   onActivate,
   ariaLabel,
   children,
 }: WidgetFrameProps) {
-  const className = `wgt wgt--${size} wgt--${variant}${onActivate ? ' wgt--clickable' : ''}`;
+  const className = `wgt wgt--${size} wgt--${variant}${onActivate ? " wgt--clickable" : ""}`;
 
   const body = (
     <>
@@ -40,7 +40,12 @@ export function WidgetFrame({
 
   if (onActivate) {
     return (
-      <button type="button" className={className} onClick={onActivate} aria-label={ariaLabel ?? title}>
+      <button
+        type="button"
+        className={className}
+        onClick={onActivate}
+        aria-label={ariaLabel ?? title}
+      >
         {body}
       </button>
     );

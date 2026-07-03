@@ -1,6 +1,5 @@
 /* ─── Shared keyframes (used by multiple components) ────────────────────── */
 @keyframes blink {
-
   0%,
   100% {
     opacity: 1;
@@ -47,7 +46,6 @@
    several different component CSS files, since it's a single global
    media-query rule that must stay in one cascade position. */
 @media (prefers-reduced-motion: reduce) {
-
   .cursor,
   .term-cursor.active,
   .reveal-content {

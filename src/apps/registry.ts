@@ -1,11 +1,11 @@
-import { finderApp } from './finder/FinderApp';
-import { previewApp } from './preview/PreviewApp';
-import { terminalApp } from './terminal/TerminalApp';
-import type { AppDefinition } from './types';
+import { finderApp } from "./finder/FinderApp";
+import { previewApp } from "./preview/PreviewApp";
+import { terminalApp } from "./terminal/TerminalApp";
+import type { AppDefinition } from "./types";
 
 /** Single source of truth for every app the desktop knows about. */
 export const APPS: AppDefinition[] = [finderApp, terminalApp, previewApp];
 
 export function getApp(id: string): AppDefinition | undefined {
-    return APPS.find(a => a.id === id);
+  return APPS.find((a) => a.id === id);
 }

@@ -1,0 +1,55 @@
+/* ─── Skills rings ───────────────────────────────────────────────────────── */
+.wgt-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  height: 100%;
+}
+
+.wgt-skill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wgt-ring {
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+
+.wgt-ring-bg {
+  fill: none;
+  stroke: var(--fg-faint);
+  stroke-width: 4;
+}
+
+.wgt-ring-fg {
+  fill: none;
+  stroke: var(--info);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.wgt-ring-num {
+  transform: rotate(90deg);
+  transform-origin: center;
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--fg);
+}
+
+.wgt-skill-name {
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wgt-ring-fg {
+    transition: none;
+  }
+}
