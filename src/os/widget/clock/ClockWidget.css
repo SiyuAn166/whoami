@@ -1,36 +1,42 @@
 /* ─── Clock widget visuals ───────────────────────────────────────────────── */
 .wgt-clock {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   align-items: center;
+  justify-content: center;
   height: 100%;
+  text-align: center;
 }
 
 .wgt-clock-face {
-  width: 68px;
-  height: 68px;
+  width: 128px;
+  height: 128px;
+  display: block;
 }
 
 .wgt-clock-bezel {
   fill: none;
-  stroke: var(--fg-faint);
-  stroke-width: 1.2;
+  stroke: var(--border-hi);
+  stroke-width: 2;
 }
 
 .wgt-clock-ring {
   fill: none;
   stroke: var(--fg-dim);
-  stroke-width: 0.8;
+  stroke-width: 1;
 }
 
 .wgt-clock-tick {
-  stroke: var(--fg-faint);
-  stroke-width: 0.6;
+  stroke: var(--fg-dim);
+  stroke-width: 1.2;
+  stroke-linecap: round;
 }
 
 .wgt-clock-tick--major {
-  stroke: var(--fg-dim);
-  stroke-width: 1;
+  stroke: var(--error);
+  stroke-width: 1.2;
+  stroke-linecap: round;
 }
 
 .wgt-clock-num {
@@ -40,11 +46,11 @@
 }
 
 .wgt-clock-hour {
-  fill: var(--fg);
+  fill: var(--default);
 }
 
 .wgt-clock-min {
-  fill: var(--fg);
+  fill: var(--info);
 }
 
 .wgt-clock-sec {
@@ -68,6 +74,7 @@
 .wgt-clock-meta {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
 }
 
