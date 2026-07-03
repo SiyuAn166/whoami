@@ -10,15 +10,18 @@
   transform-origin: 50% 100%;
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s, box-shadow 0.25s, max-width 0.22s;
 }
+
 .mac-window.is-maximized {
   border-radius: 10px;
 }
+
 /* minimize → genie down toward the dock */
 .mac-window.is-minimized {
   opacity: 0;
   transform: translateY(42vh) scale(0.12);
   pointer-events: none;
 }
+
 /* close → fade away */
 .mac-window.is-closed {
   opacity: 0;
@@ -37,12 +40,14 @@
   border-bottom: 1px solid var(--border);
   user-select: none;
 }
+
 .traffic-lights {
   display: flex;
   align-items: center;
   gap: 8px;
   z-index: 2;
 }
+
 .traffic-light {
   width: 12px;
   height: 12px;
@@ -62,25 +67,31 @@
   cursor: pointer;
   transition: color 0.12s, filter 0.12s;
 }
+
 .traffic-light:hover {
   filter: brightness(1.08);
 }
+
 .traffic-lights:hover .traffic-light,
 .traffic-light:focus-visible {
   color: rgba(0, 0, 0, 0.55);
 }
+
 .traffic-light.tl-close {
   background: #ff5f57;
   border: 0.5px solid #e0443e;
 }
+
 .traffic-light.tl-min {
   background: #febc2e;
   border: 0.5px solid #dea123;
 }
+
 .traffic-light.tl-max {
   background: #28c840;
   border: 0.5px solid #1aab29;
 }
+
 .titlebar-title {
   position: absolute;
   left: 0;

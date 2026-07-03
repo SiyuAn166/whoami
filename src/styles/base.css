@@ -11,9 +11,11 @@
   margin: 0;
   padding: 0;
 }
+
 html {
   scroll-behavior: smooth;
 }
+
 body {
   background: var(--bg);
   color: var(--fg);
@@ -25,6 +27,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
 ::selection {
   background: var(--sel-bg);
   color: var(--sel-fg);

@@ -16,11 +16,13 @@
   border-bottom: 1px solid var(--border);
   user-select: none;
 }
+
 .menu-bar .menu-item {
   padding: 1px 8px;
   border-radius: 16px;
   transition: background-color 0.15s;
 }
+
 .menu-bar .menu-item:hover {
   background: var(--fg-faint);
 }
@@ -39,6 +41,7 @@
   gap: 5px;
   transition: background-color 0.15s;
 }
+
 .appearance-toggle:hover {
   background: var(--fg-faint);
 }

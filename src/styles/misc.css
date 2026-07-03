@@ -1,14 +1,43 @@
 /* ─── Utility classes ────────────────────────────── */
-.text-fg    { color: var(--fg); }
-.text-mid   { color: var(--fg-dim); }
-.text-faint { color: var(--fg-faint); }
-.text-warn  { color: var(--warn); }
-.text-error { color: var(--error); }
-.text-info  { color: var(--info); }
-.text-accent { color: var(--accent); }
-.glow       { text-shadow: none; }
-.border-dim { border-color: var(--border); }
-.border-hi  { border-color: var(--border-hi); }
+.text-fg {
+  color: var(--fg);
+}
+
+.text-mid {
+  color: var(--fg-dim);
+}
+
+.text-faint {
+  color: var(--fg-faint);
+}
+
+.text-warn {
+  color: var(--warn);
+}
+
+.text-error {
+  color: var(--error);
+}
+
+.text-info {
+  color: var(--info);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.glow {
+  text-shadow: none;
+}
+
+.border-dim {
+  border-color: var(--border);
+}
+
+.border-hi {
+  border-color: var(--border-hi);
+}
 
 /* ─── Terminal experience rows (variant="terminal") ──
    Shared by ExperienceSection, ProjectSection, and SkillSection — kept here
@@ -17,6 +46,7 @@
   border-radius: 6px;
   transition: background-color 0.12s;
 }
+
 .kube-row:hover,
 .kube-row:focus-visible {
   background: var(--fg-faint);

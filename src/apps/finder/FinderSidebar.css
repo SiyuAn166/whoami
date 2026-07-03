@@ -11,6 +11,7 @@
   flex-direction: column;
   gap: 2px;
 }
+
 .finder-group-label {
   font-size: 11px;
   font-weight: 600;
@@ -18,6 +19,7 @@
   padding: 4px 8px 6px;
   letter-spacing: 0.02em;
 }
+
 .finder-item {
   display: flex;
   align-items: center;
@@ -34,12 +36,15 @@
   cursor: pointer;
   transition: background-color 0.12s;
 }
+
 .finder-item:hover {
   background: var(--fg-faint);
 }
+
 .finder-item.is-selected {
   background: var(--sel-bg);
 }
+
 .finder-item-icon {
   display: inline-flex;
   align-items: center;
@@ -52,5 +57,7 @@
 
 /* Compact: narrower sidebar on small windows */
 @media (max-width: 620px) {
-  .finder-sidebar { width: 168px; }
+  .finder-sidebar {
+    width: 168px;
+  }
 }

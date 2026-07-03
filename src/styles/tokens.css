@@ -46,6 +46,7 @@
   --boot-fg: #d0d0d0;
   color-scheme: dark;
 }
+
 :root[data-theme='light'] {
   /* surfaces */
   --desktop-a: #e9eefc;
