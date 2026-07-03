@@ -7,5 +7,6 @@ export const clockWidget: WidgetDefinition = {
   size: "small",
   variant: "glass",
   order: 10,
+  defaultPos: { x: 18, y: 60 },
   render: (ctx) => <ClockContent ctx={ctx} />,
 };

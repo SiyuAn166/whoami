@@ -32,7 +32,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  overflow: visible; /* let the seconds-hand glow spill like before */
+  overflow: visible;
 }
 
 .wgt-clock-bezel {
@@ -44,7 +44,7 @@
 .wgt-clock-ring {
   fill: none;
   stroke: var(--fg-dim);
-  stroke-width: 1;
+  stroke-width: 0;
 }
 
 .wgt-clock-tick {
@@ -55,7 +55,7 @@
 
 .wgt-clock-tick--major {
   stroke: var(--fg);
-  stroke-width: 2.2;
+  stroke-width: 1;
   stroke-linecap: round;
 }
 
@@ -63,6 +63,7 @@
   font-size: 16px;
   fill: var(--fg);
   font-weight: 600;
+  user-select: none;
 }
 
 /* ── Hands: each in its own overlay <svg>, rotated purely by CSS transform.
