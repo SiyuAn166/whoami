@@ -38,7 +38,7 @@ function CloseGlyph({ size = 8 }) {
       <path
         d="M2.5 2.5L7.5 7.5M7.5 2.5L2.5 7.5"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="2"
         strokeLinecap="round"
       />
     </svg>
@@ -52,7 +52,7 @@ function MinimizeGlyph({ size = 8 }) {
       <path
         d="M2 5H8"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="2"
         strokeLinecap="round"
       />
     </svg>
@@ -60,16 +60,20 @@ function MinimizeGlyph({ size = 8 }) {
 }
 
 /** Zoom glyph — the two diagonal corner arrows shown inside the green traffic light on hover */
-function ZoomGlyph({ size = 8 }) {
+function ZoomGlyph({ size = 8, maximized = false }) {
   return (
     <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
-      <path
-        d="M4 2H2V4M6 8H8V6"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      {maximized ? (
+        <>
+          <polygon points="0,5 5,0 5,5" fill="currentColor" />
+          <polygon points="10,5 5,10 5,5" fill="currentColor" />
+        </>
+      ) : (
+        <>
+          <polygon points="1.5,1.5 6.5,1.5 1.5,6.5" fill="currentColor" />
+          <polygon points="8,8 3,8 8,3" fill="currentColor" />
+        </>
+      )}
     </svg>
   );
 }
@@ -245,7 +249,7 @@ export function Window({
             aria-label="Zoom window"
             title="Zoom"
           >
-            <ZoomGlyph />
+            <ZoomGlyph maximized={maximized} />
           </button>
         </div>
         {toolbar}
