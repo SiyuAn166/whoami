@@ -162,44 +162,114 @@
   ],
   "skills": [
     {
-      "name": "Golang",
-      "level": 88
+      "name": "Go",
+      "level": 88,
+      "category": "lang"
     },
     {
       "name": "Java",
-      "level": 86
+      "level": 86,
+      "category": "lang"
     },
     {
       "name": "Python",
-      "level": 84
+      "level": 84,
+      "category": "lang"
     },
     {
       "name": "TypeScript",
-      "level": 82
+      "level": 82,
+      "category": "lang"
     },
     {
-      "name": "Microservices",
-      "level": 88
+      "name": "SQL",
+      "level": 80,
+      "category": "lang"
     },
     {
       "name": "Kubernetes",
-      "level": 85
+      "level": 85,
+      "category": "infra"
     },
     {
       "name": "Docker",
-      "level": 84
+      "level": 84,
+      "category": "infra"
     },
     {
-      "name": "REST_APIs",
-      "level": 85
+      "name": "Linux",
+      "level": 83,
+      "category": "infra"
+    },
+    {
+      "name": "Terraform",
+      "level": 82,
+      "category": "infra"
     },
     {
       "name": "AWS",
-      "level": 80
+      "level": 80,
+      "category": "infra"
     },
     {
-      "name": "CI_CD_Pipelines",
-      "level": 85
+      "name": "GCP",
+      "level": 79,
+      "category": "infra"
+    },
+    {
+      "name": "Prometheus",
+      "level": 78,
+      "category": "infra"
+    },
+    {
+      "name": "Grafana",
+      "level": 78,
+      "category": "infra"
+    },
+    {
+      "name": "Microservices",
+      "level": 88,
+      "category": "dist"
+    },
+    {
+      "name": "REST_APIs",
+      "level": 85,
+      "category": "dist"
+    },
+    {
+      "name": "DNS",
+      "level": 84,
+      "category": "dist"
+    },
+    {
+      "name": "gRPC",
+      "level": 82,
+      "category": "dist"
+    },
+    {
+      "name": "RPZ",
+      "level": 82,
+      "category": "dist"
+    },
+    {
+      "name": "Kafka",
+      "level": 81,
+      "category": "dist"
+    },
+    {
+      "name": "Cloudflare",
+      "level": 80,
+      "category": "dist"
+    },
+    {
+      "name": "etcd",
+      "level": 80,
+      "category": "dist"
+    },
+    {
+      "name": "Akamai",
+      "level": 78,
+      "category": "dist"
     }
   ]
 }

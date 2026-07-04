@@ -81,6 +81,9 @@ export interface Skill {
   name: string;
   /** Proficiency level 0–100 */
   level: number;
+  /** Domain grouping for the Finder tag view. Falls back to name-based
+   *  inference in SkillSection when omitted. */
+  category?: "lang" | "infra" | "dist";
 }
 
 export interface CommandStrings {

@@ -1,9 +1,8 @@
 import type { CSSProperties } from "react";
-import type { Skill } from "../../../../types/portfolio";
+import type { Skill } from "../../../types/portfolio";
 import "./SkillSection.css";
 
 /* ───────────────────────── shared ───────────────────────── */
-
 const NS = "siyu";
 
 function getStatus(level: number): string {
@@ -13,6 +12,7 @@ function getStatus(level: number): string {
   if (level >= 60) return "working";
   return "learning";
 }
+
 function slugify(name: string): string {
   return name
     .toLowerCase()
@@ -45,7 +45,6 @@ export function SkillSection({
 }
 
 /* ═════════════════════════ TERMINAL — kubectl ═════════════════════════ */
-
 const SCOL = {
   status: { width: "13ch", flexShrink: 0 } as CSSProperties,
   proficiency: { flex: 1, minWidth: "20ch" } as CSSProperties,
@@ -59,7 +58,6 @@ function bar(level: number): string {
 function TerminalSkills({ skills }: { skills: Skill[] }) {
   const nameCh = Math.max(8, ...skills.map((s) => slugify(s.name).length)) + 2;
   const nameStyle: CSSProperties = { width: `${nameCh}ch`, flexShrink: 0 };
-
   return (
     <section
       className="kube-exp"
@@ -80,7 +78,6 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
         <span style={{ color: "var(--prompt-path)" }}>~</span>{" "}
         <span style={{ color: "var(--fg)" }}>kubectl get skills -n {NS}</span>
       </div>
-
       <div style={{ minWidth: "min-content" }}>
         <div
           className="flex"
@@ -96,7 +93,6 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
           <span style={SCOL.status}>STATUS</span>
           <span style={SCOL.proficiency}>PROFICIENCY</span>
         </div>
-
         {skills.map((s) => {
           const status = getStatus(s.level);
           const color = STATUS_COLORS[status];
@@ -118,7 +114,6 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
           );
         })}
       </div>
-
       <div style={{ color: "var(--fg-dim)", marginTop: 10 }}>
         {skills.length} skills
       </div>
@@ -126,74 +121,82 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
   );
 }
 
-/* ═════════════════════════ FINDER — ring gauge cards ═════════════════════════
-   One considered design: each skill is a horizontal card with a native-feeling
-   circular proficiency ring (percentage in the center, tier-tinted) beside a
-   name-first text column. The ring is the hero signal; the monogram tints the
-   whole card via --tier. Rings animate in on mount.
-   ============================================================================ */
+/* ═════════════════════════ FINDER — grouped tags ═════════════════════════
+   A near-monochrome, macOS-native presentation: skills are grouped by domain
+   into rounded "tag" pills (Finder tags / System Settings token style).
+   Colour is used only as a small semantic accent — a category dot on each pill
+   and beside each group heading — never as a large block, matching macOS's
+   monochrome-base + restrained-accent language.
 
-const R = 19; // ring radius
-const C = 2 * Math.PI * R; // circumference ≈ 119.38
+   Grouping is data-driven from `skill.category`; a name-based inference is the
+   fallback so older data keeps working. No progress bars, no gauges.
+   ========================================================================== */
+
+type Domain = "lang" | "infra" | "dist";
+
+const DOMAINS: { id: Domain; label: string; color: string }[] = [
+  { id: "lang", label: "Languages", color: "var(--sk-lang)" },
+  { id: "infra", label: "Cloud Infrastructure", color: "var(--sk-infra)" },
+  {
+    id: "dist",
+    label: "Distributed Systems & Networking",
+    color: "var(--sk-dist)",
+  },
+];
+
+function classify(skill: Skill): Domain {
+  // 1) explicit data field wins (single source of truth in data.json)
+  if (skill.category) return skill.category;
+
+  // 2) fallback inference for legacy / missing data
+  const n = skill.name.toLowerCase();
+  if (
+    /(^go$|golang|java|python|type|script|\bsql\b|rust|kotlin|swift|\bc\b)/.test(
+      n,
+    )
+  )
+    return "lang";
+  if (
+    /(kubernetes|docker|linux|terraform|aws|gcp|azure|cloud|prometheus|grafana|infra)/.test(
+      n,
+    )
+  )
+    return "infra";
+  return "dist";
+}
 
 function FinderSkills({ skills }: { skills: Skill[] }) {
-  return (
-    <section className="sg-wrap">
-      <div className="sg-grid">
-        {skills.map((s) => {
-          const st = getStatus(s.level);
-          const color = STATUS_COLORS[st];
-          const label = s.name.replace(/_/g, " ");
-          const initial = s.name
-            .replace(/[^A-Za-z0-9]/g, "")
-            .charAt(0)
-            .toUpperCase();
-          const offset = C * (1 - Math.max(0, Math.min(100, s.level)) / 100);
-          return (
-            <div
-              className="sg-card"
-              key={s.name}
-              style={{ ["--tier" as string]: color }}
-            >
-              <div
-                className="sg-ring"
-                role="progressbar"
-                aria-valuenow={s.level}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={label}
-              >
-                <svg width="52" height="52" viewBox="0 0 52 52">
-                  <circle className="sg-track" cx="26" cy="26" r={R} />
-                  <circle
-                    className="sg-prog"
-                    cx="26"
-                    cy="26"
-                    r={R}
-                    style={{
-                      strokeDasharray: C,
-                      strokeDashoffset: offset,
-                      ["--sg-c" as string]: `${C}`,
-                      ["--sg-off" as string]: `${offset}`,
-                    }}
-                  />
-                </svg>
-                <span className="sg-pct">{s.level}</span>
-              </div>
+  const groups = DOMAINS.map((d) => ({
+    ...d,
+    items: skills.filter((s) => classify(s) === d.id),
+  })).filter((g) => g.items.length > 0);
 
-              <div className="sg-text">
-                <div className="sg-name" title={label}>
-                  <span className="sg-mono" aria-hidden>
-                    {initial}
-                  </span>
-                  <span className="sg-label">{label}</span>
-                </div>
-                <span className="sg-tier">{st}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+  return (
+    <section className="sk-root">
+      {groups.map((g) => (
+        <div className="sk-group" key={g.id}>
+          <div className="sk-head">
+            <span className="sk-dot" style={{ background: g.color }} />
+            {g.label}
+            <span className="sk-count">{g.items.length}</span>
+          </div>
+          <div className="sk-tags">
+            {g.items.map((s) => {
+              const label = s.name.replace(/_/g, " ");
+              return (
+                <span className="sk-tag" key={s.name} title={label}>
+                  <span
+                    className="sk-tag-dot"
+                    style={{ background: g.color }}
+                    aria-hidden
+                  />
+                  <span className="sk-tag-name">{label}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </section>
   );
 }
