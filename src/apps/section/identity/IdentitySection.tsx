@@ -1,8 +1,4 @@
-import type {
-  ExperienceEntry,
-  Identity,
-  Meta,
-} from "../../../../types/portfolio";
+import type { ExperienceEntry, Identity, Meta } from "../../../types/portfolio";
 
 interface IdentitySectionProps {
   identity: Identity;

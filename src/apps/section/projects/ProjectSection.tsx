@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Project } from "../../../../types/portfolio";
+import type { Project } from "../../../types/portfolio";
 import "./ProjectSection.css";
 
 /* ───────────────────────── shared ───────────────────────── */

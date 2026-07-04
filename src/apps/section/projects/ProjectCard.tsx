@@ -1,4 +1,4 @@
-import type { Project } from "../../../../types/portfolio";
+import type { Project } from "../../../types/portfolio";
 import "./ProjectCard.css";
 
 interface ProjectCardProps {
