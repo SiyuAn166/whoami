@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Project } from "../../../types/portfolio";
 import "./ProjectSection.css";
 
@@ -20,24 +20,6 @@ function slugify(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-/** Deterministic hue from a string, for per-project icon tint. */
-function hueOf(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
-  return h;
-}
-
-/** 1–2 letter monogram from a SCREAMING_SNAKE / spaced name. */
-function initials(name: string): string {
-  const parts = name
-    .replace(/[^A-Za-z0-9]+/g, " ")
-    .trim()
-    .split(" ")
-    .filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return (parts[0] ?? "?").slice(0, 2).toUpperCase();
 }
 
 export type ProjectsVariant = "finder" | "terminal";
@@ -277,129 +259,102 @@ function ProjDescribe({
   );
 }
 
-/* ═════════════════════════ FINDER — Launchpad + Quick Look ═════════════════════════ */
+/* ═════════════════════════ FINDER — stacked list ═════════════════════════ */
 
-function AppIcon({ project, size = 60 }: { project: Project; size?: number }) {
-  const h = hueOf(project.name);
-  const bg = `linear-gradient(150deg, hsl(${h} 70% 58%), hsl(${(h + 40) % 360} 68% 46%))`;
+function clean(s: string): string {
+  return s.replace(/_/g, " ");
+}
+
+/** Two-letter monogram from a project name, e.g. GOARC_MCP → GM */
+function monogram(name: string): string {
+  const parts = name.split(/[_\s]+/).filter(Boolean);
+  const a = parts[0]?.[0] ?? "";
+  const b = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
+  return (a + b).toUpperCase();
+}
+
+/** map a project status to a scoped status class (macOS system colour) */
+function statusClass(status: string): string {
+  return "pj-st-" + status.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function ChevronIcon() {
   return (
-    <span
-      className="lp-icon"
-      style={{
-        width: size,
-        height: size,
-        background: bg,
-        borderRadius: size * 0.23,
-        fontSize: size * 0.36,
-      }}
+    <svg
+      className="pj-chev"
+      width="7"
+      height="12"
+      viewBox="0 0 7 12"
+      fill="none"
+      aria-hidden
     >
-      {initials(project.name)}
-      <span
-        className="lp-icon-badge"
-        style={{ background: statusColor(project.status) }}
-        aria-hidden
+      <path
+        d="M1 1l5 5-5 5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-    </span>
+    </svg>
   );
 }
 
 function FinderProjects({ projects }: { projects: Project[] }) {
-  const [sel, setSel] = useState<Project | null>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSel(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   return (
-    <section className="lp-wrap">
-      <div className="lp-grid">
-        {projects.map((p) => (
-          <button
-            key={p.name}
-            type="button"
-            className="lp-item"
-            onClick={() => setSel(p)}
-          >
-            <AppIcon project={p} />
-            <span className="lp-name">{p.name.replace(/_/g, " ")}</span>
-            <span className="lp-version">{p.version}</span>
-          </button>
-        ))}
-      </div>
-
-      {sel && <QuickLook project={sel} onClose={() => setSel(null)} />}
+    <section className="pj-root">
+      <ul className="pj-stack">
+        {projects.map((p) => {
+          const row = (
+            <>
+              <div className={`pj-ico ${statusClass(p.status)}`}>
+                {monogram(p.name)}
+              </div>
+              <div className="pj-mid">
+                <div className="pj-name">
+                  {clean(p.name)}
+                  <span className="pj-ver">{p.version}</span>
+                  <span className={`pj-pill ${statusClass(p.status)}`}>
+                    {p.status}
+                  </span>
+                </div>
+                <div className="pj-desc">{p.description}</div>
+                {p.tags?.length ? (
+                  <div className="pj-tags">
+                    {p.tags.map((t) => (
+                      <span className="pj-tag" key={t}>
+                        {clean(t)}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                {p.license && (
+                  <div className="pj-foot">
+                    <span className="pj-lic">{clean(p.license)}</span>
+                  </div>
+                )}
+              </div>
+              {p.url ? <ChevronIcon /> : <span className="pj-chev-spacer" />}
+            </>
+          );
+          return (
+            <li key={p.name} className="pj-row">
+              {p.url ? (
+                <a
+                  className="pj-link"
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open ${clean(p.name)}`}
+                >
+                  {row}
+                </a>
+              ) : (
+                <div className="pj-link pj-link--static">{row}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </section>
-  );
-}
-
-function QuickLook({
-  project,
-  onClose,
-}: {
-  project: Project;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="ql-backdrop"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={project.name}
-    >
-      <div className="ql-card" onClick={(e) => e.stopPropagation()}>
-        <button className="ql-close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
-        <div className="ql-hero">
-          <AppIcon project={project} size={72} />
-          <div>
-            <div className="ql-title">{project.name.replace(/_/g, " ")}</div>
-            <div className="ql-sub">
-              <span>{project.version}</span>
-              <span
-                className="ql-badge"
-                style={{
-                  color: statusColor(project.status),
-                  borderColor: statusColor(project.status),
-                }}
-              >
-                ● {project.status}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <p className="ql-desc">{project.description}</p>
-
-        <div className="ql-tags">
-          {project.tags.map((t) => (
-            <span key={t} className="ql-tag">
-              {t}
-            </span>
-          ))}
-          {project.license && (
-            <span className="ql-tag ql-tag-license">{project.license}</span>
-          )}
-        </div>
-
-        {project.url && (
-          <div className="ql-actions">
-            <a
-              className="ql-open"
-              href={project.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open ↗
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
   );
 }

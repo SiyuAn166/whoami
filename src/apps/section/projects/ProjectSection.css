@@ -1,237 +1,197 @@
 /* ============================================================
-   Projects — Finder "Launchpad" icon grid + Quick Look card
-   (variant="finder"). The kubectl terminal view reuses
-   .kube-row from ../../../styles/misc.css, so needs no CSS here.
+   Projects — Finder "stacked list" view (variant="finder").
+   Near-monochrome macOS presentation, matching the Skills
+   redesign. Reuses the project's global tokens (--fg, --fg-dim)
+   and defines only small scoped extras, theme-aware. Status
+   colours are macOS system colours used solely as tiny accents
+   (icon tile + pill), never large fills.
+
+   The kubectl terminal view reuses .kube-row from the shared
+   styles, so needs no CSS here.
    ============================================================ */
 
-.lp-wrap {
-  position: relative;
-  height: 100%;
-  min-height: 0;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
+.pj-root {
+  /* neutral surface tokens (dark = default) */
+  --pj-hairline: rgba(255, 255, 255, 0.1);
+  --pj-tile-hover: rgba(255, 255, 255, 0.06);
+  --pj-fg: var(--fg, #e6e6e6);
+  --pj-dim: var(--fg-dim, rgba(235, 235, 245, 0.6));
+  --pj-faint: rgba(235, 235, 245, 0.35);
+  --pj-chip: rgba(255, 255, 255, 0.08);
+  --pj-mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
   font-family:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
-}
-
-.lp-grid {
-  flex: 1 1 auto;
+  height: 100%;
   min-height: 0;
   overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  align-content: start;
-  gap: 20px 10px;
-  padding: 12px 6px;
 }
 
-.lp-item {
+/* light theme: macOS light neutrals */
+[data-theme="light"] .pj-root {
+  --pj-hairline: rgba(0, 0, 0, 0.1);
+  --pj-tile-hover: rgba(0, 0, 0, 0.045);
+  --pj-fg: #1d1d1f;
+  --pj-dim: rgba(60, 60, 67, 0.62);
+  --pj-faint: rgba(60, 60, 67, 0.4);
+  --pj-chip: rgba(0, 0, 0, 0.05);
+}
+
+/* status semantic — macOS system colours (dark) */
+.pj-st-active {
+  --pj-sc: #30d158;
+}
+.pj-st-stable {
+  --pj-sc: #0a84ff;
+}
+.pj-st-beta,
+.pj-st-wip {
+  --pj-sc: #ff9f0a;
+}
+.pj-st-archived {
+  --pj-sc: #98989d;
+}
+/* light system-colour variants */
+[data-theme="light"] .pj-st-active {
+  --pj-sc: #34c759;
+}
+[data-theme="light"] .pj-st-stable {
+  --pj-sc: #007aff;
+}
+[data-theme="light"] .pj-st-beta,
+[data-theme="light"] .pj-st-wip {
+  --pj-sc: #ff9500;
+}
+[data-theme="light"] .pj-st-archived {
+  --pj-sc: #8e8e93;
+}
+
+.pj-stack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pj-row + .pj-row {
+  border-top: 0.5px solid var(--pj-hairline);
+}
+
+.pj-link {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 4px;
-  background: none;
-  border: 0;
-  border-radius: 12px;
-  cursor: pointer;
-  font: inherit;
-  color: var(--fg);
-  transition:
-    background-color 0.15s,
-    transform 0.15s;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 9px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
 }
-
-.lp-item:hover,
-.lp-item:focus-visible {
-  background: var(--fg-faint);
-  outline: none;
+.pj-link:hover {
+  background: var(--pj-tile-hover);
 }
-
-.lp-item:hover .lp-icon {
-  transform: translateY(-3px) scale(1.04);
+.pj-link--static {
+  cursor: default;
 }
-
-.lp-icon {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.18);
-  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.lp-icon-badge {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid var(--bg);
-}
-
-.lp-name {
-  font-size: 12px;
-  text-align: center;
-  line-height: 1.25;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lp-version {
-  font-size: 10.5px;
-  color: var(--fg-dim);
-}
-
-/* ── Quick Look overlay ── */
-.ql-backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.32);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  animation: fadeIn 0.16s ease;
-}
-
-.ql-card {
-  position: relative;
-  width: min(420px, 100%);
-  max-height: 100%;
-  overflow-y: auto;
-  padding: 22px;
-  border-radius: 14px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-  animation: ql-pop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-@keyframes ql-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.ql-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 24px;
-  height: 24px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--fg-faint);
-  color: var(--fg-dim);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background-color 0.14s,
-    color 0.14s;
-}
-
-.ql-close:hover {
-  background: var(--error);
-  color: #fff;
-}
-
-.ql-hero {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 14px;
-}
-
-.ql-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--fg);
-  margin-bottom: 6px;
-}
-
-.ql-sub {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12.5px;
-  color: var(--fg-dim);
-}
-
-.ql-badge {
-  font-size: 11px;
-  padding: 1px 9px;
-  border-radius: 999px;
-  border: 1px solid;
+.pj-link--static:hover {
   background: transparent;
 }
 
-.ql-desc {
+/* icon monogram tile — the only sizeable colour */
+.pj-ico {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-family: var(--pj-mono);
   font-size: 13px;
-  line-height: 1.6;
-  color: var(--fg);
-  margin-bottom: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--pj-sc) 86%, #fff),
+    var(--pj-sc)
+  );
+  box-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.ql-tags {
+.pj-mid {
+  flex: 1;
+  min-width: 0;
+}
+
+.pj-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--pj-fg);
+}
+
+.pj-ver {
+  font-family: var(--pj-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--pj-faint);
+}
+
+.pj-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: var(--pj-sc);
+  background: color-mix(in srgb, var(--pj-sc) 15%, transparent);
+}
+
+.pj-desc {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--pj-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pj-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 5px;
+  margin-top: 7px;
+}
+.pj-tag {
+  font-family: var(--pj-mono);
+  font-size: 10px;
+  color: var(--pj-dim);
+  background: var(--pj-chip);
+  border-radius: 5px;
+  padding: 2px 7px;
 }
 
-.ql-tag {
-  font-size: 11px;
-  padding: 3px 9px;
-  border-radius: 7px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--fg-dim);
+.pj-foot {
+  margin-top: 7px;
+}
+.pj-lic {
+  font-family: var(--pj-mono);
+  font-size: 10px;
+  color: var(--pj-faint);
 }
 
-.ql-tag-license {
-  font-style: italic;
+.pj-chev {
+  flex: none;
+  align-self: center;
+  color: var(--pj-faint);
 }
-
-.ql-actions {
-  margin-top: 18px;
-}
-
-.ql-open {
-  display: inline-block;
-  font-size: 12.5px;
-  padding: 7px 16px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #fff;
-  background: var(--info);
-  border: 1px solid var(--info);
-  transition: filter 0.15s;
-}
-
-.ql-open:hover {
-  filter: brightness(1.08);
+.pj-chev-spacer {
+  width: 7px;
+  flex: none;
 }
