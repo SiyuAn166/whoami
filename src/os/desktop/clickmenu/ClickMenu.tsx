@@ -12,7 +12,7 @@ import "./ClickMenu.css";
 export interface ClickMenuItem {
   /** use '---' for a separator */
   label: string;
-  icon?: ReactNode;
+  icon?: ReactNode; // SVG glyph
   shortcut?: string;
   disabled?: boolean;
   onSelect?: () => void;
@@ -27,18 +27,7 @@ interface Props {
 
 export function ClickMenu({ x, y, items, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  // Start off-screen invisible, then clamp to the real measured size on mount.
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const { width, height } = el.getBoundingClientRect();
-    setPos({
-      left: Math.min(x, window.innerWidth - width - 8),
-      top: Math.min(y, window.innerHeight - height - 8),
-    });
-  }, [x, y, items.length]);
+  const [pos, setPos] = useState({ left: x, top: y });
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -53,15 +42,23 @@ export function ClickMenu({ x, y, items, onClose }: Props) {
     };
   }, [onClose]);
 
+  // Keep the menu on-screen using its REAL measured size (width is now
+  // content-driven, so a fixed constant would be wrong).
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    setPos({
+      left: Math.min(x, window.innerWidth - width - 6),
+      top: Math.min(y, window.innerHeight - height - 6),
+    });
+  }, [x, y, items.length]);
+
   return (
     <div
       ref={ref}
       className="clickmenu"
-      style={{
-        left: pos?.left ?? x,
-        top: pos?.top ?? y,
-        visibility: pos ? "visible" : "hidden",
-      }}
+      style={{ left: pos.left, top: pos.top }}
       role="menu"
     >
       {items.map((it, i) =>

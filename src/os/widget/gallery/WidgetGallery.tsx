@@ -1,21 +1,15 @@
 // src/os/desktop/clickmenu/WidgetGallery.tsx
-// "Add Widgets" gallery rendered inside the app's real <Window> chrome, so it
-// gets the standard macOS traffic lights, drag and resize for free. It reads the
-// widget CATALOG from the registry and renders each tile as the REAL WidgetFrame
-// (w.render(ctx)) — no duplicated preview markup. Adding is delegated via onAdd.
-import { useMemo, useState } from "react";
+// "Add Widgets" panel that slides up from above the dock (NO traffic lights /
+// NO <Window>). Content is unchanged: category pills + search + a grid of the
+// REAL WidgetFrame previews (w.render(ctx)). A blue "Done" button (bottom-right)
+// and clicking the empty desktop (scrim) both slide the panel out.
+import { useEffect, useMemo, useState } from "react";
 import type {
   WidgetDefinition,
   WidgetRenderContext,
   WidgetVariant,
-} from "../../widget/types";
-import { WidgetFrame } from "../../widget/WidgetFrame";
-import { Window } from "../../window/Window";
-import {
-  defaultRect,
-  type Rect,
-  type WindowInstance,
-} from "../../window/types";
+} from "../types";
+import { WidgetFrame } from "../WidgetFrame";
 import "./WidgetGallery.css";
 
 const VARIANT_LABEL: Record<WidgetVariant, string> = {
@@ -25,7 +19,7 @@ const VARIANT_LABEL: Record<WidgetVariant, string> = {
 };
 
 interface Props {
-  /** all available widgets — pass WIDGETS from registry.ts */
+  /** all available widgets — pass CATALOG from registry.ts */
   catalog: WidgetDefinition[];
   /** the same render context WidgetLayer feeds widgets (data / theme / openApp) */
   ctx: WidgetRenderContext;
@@ -42,25 +36,25 @@ export function WidgetGallery({
   onAdd,
   onClose,
 }: Props) {
-  // Standalone window instance (not registered with the WindowManager — this is
-  // a transient utility window that closes on the red traffic light).
-  const [inst, setInst] = useState<WindowInstance>(() => ({
-    id: "widget-gallery",
-    appId: "widget-gallery",
-    title: "Widgets",
-    rect: defaultRect({ w: 760, h: 540 }, { w: 520, h: 380 }),
-    state: "normal",
-    zIndex: 9000,
-    minSize: { w: 520, h: 380 },
-    resizable: true,
-  }));
+  // drive the slide-in / slide-out transition
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setOpen(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
 
-  const onRectChange = (rect: Rect) => setInst((i) => ({ ...i, rect }));
-  const onToggleMax = () =>
-    setInst((i) => ({
-      ...i,
-      state: i.state === "maximized" ? "normal" : "maximized",
-    }));
+  // slide out, then unmount after the transition
+  const close = () => {
+    setOpen(false);
+    window.setTimeout(onClose, 460);
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Respect each def's enabled() — only show widgets whose data exists.
   const available = useMemo(
@@ -93,17 +87,21 @@ export function WidgetGallery({
   }, [available, group, q]);
 
   return (
-    <Window
-      instance={inst}
-      focused
-      onFocus={() => {}}
-      onClose={onClose}
-      onMinimize={onClose}
-      onToggleMax={onToggleMax}
-      onRectChange={onRectChange}
-    >
-      <div className="widgetgallery">
-        <div className="widgetgallery__controls">
+    <>
+      {/* click the empty desktop (scrim) to slide out */}
+      <div
+        className={`widgetgallery__scrim${open ? " is-open" : ""}`}
+        onClick={close}
+      />
+      <div
+        className={`widgetgallery__panel${open ? " is-open" : ""}`}
+        role="dialog"
+        aria-label="Add widgets"
+      >
+        <div className="widgetgallery__grip" />
+
+        <div className="widgetgallery__head">
+          <div className="widgetgallery__title">Widgets</div>
           <div className="widgetgallery__pills">
             <button
               className={`widgetgallery__pill${group === "all" ? " is-active" : ""}`}
@@ -141,7 +139,7 @@ export function WidgetGallery({
                 key={w.id}
                 onClick={() => {
                   onAdd(w.id);
-                  onClose();
+                  close();
                 }}
               >
                 <div className="widgetgallery__tile" data-size={w.size}>
@@ -174,7 +172,13 @@ export function WidgetGallery({
             <div className="widgetgallery__empty">No widgets match “{q}”.</div>
           )}
         </div>
+
+        <div className="widgetgallery__foot">
+          <button className="widgetgallery__done" onClick={close}>
+            Done
+          </button>
+        </div>
       </div>
-    </Window>
+    </>
   );
 }

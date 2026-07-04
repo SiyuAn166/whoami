@@ -1,4 +1,4 @@
 // src/os/desktop/clickmenu/index.ts
-export { DesktopClickMenu } from "./DesktopClickMenu";
+export { WidgetGallery } from "../../widget/gallery/WidgetGallery";
 export { ClickMenu, type ClickMenuItem } from "./ClickMenu";
-export { WidgetGallery } from "./WidgetGallery";
+export { DesktopClickMenu } from "./DesktopClickMenu";
