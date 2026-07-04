@@ -159,7 +159,23 @@ export function WidgetGallery({
                       </WidgetFrame>
                     </div>
                   </div>
-                  <div className="widgetgallery__plus">+</div>
+                  <div className="widgetgallery__plus">
+                    {/* plus sign */}
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path
+                        d="M7 2.4V11.6M2.4 7H11.6"
+                        stroke="#fff"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
                 </div>
                 <div className="widgetgallery__caption">
                   <b>{w.title ?? w.id}</b>
