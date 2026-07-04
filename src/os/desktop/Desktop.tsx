@@ -20,7 +20,7 @@ export function Desktop() {
   if (!data) {
     return (
       <div className="mac-desktop">
-        <MenuBar appName="Finder" theme={theme} onToggleTheme={toggleTheme} />
+        <MenuBar appName="Finder" />
         <div className="boot-screen" role="status" aria-live="polite">
           {error ? (
             <div className="boot-error">
@@ -93,11 +93,7 @@ function DesktopReady({
       onToggleTheme={toggleTheme}
     >
       {data.meta.wallpaper && <div className="wallpaper-tint" aria-hidden />}
-      <MenuBar
-        appName={menuBarAppName}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-      />
+      <MenuBar appName={menuBarAppName} />
       {/* {<DesktopIcons openApp={wm.openApp} />} */}
       <WidgetLayer
         data={data}
