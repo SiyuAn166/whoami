@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import type { PortfolioData } from "../../../types/portfolio";
-import { ExperienceSection } from "../../finder/section/experience/ExperienceSection";
-import { IdentitySection } from "../../finder/section/identity/IdentitySection";
-import { ProjectSection } from "../../finder/section/projects/ProjectSection";
-import { SkillSection } from "../../finder/section/skills/SkillSection";
+import { ExperienceSection } from "../../section/experience/ExperienceSection";
+import { IdentitySection } from "../../section/identity/IdentitySection";
+import { ProjectSection } from "../../section/projects/ProjectSection";
+import { SkillSection } from "../../section/skills/SkillSection";
 import type { VDir } from "../vfs";
 import { isDir, listDir, pathString, resolve, treeString } from "../vfs";
 import { ContactCard } from "./ContactCard";

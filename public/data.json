@@ -96,6 +96,19 @@
   ],
   "projects": [
     {
+      "name": "WHOAMI",
+      "version": "v0.1.0",
+      "status": "ACTIVE",
+      "description": "This very portfolio — a macOS desktop rebuilt in the browser.",
+      "tags": [
+        "React",
+        "TypeScript",
+        "Vite"
+      ],
+      "license": "MIT_License",
+      "url": "https://github.com/SiyuAn166/whoami"
+    },
+    {
       "name": "GOARC_MCP",
       "version": "v0.1.0",
       "status": "ACTIVE",

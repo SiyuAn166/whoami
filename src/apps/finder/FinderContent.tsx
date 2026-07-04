@@ -1,10 +1,10 @@
 import type { PortfolioData } from "../../types/portfolio";
+import { ExperienceSection } from "../section/experience/ExperienceSection";
+import { ProjectSection } from "../section/projects/ProjectSection";
+import { CapabilitiesSection } from "../section/skills/SkillSection";
 import { FinderSidebar } from "./FinderSidebar";
 import "./finder.css";
 import { useFinderNav } from "./finderNav";
-import { ExperienceSection } from "./section/experience/ExperienceSection";
-import { ProjectSection } from "./section/projects/ProjectSection";
-import { CapabilitiesSection } from "./section/skills/SkillSection";
 
 export function FinderContent({ data }: { data: PortfolioData }) {
   const { section, sidebarOpen } = useFinderNav();
