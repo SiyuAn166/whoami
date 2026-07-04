@@ -8,6 +8,7 @@
   --clickmenu-sel: #0a63e6;
   --clickmenu-sel-fg: #fff;
 }
+
 :root[data-theme="light"] {
   --clickmenu-bg: rgba(246, 246, 248, 0.72);
   --clickmenu-stroke: rgba(0, 0, 0, 0.1);
@@ -18,7 +19,8 @@
 .clickmenu {
   position: fixed;
   z-index: 1000;
-  min-width: 216px;
+  width: max-content;
+  max-width: 320px;
   padding: 5px;
   font-family:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
@@ -35,59 +37,84 @@
     0 0 0 0.5px rgba(0, 0, 0, 0.2);
   animation: clickmenu-in 0.1s ease;
 }
+
 @keyframes clickmenu-in {
   from {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
+
 .clickmenu__item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   height: 24px;
-  padding: 0 9px;
+  padding: 0 10px 0 8px;
   border-radius: 5px;
   cursor: default;
+  white-space: nowrap;
 }
+
 .clickmenu__icon {
-  width: 17px;
-  text-align: center;
-  font-size: 13px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
   opacity: 0.85;
 }
+
+.clickmenu__icon svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
 .clickmenu__label {
   flex: 1;
+  /* small trailing space before menu edge; keeps shrink-to-fit tidy */
+  padding-right: 12px;
 }
+
 .clickmenu__shortcut {
   font-size: 12px;
   opacity: 0.55;
+  padding-left: 4px;
 }
+
 .clickmenu__item:hover {
   background: var(--clickmenu-sel);
   color: var(--clickmenu-sel-fg);
 }
+
 .clickmenu__item:hover .clickmenu__icon,
 .clickmenu__item:hover .clickmenu__shortcut {
   color: var(--clickmenu-sel-fg);
   opacity: 0.9;
 }
+
 .clickmenu__item.is-disabled {
   opacity: 0.38;
 }
+
 .clickmenu__item.is-disabled:hover {
   background: transparent;
   color: var(--fg);
 }
+
 .clickmenu__sep {
   height: 0.5px;
   background: var(--clickmenu-stroke);
   margin: 5px 8px;
 }
+
 @media (prefers-reduced-motion: reduce) {
   .clickmenu {
     animation: none;

@@ -12,6 +12,7 @@ import {
 import { CATALOG, getWidget } from "../../widget/registry";
 import type { WidgetRenderContext } from "../../widget/types";
 import { ClickMenu, type ClickMenuItem } from "./ClickMenu";
+import { AddWidgetsIcon, AppearanceIcon, RemoveIcon } from "./ClickMenuIcons";
 import { WidgetGallery } from "./WidgetGallery";
 
 interface Props {
@@ -31,8 +32,8 @@ interface Props {
   children: ReactNode;
 }
 
-/** Menu anchor + optional widget the right-click landed on. */
-type MenuPos = { x: number; y: number; widgetId: string | null };
+/** Menu position, plus the widget id it was opened on (null = empty desktop). */
+type MenuState = { x: number; y: number; widgetId: string | null };
 
 export function DesktopClickMenu({
   className,
@@ -44,50 +45,53 @@ export function DesktopClickMenu({
   onToggleTheme,
   children,
 }: Props) {
-  const [menu, setMenu] = useState<MenuPos | null>(null);
+  const [menu, setMenu] = useState<MenuState | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
 
   const onContextMenu = useCallback((e: React.MouseEvent) => {
     // Always suppress the browser menu on the desktop…
     e.preventDefault();
     const target = e.target as HTMLElement;
-    // …but leave app windows to their own behaviour.
-    if (target.closest(".mac-window")) return;
-    // Did the right-click land on a widget card? (data-wid set by WidgetLayer)
+    // …but leave app windows AND the menu bar to their own behaviour.
+    if (target.closest(".mac-window, .menu-bar")) return;
+    // Did the right-click land on a widget? If so, remember which one.
     const widgetEl = target.closest<HTMLElement>("[data-wid]");
     setMenu({
       x: e.clientX,
       y: e.clientY,
-      widgetId: widgetEl?.getAttribute("data-wid") ?? null,
+      widgetId: widgetEl?.dataset.wid ?? null,
     });
   }, []);
 
-  // Build a context-sensitive menu: widget-specific when right-clicking a card,
-  // otherwise the plain desktop menu.
-  const items: ClickMenuItem[] = (() => {
-    if (menu?.widgetId) {
-      const wid = menu.widgetId;
-      const name = getWidget(wid)?.title ?? wid;
-      return [
-        {
-          label: `Remove \u201C${name}\u201D`,
-          onSelect: () => onRemoveWidget?.(wid),
-          disabled: !onRemoveWidget,
-        },
-        { label: "---" },
-        { label: "Add Widgets\u2026", onSelect: () => setGalleryOpen(true) },
-      ];
-    }
-    return [
-      { label: "Add Widgets\u2026", onSelect: () => setGalleryOpen(true) },
-      { label: "---" },
+  // Build items — prepend "Remove …" when the menu was opened on a widget.
+  const items: ClickMenuItem[] = [];
+  if (menu?.widgetId) {
+    const name = getWidget(menu.widgetId)?.title ?? menu.widgetId;
+    const id = menu.widgetId;
+    items.push(
       {
-        label: "Toggle Appearance",
-        onSelect: () => onToggleTheme?.(),
-        disabled: !onToggleTheme,
+        label: `Remove \u201C${name}\u201D`,
+        icon: <RemoveIcon />,
+        onSelect: () => onRemoveWidget?.(id),
+        disabled: !onRemoveWidget,
       },
-    ];
-  })();
+      { label: "---" }, // separator (ClickMenu convention)
+    );
+  }
+  items.push(
+    {
+      label: "Add Widgets\u2026",
+      icon: <AddWidgetsIcon />,
+      onSelect: () => setGalleryOpen(true),
+    },
+    { label: "---" }, // separator (ClickMenu convention)
+    {
+      label: "Toggle Appearance",
+      icon: <AppearanceIcon />,
+      onSelect: () => onToggleTheme?.(),
+      disabled: !onToggleTheme,
+    },
+  );
 
   return (
     <div className={className} style={style} onContextMenu={onContextMenu}>
