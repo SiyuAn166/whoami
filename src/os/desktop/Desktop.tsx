@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { getApp } from "../../apps/registry";
 import { usePortfolioData } from "../../hooks/usePortfolioData";
 import { useTheme } from "../../hooks/useTheme";
@@ -70,6 +71,8 @@ function DesktopReady({
   const { activeIds, addWidget, removeWidget } = useActiveWidgets(
     DEFAULT_ACTIVE_WIDGET_IDS,
   );
+  // Which widget (if any) is currently being placed on the desktop.
+  const [placingId, setPlacingId] = useState<string | null>(null);
   const widgetCtx = { data, theme, setTheme, openApp: wm.openApp };
   const focusedApp = wm.instances.find((w) => w.id === wm.focusedId);
   const menuBarAppName =
@@ -88,7 +91,7 @@ function DesktopReady({
       }
       ctx={widgetCtx}
       activeIds={activeIds}
-      onAddWidget={addWidget}
+      onAddWidget={(id) => setPlacingId(id)}
       onRemoveWidget={removeWidget}
       onToggleTheme={toggleTheme}
     >
@@ -101,6 +104,12 @@ function DesktopReady({
         setTheme={setTheme}
         openApp={wm.openApp}
         activeIds={activeIds}
+        placingId={placingId}
+        onPlaced={(id) => {
+          addWidget(id);
+          setPlacingId(null);
+        }}
+        onCancelPlacing={() => setPlacingId(null)}
       />
       {wm.render()}
       <Dock isOpen={wm.isOpen} openApp={wm.openApp} />

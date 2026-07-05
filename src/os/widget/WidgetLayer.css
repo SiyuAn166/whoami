@@ -38,6 +38,72 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.26);
 }
 
+/* ─── Placement mode (Add Widgets → ghost follows cursor → click to drop) ───
+   Ghost + hint are portaled to <body>, so these fixed/z-index rules apply in
+   the ROOT stacking context (not trapped inside .wgt-layer's z-index:1).
+   The ghost is positioned purely via `transform` set imperatively from JS. */
+.wgt-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9000;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 2px dashed rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  background: rgba(120, 170, 255, 0.1);
+  box-shadow:
+    0 0 0 4px rgba(10, 132, 255, 0.28),
+    0 22px 55px rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  will-change: transform;
+}
+
+.wgt-ghost-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--fg, #e6e6e6);
+  opacity: 0.85;
+  pointer-events: none;
+  user-select: none;
+}
+
+.wgt-place-hint {
+  position: fixed;
+  left: 50%;
+  top: 40px;
+  transform: translateX(-50%);
+  z-index: 9001;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+[data-theme="light"] .wgt-ghost {
+  border-color: rgba(0, 0, 0, 0.35);
+  background: rgba(10, 132, 255, 0.08);
+  box-shadow:
+    0 0 0 4px rgba(0, 122, 255, 0.22),
+    0 22px 55px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .wgt-place-hint {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #1c1c1e;
+}
+
 /* ─── Responsive: hide widgets on narrow screens (they'd cover content) ───── */
 @media (max-width: 900px) {
   .wgt-layer {
