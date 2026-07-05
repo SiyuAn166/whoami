@@ -1,7 +1,7 @@
 import {
   navigateTo,
-  useFinderNav,
   SECTION_LABEL,
+  useFinderNav,
   type FinderSection,
 } from "./finderNav";
 import "./FinderSidebar.css";
@@ -10,6 +10,33 @@ export type { FinderSection };
 
 /** macOS-style blue tinted linear glyphs for the Favorites items */
 function ItemGlyph({ id }: { id: FinderSection }) {
+  if (id === "about") {
+    // person
+    return (
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle
+          cx="12"
+          cy="12"
+          r="9"
+          stroke="currentColor"
+          stroke-width="1.5"
+        />
+        <circle
+          cx="12"
+          cy="10"
+          r="3"
+          stroke="currentColor"
+          stroke-width="1.5"
+        />
+        <path
+          d="M6.5 18.5c1-2.7 3.1-4 5.5-4s4.5 1.3 5.5 4"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
+    );
+  }
   if (id === "experience") {
     // briefcase
     return (
@@ -86,7 +113,7 @@ function ItemGlyph({ id }: { id: FinderSection }) {
   );
 }
 
-const ITEMS: FinderSection[] = ["experience", "projects", "skills"];
+const ITEMS: FinderSection[] = ["about", "experience", "projects", "skills"];
 
 export function FinderSidebar() {
   const { section } = useFinderNav();

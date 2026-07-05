@@ -1,4 +1,5 @@
 import type { PortfolioData } from "../../types/portfolio";
+import { AboutMeSection } from "../section/aboutme/AboutMeSection";
 import { ExperienceSection } from "../section/experience/ExperienceSection";
 import { ProjectSection } from "../section/projects/ProjectSection";
 import { CapabilitiesSection } from "../section/skills/SkillSection";
@@ -12,6 +13,13 @@ export function FinderContent({ data }: { data: PortfolioData }) {
     <div className="finder">
       {sidebarOpen && <FinderSidebar />}
       <div className="finder-pane">
+        {section === "about" && (
+          <AboutMeSection
+            identity={data.identity}
+            meta={data.meta}
+            variant="finder"
+          />
+        )}
         {section === "experience" && (
           <ExperienceSection entries={data.experience} variant="finder" />
         )}

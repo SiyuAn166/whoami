@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import "./Window.css";
 import {
   clamp,
   clampRect,
@@ -14,6 +13,8 @@ import {
   type Rect,
   type WindowInstance,
 } from "./types";
+import "./Window.css";
+import { CloseIcon, MinimizeIcon, ZoomIcon } from "./WindowIcons";
 
 interface WindowProps {
   instance: WindowInstance;
@@ -29,53 +30,6 @@ interface WindowProps {
   /** Rendered below the content area, inside the window (e.g. a status bar). Optional. */
   footer?: ReactNode;
   children: ReactNode;
-}
-
-/** Close glyph — the × shown inside the red traffic light on hover */
-function CloseGlyph({ size = 8 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
-      <path
-        d="M2.5 2.5L7.5 7.5M7.5 2.5L2.5 7.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Minimize glyph — the – shown inside the yellow traffic light on hover */
-function MinimizeGlyph({ size = 8 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
-      <path
-        d="M2 5H8"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Zoom glyph — the two diagonal corner arrows shown inside the green traffic light on hover */
-function ZoomGlyph({ size = 8, maximized = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
-      {maximized ? (
-        <>
-          <polygon points="0,5 5,0 5,5" fill="currentColor" />
-          <polygon points="10,5 5,10 5,5" fill="currentColor" />
-        </>
-      ) : (
-        <>
-          <polygon points="1.5,1.5 6.5,1.5 1.5,6.5" fill="currentColor" />
-          <polygon points="8,8 3,8 8,3" fill="currentColor" />
-        </>
-      )}
-    </svg>
-  );
 }
 
 /**
@@ -130,8 +84,8 @@ export function Window({
       const { vw, vh } = vp();
       onRectChange({
         ...r0,
-        x: clamp(r0.x + ev.clientX - sx, 8, vw - 8 - r0.w),
-        y: clamp(r0.y + ev.clientY - sy, MENUBAR_H + 4, vh - DOCK_H - r0.h),
+        x: clamp(r0.x + ev.clientX - sx, 0, vw - r0.w),
+        y: clamp(r0.y + ev.clientY - sy, MENUBAR_H, vh - DOCK_H - r0.h),
       });
     };
     const up = () => {
@@ -165,20 +119,20 @@ export function Window({
     const move = (ev: PointerEvent) => {
       const { vw, vh } = vp();
       const minW = Math.min(minSize?.w ?? MIN_W, vw - 16),
-        minH = Math.min(minSize?.h ?? MIN_H, vh - (MENUBAR_H + 4) - DOCK_H);
+        minH = Math.min(minSize?.h ?? MIN_H, vh - MENUBAR_H - DOCK_H);
       const dx = ev.clientX - sx,
         dy = ev.clientY - sy;
       let { x, y, w, h } = r0;
-      if (R) w = clamp(r0.w + dx, minW, vw - 8 - r0.x);
+      if (R) w = clamp(r0.w + dx, minW, vw - r0.x);
       if (B) h = clamp(r0.h + dy, minH, vh - DOCK_H - r0.y);
       if (L) {
         const right = r0.x + r0.w;
-        x = clamp(r0.x + dx, 8, right - minW);
+        x = clamp(r0.x + dx, 0, right - minW);
         w = right - x;
       }
       if (T) {
         const bottom = r0.y + r0.h;
-        y = clamp(r0.y + dy, MENUBAR_H + 4, bottom - minH);
+        y = clamp(r0.y + dy, MENUBAR_H, bottom - minH);
         h = bottom - y;
       }
       onRectChange({ x, y, w, h });
@@ -233,7 +187,7 @@ export function Window({
             aria-label="Close window"
             title="Close"
           >
-            <CloseGlyph />
+            <CloseIcon />
           </button>
           <button
             className="traffic-light tl-min"
@@ -241,7 +195,7 @@ export function Window({
             aria-label="Minimize window"
             title="Minimize"
           >
-            <MinimizeGlyph />
+            <MinimizeIcon />
           </button>
           <button
             className="traffic-light tl-max"
@@ -249,7 +203,7 @@ export function Window({
             aria-label="Zoom window"
             title="Zoom"
           >
-            <ZoomGlyph maximized={maximized} />
+            <ZoomIcon maximized={maximized} />
           </button>
         </div>
         {toolbar}

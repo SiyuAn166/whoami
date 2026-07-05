@@ -1,0 +1,325 @@
+/* ============================================================
+   About Me — Finder "About This Mac" panel (variant="finder")
+   + Terminal `whoami` block (variant="terminal").
+   Near-monochrome macOS surface: neutral tiles, .5px hairlines,
+   colour only as small semantic accents. Consistent with the
+   Skills / Projects / Experience Finder redesigns.
+   ============================================================ */
+
+.ab-root {
+  --ab-tile: rgba(255, 255, 255, 0.045);
+  --ab-hair: rgba(255, 255, 255, 0.09);
+  --ab-blue: #0a84ff;
+  --ab-purple: #bf5af2;
+  --ab-green: #30d158;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 20px 40px;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  color: var(--fg);
+}
+
+.ab-panel {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* ── hero ── */
+.ab-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ab-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 26px;
+  background: linear-gradient(140deg, var(--ab-blue), var(--ab-purple));
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.32);
+}
+
+.ab-name {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 16px 0 0;
+}
+
+.ab-headline {
+  font-size: 13.5px;
+  color: var(--fg-dim);
+  margin: 5px 0 0;
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.ab-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--fg-dim);
+  background: var(--ab-tile);
+  border: 0.5px solid var(--ab-hair);
+}
+
+.ab-avail-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ab-green);
+  box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.5);
+  animation: ab-pulse 2.4s ease-out infinite;
+}
+
+@keyframes ab-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(48, 209, 88, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(48, 209, 88, 0);
+  }
+}
+
+/* ── bio ── */
+.ab-bio {
+  margin: 22px 0 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--fg);
+  opacity: 0.88;
+  text-align: left;
+}
+
+/* ── details list ── */
+.ab-list {
+  width: 100%;
+  margin-top: 24px;
+  border-radius: 12px;
+  background: var(--ab-tile);
+  border: 0.5px solid var(--ab-hair);
+  overflow: hidden;
+}
+
+.ab-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--ab-hair);
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.ab-row:last-child {
+  border-bottom: none;
+}
+
+.ab-key {
+  color: var(--fg-dim);
+  flex: none;
+  width: 88px;
+}
+
+.ab-val {
+  color: var(--fg);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ab-row-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.ab-row-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ab-row-link .ab-val {
+  color: #0a78ff;
+}
+
+[data-theme="light"] .ab-root .ab-row-link .ab-val {
+  color: #005eff;
+}
+
+.ab-chev {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  color: var(--fg-dim);
+  opacity: 0.6;
+}
+
+/* ═════════════════════════ TERMINAL — whoami ═════════════════════════ */
+
+.ab-term {
+  padding: 6px 4px 12px;
+  font-family:
+    "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg);
+}
+
+.ab-term-head {
+  margin-bottom: 14px;
+}
+
+.ab-term-prompt {
+  color: var(--ab-green);
+}
+
+.ab-term-path {
+  color: var(--ab-blue);
+}
+
+.ab-term-sep {
+  color: var(--fg-dim);
+}
+
+.ab-term-cmd {
+  color: var(--fg);
+}
+
+.ab-term-body {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.ab-term-mono {
+  margin: 0;
+  padding: 12px 18px;
+  border: 0.5px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ab-green);
+  background: rgba(48, 209, 88, 0.06);
+}
+
+.ab-term-info {
+  flex: 1;
+  min-width: 220px;
+}
+
+.ab-term-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ab-term-role {
+  color: var(--fg-dim);
+  margin-top: 2px;
+}
+
+.ab-term-rule {
+  height: 0.5px;
+  background: var(--border, rgba(255, 255, 255, 0.12));
+  margin: 10px 0;
+}
+
+.ab-term-line {
+  display: flex;
+  gap: 12px;
+}
+
+.ab-term-k {
+  color: var(--fg-dim);
+  width: 90px;
+  flex: none;
+}
+
+.ab-term-v {
+  color: var(--fg);
+}
+
+.ab-term-tag {
+  margin: 16px 0 0;
+  color: var(--fg-dim);
+  line-height: 1.7;
+  font-size: 12.5px;
+  max-width: 680px;
+}
+
+/* ═════════════════════════ LIGHT THEME ═════════════════════════ */
+
+[data-theme="light"] .ab-root {
+  --ab-tile: rgba(0, 0, 0, 0.035);
+  --ab-hair: rgba(0, 0, 0, 0.1);
+  --ab-blue: #007aff;
+  --ab-purple: #af52de;
+  --ab-green: #34c759;
+}
+
+[data-theme="light"] .ab-avatar {
+  box-shadow: 0 8px 22px rgba(0, 122, 255, 0.28);
+}
+
+[data-theme="light"] .ab-row-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .ab-term-mono {
+  color: #248a3d;
+  background: rgba(52, 199, 89, 0.09);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .ab-term-prompt {
+  color: #248a3d;
+}
+
+[data-theme="light"] .ab-term-path {
+  color: #007aff;
+}
+
+[data-theme="light"] .ab-term-rule {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 640px) {
+  .ab-root {
+    padding: 20px 14px 30px;
+  }
+
+  .ab-key,
+  .ab-term-k {
+    width: 72px;
+  }
+}

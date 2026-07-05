@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-export type FinderSection = "experience" | "projects" | "skills";
+export type FinderSection = "about" | "experience" | "projects" | "skills";
 
 interface NavState {
   history: FinderSection[];
@@ -17,7 +17,7 @@ interface NavState {
  * store is the clean way to keep the back/forward history, the current folder
  * and the sidebar toggle in sync across all four.
  */
-let state: NavState = { history: ["experience"], index: 0, sidebarOpen: true };
+let state: NavState = { history: ["about"], index: 0, sidebarOpen: true };
 
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -63,6 +63,7 @@ export function useFinderNav() {
 }
 
 export const SECTION_LABEL: Record<FinderSection, string> = {
+  about: "About Me",
   experience: "Experience",
   projects: "Projects",
   skills: "Skills",

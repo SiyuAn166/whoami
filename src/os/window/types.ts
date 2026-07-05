@@ -32,7 +32,7 @@ export interface WindowInstance {
 
 export const MENUBAR_H = 28;
 export const TOP_GAP = 12;
-export const EDGE = 8; // viewport margin a window can't cross
+export const EDGE = 0; // viewport margin a window can't cross
 export const DOCK_H = 86; // dock height + bottom margin (14px margin + ~70px dock + buffer)
 export const MIN_W = 440;
 export const MIN_H = 300;
@@ -61,9 +61,9 @@ export function maxedRect(): Rect {
   const { vw, vh } = vp();
   return {
     x: EDGE,
-    y: MENUBAR_H + 4,
-    w: vw - 2 * EDGE,
-    h: vh - (MENUBAR_H + 4) - DOCK_H,
+    y: MENUBAR_H,
+    w: vw,
+    h: vh - MENUBAR_H - DOCK_H,
   };
 }
 
@@ -72,17 +72,17 @@ export function clampRect(r: Rect, minSize?: Size): Rect {
   const { vw, vh } = vp();
   const minW = minSize?.w ?? MIN_W;
   const minH = minSize?.h ?? MIN_H;
-  const w = clamp(r.w, Math.min(minW, vw - 2 * EDGE), vw - 2 * EDGE);
+  const w = clamp(r.w, Math.min(minW, vw), vw);
   const h = clamp(
     r.h,
-    Math.min(minH, vh - (MENUBAR_H + 4) - DOCK_H),
-    vh - (MENUBAR_H + 4) - DOCK_H,
+    Math.min(minH, vh - MENUBAR_H - DOCK_H),
+    vh - MENUBAR_H - DOCK_H,
   );
   return {
     w,
     h,
     x: clamp(r.x, EDGE, vw - EDGE - w),
-    y: clamp(r.y, MENUBAR_H + 4, vh - DOCK_H - h),
+    y: clamp(r.y, MENUBAR_H, vh - DOCK_H - h),
   };
 }
 

@@ -157,12 +157,64 @@
 /* ---- grid of widget tiles (scrolls) ---- */
 .widgetgallery__grid {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 18px;
   padding: 4px 24px 20px;
   align-content: start;
+  /* Firefox: thin overlay-style scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.widgetgallery__grid:hover,
+.widgetgallery__grid:focus-within {
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+/* macOS overlay scrollbar (WebKit/Blink): hidden until hover/scroll */
+.widgetgallery__grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.widgetgallery__grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widgetgallery__grid::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.25s ease;
+}
+
+.widgetgallery__grid:hover::-webkit-scrollbar-thumb,
+.widgetgallery__grid:focus-within::-webkit-scrollbar-thumb,
+.widgetgallery__grid:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+.widgetgallery__grid::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .widgetgallery__grid:hover,
+[data-theme="light"] .widgetgallery__grid:focus-within {
+  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
+}
+
+[data-theme="light"] .widgetgallery__grid:hover::-webkit-scrollbar-thumb,
+[data-theme="light"] .widgetgallery__grid:focus-within::-webkit-scrollbar-thumb,
+[data-theme="light"] .widgetgallery__grid:active::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] .widgetgallery__grid::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.42);
 }
 
 .widgetgallery__card {
@@ -232,10 +284,18 @@
   height: 18px;
   display: grid;
   place-items: center;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1;
   color: #fff;
   border-radius: 50%;
   background: var(--accent, #30d158);
   opacity: 0;
+  transform: scale(0.7);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .widgetgallery__card:hover .widgetgallery__plus {

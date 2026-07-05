@@ -315,142 +315,105 @@ function Describe({
   );
 }
 
-/* ═════════════════════════ FINDER — Miller columns ═════════════════════════ */
+/* ═════════════════════════ FINDER — grouped cards ═════════════════════════ */
 
-function FolderIcon({ tone }: { tone: "live" | "open" | "dim" }) {
-  const fill =
-    tone === "live"
-      ? "var(--ok)"
-      : tone === "open"
-        ? "var(--info)"
-        : "var(--fg-dim)";
-  return (
-    <svg className="finder-icon" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M2 6.6A2.6 2.6 0 0 1 4.6 4h3.9c.66 0 1.29.27 1.74.75L11.6 6h7.8A2.6 2.6 0 0 1 22 8.6v8.8A2.6 2.6 0 0 1 19.4 20H4.6A2.6 2.6 0 0 1 2 17.4V6.6Z"
-        fill={fill}
-      />
-      <path
-        d="M2 8.4h20v.2A2.6 2.6 0 0 1 19.4 11H4.6A2.6 2.6 0 0 1 2 8.6v-.2Z"
-        fill="#000"
-        opacity="0.10"
-      />
-    </svg>
-  );
+/** Two-letter monogram from a screaming-snake name.
+ *  "INFOBLOX" -> "IN", "SFU_BIG_DATA_HUB" -> "SB". */
+function monogram(name: string): string {
+  const parts = name
+    .replace(/^\//, "")
+    .split(/[_\s-]+/)
+    .filter(Boolean);
+  const a = parts[0]?.[0] ?? "";
+  const b = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
+  return (a + b).toUpperCase();
+}
+
+/** Semantic tone for the monogram tile + badge:
+ *  current role → live (green), has publication → pub (purple), else archived. */
+function toneOf(e: ExperienceEntry): "live" | "pub" | "arch" {
+  if (e.current) return "live";
+  if (e.researchUrl) return "pub";
+  return "arch";
 }
 
 function FinderExperience({ entries }: { entries: ExperienceEntry[] }) {
-  const initial = entries.findIndex((e) => e.current);
-  const [sel, setSel] = useState(initial === -1 ? 0 : initial);
-  const active = entries[sel];
-
   return (
-    <section className="finder-miller">
-      {/* ── left column: role folders ── */}
-      <div className="miller-col" role="listbox" aria-label="Experience">
-        {entries.map((e, i) => (
-          <button
-            key={e.name}
-            type="button"
-            role="option"
-            aria-selected={i === sel}
-            className={`miller-item${i === sel ? " is-sel" : ""}`}
-            onClick={() => setSel(i)}
-          >
-            <FolderIcon
-              tone={e.current ? "live" : i === sel ? "open" : "dim"}
-            />
-            <span className="miller-name">{e.title ?? humanize(e.name)}</span>
-            {e.current && (
-              <span className="miller-live" title="Current role" aria-hidden />
-            )}
-            <span className="miller-chev" aria-hidden>
-              ›
-            </span>
-          </button>
+    <section className="exp-root">
+      <div className="exp-gl">
+        {entries.map((e) => (
+          <ExperienceCard key={e.name} entry={e} />
         ))}
-      </div>
-
-      {/* ── right column: detail, slides in on change ── */}
-      <div className="miller-detail" key={active.name} aria-live="polite">
-        <FinderDetail entry={active} />
       </div>
     </section>
   );
 }
 
-function FinderDetail({ entry }: { entry: ExperienceEntry }) {
-  const running = !!entry.current;
-  const meta: [string, string][] = [
-    ["Company", entry.company ?? humanize(entry.name)],
-    ["Period", fmtPeriod(entry.dateRange ?? entry.timestamp)],
-    ["Duration", ageOf(entry.dateRange ?? entry.timestamp)],
-    ["Kind", running ? "Active Role" : "Archived Role"],
-    ["Owner", entry.owner],
-    ["Size", entry.size],
-  ];
+function ExperienceCard({ entry }: { entry: ExperienceEntry }) {
+  const tone = toneOf(entry);
+  const title = entry.title ?? humanize(entry.name);
+  const company = entry.company ?? humanize(entry.name);
+  const period = fmtPeriod(entry.dateRange ?? entry.timestamp);
+  const dur = ageOf(entry.dateRange ?? entry.timestamp);
 
   return (
-    <>
-      <div className="miller-hero">
-        <div className="miller-hero-icon">
-          <FolderIcon tone={running ? "live" : "open"} />
+    <article className={`exp-card exp-t-${tone}`}>
+      <header className="exp-chead">
+        <div className="exp-ic" aria-hidden>
+          {monogram(entry.name)}
         </div>
-        <div>
-          <div className="miller-hero-title">
-            {entry.title ?? humanize(entry.name)}
+        <div className="exp-cmeta">
+          <div className="exp-ctitle">
+            <span className="exp-cname">{title}</span>
+            {tone === "live" && <span className="exp-pill live">● Active</span>}
+            {tone === "pub" && (
+              <span className="exp-pill pub">Publication</span>
+            )}
           </div>
-          <span className={`miller-badge${running ? " is-live" : ""}`}>
-            {running ? "● Active" : "Archived"}
-          </span>
+          <div className="exp-cco">{company}</div>
         </div>
-      </div>
+        <div className="exp-cper">
+          <span>{period}</span>
+          <span className="exp-cdur">{dur}</span>
+        </div>
+      </header>
 
-      <dl className="miller-meta">
-        {meta.map(([k, v]) => (
-          <div key={k} className="miller-meta-row">
-            <dt>{k}</dt>
-            <dd>{v}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {entry.highlights?.length ? (
-        <div className="miller-hl">
-          <div className="miller-hl-title">Highlights</div>
-          {entry.highlights.map((h, i) => (
-            <div key={i} className="miller-hl-item">
-              <span aria-hidden>›</span>
-              {h}
+      {(entry.highlights?.length || entry.url || entry.researchUrl) && (
+        <div className="exp-cbody">
+          {entry.highlights?.map((h, i) => (
+            <div key={i} className="exp-hl">
+              <span className="exp-hl-b" aria-hidden>
+                ›
+              </span>
+              <span>{h}</span>
             </div>
           ))}
-        </div>
-      ) : null}
-
-      {(entry.url || entry.researchUrl) && (
-        <div className="miller-actions">
-          {entry.url && (
-            <a
-              className="miller-open"
-              href={entry.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open ↗
-            </a>
-          )}
-          {entry.researchUrl && (
-            <a
-              className="miller-open ghost"
-              href={entry.researchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Publication ↗
-            </a>
+          {(entry.url || entry.researchUrl) && (
+            <div className="exp-actions">
+              {entry.url && (
+                <a
+                  className="exp-open"
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open ↗
+                </a>
+              )}
+              {entry.researchUrl && (
+                <a
+                  className="exp-open ghost"
+                  href={entry.researchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Publication ↗
+                </a>
+              )}
+            </div>
           )}
         </div>
       )}
-    </>
+    </article>
   );
 }
