@@ -16,7 +16,7 @@ export function Dock({ isOpen, openApp }: DockProps) {
           key={app.id}
           variant="dock"
           label={app.name}
-          glyph={app.icon}
+          icon={app.icon}
           running={isOpen(app.id)}
           onOpen={() => openApp(app.id)}
         />

@@ -1,27 +1,86 @@
-/* ─── Calendar ───────────────────────────────────────────────────────────── */
+/* ─── Calendar (compact month grid) ──────────────────────────────────────── */
 .wgt-cal {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
   height: 100%;
+  gap: 6px;
+  padding: 2px;
+}
+
+.wgt-cal-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0 2px;
 }
 
 .wgt-cal-month {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.08em;
   color: var(--error);
+  letter-spacing: 0.01em;
 }
 
-.wgt-cal-day {
-  font-size: 56px;
-  font-weight: 700;
+.wgt-cal-year {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-dim);
+}
+
+.wgt-cal-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 1px 0;
+  align-content: stretch;
+}
+
+.wgt-cal-dow {
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fg-dim);
+  letter-spacing: 0.02em;
+  padding-bottom: 2px;
+}
+
+.wgt-cal-cell {
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg);
+  aspect-ratio: 1;
+  justify-self: center;
+  align-self: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   line-height: 1;
 }
 
-.wgt-cal-weekday {
-  font-size: 12.5px;
-  color: var(--fg-dim);
+.wgt-cal-empty {
+  color: transparent;
+}
+
+/* Weekend numbers get a muted-red tint (macOS style). */
+.wgt-cal-weekend {
+  color: color-mix(in srgb, var(--error) 72%, var(--fg-dim));
+}
+
+/* Today: filled red circle with white number (macOS standard). */
+.wgt-cal-today {
+  background: var(--error);
+  color: #fff;
+  font-weight: 700;
+}
+.wgt-cal-today.wgt-cal-weekend {
+  color: #fff;
+}
+
+/* ─── Light theme ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .wgt-cal-today {
+  color: #fff;
 }

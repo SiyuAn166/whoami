@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 interface IconProps {
   label: string;
-  glyph: ReactNode;
+  icon: ReactNode;
   /** Shows the little "running" dot (Dock variant only). */
   running?: boolean;
   onOpen: () => void;
@@ -10,7 +10,7 @@ interface IconProps {
 }
 
 /** Shared presentational primitive behind both DockIcon and DesktopIcon. */
-export function Icon({ label, glyph, running, onOpen, variant }: IconProps) {
+export function Icon({ label, icon, running, onOpen, variant }: IconProps) {
   if (variant === "dock") {
     return (
       <button
@@ -22,7 +22,7 @@ export function Icon({ label, glyph, running, onOpen, variant }: IconProps) {
         <span className="dock-tooltip" role="tooltip">
           {label}
         </span>
-        {glyph}
+        {icon}
         {running && <span className="dock-dot" aria-hidden />}
       </button>
     );
@@ -34,7 +34,7 @@ export function Icon({ label, glyph, running, onOpen, variant }: IconProps) {
       aria-label={`Open ${label}`}
       title={label}
     >
-      <span className="desktop-icon-glyph">{glyph}</span>
+      <span className="desktop-icon-asset">{icon}</span>
       <span className="desktop-icon-label">{label}</span>
     </button>
   );

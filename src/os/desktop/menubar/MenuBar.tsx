@@ -1,12 +1,12 @@
 import "./MenuBar.css";
 import { MenuClock } from "./MenuBarClock";
 import {
-  AppleGlyph,
-  BatteryGlyph,
-  ControlCenterGlyph,
-  SearchGlyph,
-  WifiGlyph,
-} from "./MenuBarGlyphs";
+  AppleIcon,
+  BatteryIcon,
+  ControlCenterIcon,
+  SearchIcon,
+  WifiIcon,
+} from "./MenuBarIcons";
 
 interface MenuBarProps {
   appName: string;
@@ -17,7 +17,7 @@ export function MenuBar({ appName }: MenuBarProps) {
     <div className="menu-bar">
       <div className="flex items-center gap-0.5">
         <span className="menu-item menu-item--apple" aria-hidden>
-          <AppleGlyph />
+          <AppleIcon />
         </span>
         <span className="menu-item font-bold">{appName}</span>
         <span className="menu-item font-semibold hidden sm:inline">File</span>
@@ -29,16 +29,16 @@ export function MenuBar({ appName }: MenuBarProps) {
       </div>
       <div className="flex items-center">
         <span className="menu-item" aria-hidden>
-          <BatteryGlyph />
+          <BatteryIcon />
         </span>
         <span className="menu-item" aria-hidden>
-          <WifiGlyph />
+          <WifiIcon />
         </span>
         <span className="menu-item" aria-hidden>
-          <SearchGlyph />
+          <SearchIcon />
         </span>
         <span className="menu-item" aria-hidden>
-          <ControlCenterGlyph />
+          <ControlCenterIcon />
         </span>
         <span className="menu-item" aria-hidden>
           <MenuClock />

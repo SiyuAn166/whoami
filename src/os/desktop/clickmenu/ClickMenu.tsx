@@ -12,7 +12,7 @@ import "./ClickMenu.css";
 export interface ClickMenuItem {
   /** use '---' for a separator */
   label: string;
-  icon?: ReactNode; // SVG glyph
+  icon?: ReactNode; // SVG icon
   shortcut?: string;
   disabled?: boolean;
   onSelect?: () => void;

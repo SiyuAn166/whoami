@@ -1,4 +1,4 @@
-import { MoonGlyph, SunGlyph } from "./MenuBarGlyphs";
+import { MoonIcon, SunIcon } from "./MenuBarIcons";
 
 interface MenuBarToggleThemeBtnProps {
   theme: "dark" | "light";
@@ -19,7 +19,7 @@ export function MenuBarToggleThemeBtn({
       title={`Switch to ${isDark ? "light" : "dark"} appearance`}
     >
       <span className="font-semibold" aria-hidden>
-        {isDark ? <SunGlyph /> : <MoonGlyph />}
+        {isDark ? <SunIcon /> : <MoonIcon />}
       </span>
     </button>
   );

@@ -1,5 +1,5 @@
 /** Full-bleed Terminal.app-style icon used by the Dock and Desktop. */
-export function TermGlyph() {
+export function TermIcon() {
   return (
     <svg width="90%" height="90%" viewBox="0 0 48 48" aria-hidden>
       <rect

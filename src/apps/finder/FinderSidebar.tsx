@@ -8,8 +8,8 @@ import "./FinderSidebar.css";
 
 export type { FinderSection };
 
-/** macOS-style blue tinted linear glyphs for the Favorites items */
-function ItemGlyph({ id }: { id: FinderSection }) {
+/** macOS-style blue tinted linear icons for the Favorites items */
+function ItemIcon({ id }: { id: FinderSection }) {
   if (id === "about") {
     // person
     return (
@@ -128,7 +128,7 @@ export function FinderSidebar() {
           onClick={() => navigateTo(id)}
         >
           <span className="finder-item-icon" aria-hidden>
-            <ItemGlyph id={id} />
+            <ItemIcon id={id} />
           </span>
           {SECTION_LABEL[id]}
         </button>

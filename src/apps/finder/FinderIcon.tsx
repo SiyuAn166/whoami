@@ -1,5 +1,5 @@
 /** macOS Finder-style folder icon used by the Dock and Desktop. */
-export function FinderGlyph() {
+export function FinderIcon() {
   return (
     <svg
       width="90%"

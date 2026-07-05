@@ -24,6 +24,7 @@
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
   color: var(--fg);
+  user-select: none;
 }
 
 .ab-panel {

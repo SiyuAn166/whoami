@@ -1,4 +1,4 @@
-export function PreviewGlyph() {
+export function PreviewIcon() {
   return (
     <svg
       width="90%"

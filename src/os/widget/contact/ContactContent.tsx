@@ -65,7 +65,7 @@ export function ContactContent({ ctx }: { ctx: WidgetRenderContext }) {
             title={l.label}
             aria-label={l.label}
           >
-            <span className="wgt-contact-glyph" aria-hidden>
+            <span className="wgt-contact-icon" aria-hidden>
               <Icon kind={l.icon} />
             </span>
           </a>

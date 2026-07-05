@@ -28,6 +28,7 @@
     transform 0.18s ease,
     box-shadow 0.18s ease,
     border-color 0.18s ease;
+  user-select: none;
 }
 
 :root[data-theme="light"] .wgt {

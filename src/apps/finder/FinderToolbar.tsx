@@ -6,8 +6,8 @@ import {
   SECTION_LABEL,
 } from "./finderNav";
 
-/** Toggle-sidebar glyph (macOS "sidebar.left") */
-function SidebarGlyph() {
+/** Toggle-sidebar icon (macOS "sidebar.left") */
+function SidebarIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <rect
@@ -63,7 +63,7 @@ export function FinderToolbar() {
         aria-label="Toggle sidebar"
         title="Toggle sidebar"
       >
-        <SidebarGlyph />
+        <SidebarIcon />
       </button>
       <span className="finder-tsep" aria-hidden />
       <button

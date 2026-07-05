@@ -1,4 +1,5 @@
 // src/os/widget/registry.ts
+import { bootstrapWidget } from "./bootstrap/BootstrapWidget";
 import { calendarWidget } from "./calendar/CalendarWidget";
 import { clockWidget } from "./clock/ClockWidget";
 import { contactWidget } from "./contact/ContactWidget";
@@ -14,6 +15,7 @@ import type { WidgetDefinition } from "./types";
  * decided at runtime by `activeIds` (see useActiveWidgets), NOT by this array.
  */
 export const CATALOG: WidgetDefinition[] = [
+  bootstrapWidget,
   clockWidget,
   skillsWidget,
   featuredProjectWidget,
@@ -28,6 +30,7 @@ export const WIDGETS = CATALOG;
 
 /** Widgets placed on the desktop on first load */
 export const DEFAULT_ACTIVE_WIDGET_IDS: string[] = [
+  bootstrapWidget.id,
   contactWidget.id,
   // clockWidget.id,
   // skillsWidget.id,

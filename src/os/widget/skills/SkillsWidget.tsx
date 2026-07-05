@@ -1,5 +1,6 @@
 import type { WidgetDefinition } from "../types";
 import { SkillsContent } from "./SkillsContent";
+import { navigateTo } from "../../../apps/finder/finderNav";
 import "./SkillsWidget.css";
 
 export const skillsWidget: WidgetDefinition = {
@@ -10,6 +11,9 @@ export const skillsWidget: WidgetDefinition = {
   order: 20,
   defaultPos: { x: 18, y: 320 },
   enabled: (ctx) => ctx.data.skills.length > 0,
-  onActivate: (ctx) => ctx.openApp("finder"),
+  onActivate: (ctx) => {
+    ctx.openApp("finder");
+    navigateTo("skills");
+  },
   render: (ctx) => <SkillsContent ctx={ctx} />,
 };

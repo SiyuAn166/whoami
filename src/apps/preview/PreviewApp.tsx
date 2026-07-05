@@ -1,7 +1,7 @@
 import type { AppDefinition } from "../types";
 import { PreviewContent } from "./PreviewContent";
 import { PreviewFooter } from "./PreviewFooter";
-import { PreviewGlyph } from "./PreviewGlyph";
+import { PreviewIcon } from "./PreviewIcon";
 
 /**
  * "Preview" — a macOS Preview.app-style window that embeds the résumé PDF.
@@ -11,7 +11,7 @@ import { PreviewGlyph } from "./PreviewGlyph";
 export const previewApp: AppDefinition = {
   id: "preview",
   name: "Preview",
-  icon: <PreviewGlyph />,
+  icon: <PreviewIcon />,
   showOnDesktop: true,
   title: "resume.pdf",
   defaultSize: { w: 720, h: 900 },

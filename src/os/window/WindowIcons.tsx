@@ -1,4 +1,4 @@
-/** Close glyph — the × shown inside the red traffic light on hover */
+/** Close icon — the × shown inside the red traffic light on hover */
 export function CloseIcon({ size = 8 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
@@ -12,7 +12,7 @@ export function CloseIcon({ size = 8 }) {
   );
 }
 
-/** Minimize glyph — the – shown inside the yellow traffic light on hover */
+/** Minimize icon — the – shown inside the yellow traffic light on hover */
 export function MinimizeIcon({ size = 8 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
@@ -26,7 +26,7 @@ export function MinimizeIcon({ size = 8 }) {
   );
 }
 
-/** Zoom glyph — the two diagonal corner arrows shown inside the green traffic light on hover */
+/** Zoom icon — the two diagonal corner arrows shown inside the green traffic light on hover */
 export function ZoomIcon({ size = 8, maximized = false }) {
   return (
     <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>

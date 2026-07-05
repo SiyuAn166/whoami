@@ -1,55 +1,132 @@
-/* ─── Skills rings ───────────────────────────────────────────────────────── */
-.wgt-skills {
+/* ── Skills widget · proportional stacked bar ─────────────────────────── */
+.skw {
+  --skw-lang: #0a84ff; /* Languages   — system blue  */
+  --skw-infra: #30d158; /* Cloud Infra — system green */
+  --skw-dist: #bf5af2; /* Distributed — system purple */
+  --skw-track: rgba(255, 255, 255, 0.08);
+  --skw-hair: rgba(255, 255, 255, 0.1);
+
   display: flex;
   flex-direction: column;
   gap: 12px;
-  justify-content: center;
   height: 100%;
+  padding: 2px;
+  cursor: pointer;
 }
 
-.wgt-skill {
+/* header */
+.skw-head {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: baseline;
+  gap: 6px;
 }
-
-.wgt-ring {
-  flex-shrink: 0;
-  transform: rotate(-90deg);
-}
-
-.wgt-ring-bg {
-  fill: none;
-  stroke: var(--fg-faint);
-  stroke-width: 4;
-}
-
-.wgt-ring-fg {
-  fill: none;
-  stroke: var(--info);
-  stroke-width: 4;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.wgt-ring-num {
-  transform: rotate(90deg);
-  transform-origin: center;
-  font-size: 13px;
+.skw-total {
+  font-size: 30px;
   font-weight: 700;
-  fill: var(--fg);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--fg);
 }
-
-.wgt-skill-name {
+.skw-total-label {
   font-size: 13px;
   font-weight: 500;
+  color: var(--fg-dim, rgba(255, 255, 255, 0.55));
+}
+
+/* stacked proportional bar */
+.skw-bar {
+  display: flex;
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  background: var(--skw-track);
+  gap: 2px;
+}
+.skw-seg {
+  display: grid;
+  place-items: center;
+  min-width: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  transition: flex-grow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.skw-seg--lang {
+  background: var(--skw-lang);
+}
+.skw-seg--infra {
+  background: var(--skw-infra);
+}
+.skw-seg--dist {
+  background: var(--skw-dist);
+}
+
+/* legend */
+.skw-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.skw-leg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.skw-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.skw-dot--lang {
+  background: var(--skw-lang);
+}
+.skw-dot--infra {
+  background: var(--skw-infra);
+}
+.skw-dot--dist {
+  background: var(--skw-dist);
+}
+.skw-leg-label {
+  color: var(--fg);
+  font-weight: 500;
+}
+.skw-leg-count {
+  margin-left: auto;
+  color: var(--fg-dim, rgba(255, 255, 255, 0.5));
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* footer hint */
+.skw-foot {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 0.5px solid var(--skw-hair);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fg-dim, rgba(255, 255, 255, 0.45));
+}
+
+/* ── Light theme ──────────────────────────────────────────────────────── */
+[data-theme="light"] .skw {
+  --skw-lang: #007aff;
+  --skw-infra: #34c759;
+  --skw-dist: #af52de;
+  --skw-track: rgba(0, 0, 0, 0.07);
+  --skw-hair: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .skw-seg {
+  color: rgba(255, 255, 255, 0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wgt-ring-fg {
+  .skw-seg {
     transition: none;
   }
 }

@@ -1,10 +1,10 @@
 import type { SVGProps } from "react";
 
-interface GlyphProps extends SVGProps<SVGSVGElement> {
+interface IconProps extends SVGProps<SVGSVGElement> {
   size?: number;
 }
 
-export function AppleGlyph({ size = 20, ...props }: GlyphProps) {
+export function AppleIcon({ size = 20, ...props }: IconProps) {
   return (
     <svg
       width={size}
@@ -20,7 +20,7 @@ export function AppleGlyph({ size = 20, ...props }: GlyphProps) {
   );
 }
 
-export function MoonGlyph({ size = 14, ...props }: GlyphProps) {
+export function MoonIcon({ size = 14, ...props }: IconProps) {
   return (
     <svg
       width={size}
@@ -36,7 +36,7 @@ export function MoonGlyph({ size = 14, ...props }: GlyphProps) {
   );
 }
 
-export function SunGlyph({ size = 14, ...props }: GlyphProps) {
+export function SunIcon({ size = 14, ...props }: IconProps) {
   return (
     <svg
       width={size}
@@ -57,7 +57,7 @@ export function SunGlyph({ size = 14, ...props }: GlyphProps) {
   );
 }
 
-export function WifiGlyph({ size = 16, ...props }: GlyphProps) {
+export function WifiIcon({ size = 16, ...props }: IconProps) {
   return (
     <svg
       width={size}
@@ -77,7 +77,7 @@ export function WifiGlyph({ size = 16, ...props }: GlyphProps) {
   );
 }
 
-export function BatteryGlyph({ size = 16, ...props }: GlyphProps) {
+export function BatteryIcon({ size = 16, ...props }: IconProps) {
   return (
     <svg
       width={size * 1.7}
@@ -93,11 +93,11 @@ export function BatteryGlyph({ size = 16, ...props }: GlyphProps) {
   );
 }
 
-export function ControlCenterGlyph({
+export function ControlCenterIcon({
   size = 16,
   id = "cc",
   ...props
-}: GlyphProps & { id?: string }) {
+}: IconProps & { id?: string }) {
   return (
     <svg
       width={size}
@@ -143,7 +143,7 @@ export function ControlCenterGlyph({
   );
 }
 
-export function SearchGlyph({ size = 14, ...props }: GlyphProps) {
+export function SearchIcon({ size = 14, ...props }: IconProps) {
   return (
     <svg
       width={size}

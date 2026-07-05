@@ -16,7 +16,7 @@ export function DesktopIcons({ openApp }: DesktopIconsProps) {
           key={app.id}
           variant="desktop"
           label={app.name}
-          glyph={app.icon}
+          icon={app.icon}
           onOpen={() => openApp(app.id)}
         />
       ))}

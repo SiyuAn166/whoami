@@ -3,12 +3,12 @@ import "./finder.css";
 import { FinderContent } from "./FinderContent";
 import { FinderFooter } from "./FinderFooter";
 import { FinderToolbar } from "./FinderToolbar";
-import { FinderGlyph } from "./FinderGlyph";
+import { FinderIcon } from "./FinderIcon";
 
 export const finderApp: AppDefinition = {
   id: "finder",
   name: "Finder",
-  icon: <FinderGlyph />,
+  icon: <FinderIcon />,
   showOnDesktop: true,
   title: "Finder",
   defaultSize: { w: 1280, h: 760 },

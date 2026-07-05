@@ -1,7 +1,7 @@
 import type { AppDefinition } from "../types";
 import { Shell } from "./Shell";
 import { StatusBar } from "./StatusBar";
-import { TermGlyph } from "./TermGlyph";
+import { TermIcon } from "./TermIcon";
 
 const SHELL_USER = "siyu";
 const SHELL_HOST = "portfolio";
@@ -9,7 +9,7 @@ const SHELL_HOST = "portfolio";
 export const terminalApp: AppDefinition = {
   id: "terminal",
   name: "Terminal",
-  icon: <TermGlyph />,
+  icon: <TermIcon />,
   showOnDesktop: true,
   title: `${SHELL_USER}@${SHELL_HOST} — zsh — 92×30`,
   defaultSize: { w: 1040, h: 860 },
