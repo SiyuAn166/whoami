@@ -1,51 +1,45 @@
-import { CursorIcon, DockIcon, DragIcon } from "./BootstrapIcons";
 import "./BootstrapWidget.css";
 
-const STEPS = [
-  {
-    icon: <CursorIcon />,
-    tone: "blue",
-    title: "Right click",
-    desc: "Open the menu",
-  },
-  {
-    icon: <DockIcon />,
-    tone: "green",
-    title: "Dock",
-    desc: "Launch apps below",
-  },
-  {
-    icon: <DragIcon />,
-    tone: "purple",
-    title: "Drag",
-    desc: "Move & resize windows",
-  },
-];
-
+/**
+ * Bootstrap widget — S4 "annotated desktop map".
+ * A miniature macOS desktop (menu bar · window · dock) with leader-line
+ * labels pointing at each interaction. Static, no animation.
+ */
 export function BootstrapContent() {
   return (
-    <div className="stw-root">
-      <header className="stw-head">
-        <div className="stw-welcome">
-          Hi, there <span className="stw-wave">👋</span>
-        </div>
-        <h2 className="stw-title">Welcome to my macOS‑inspired portfolio</h2>
-        <p className="stw-intro">
-          A desktop built in the browser — explore it like the real thing.
-        </p>
+    <div className="bsw-root">
+      <header className="bsw-head">
+        <h2 className="bsw-title">
+          Welcome <span className="bsw-wave">👋</span>
+        </h2>
+        <p className="bsw-sub">A portfolio that works like a Mac.</p>
       </header>
 
-      <ol className="stw-steps">
-        {STEPS.map((s) => (
-          <li className="stw-step" key={s.title}>
-            <span className={`stw-icon stw-icon--${s.tone}`}>{s.icon}</span>
-            <span className="stw-step-text">
-              <span className="stw-step-title">{s.title}</span>
-              <span className="stw-step-desc">{s.desc}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
+      <div
+        className="bsw-map"
+        role="img"
+        aria-label="A miniature macOS desktop showing the menu bar, a window and the dock"
+      >
+        <div className="bsw-menubar">
+          <span />
+          <span style={{ width: 8 }} />
+          <span style={{ width: 10 }} />
+        </div>
+
+        <div className="bsw-win">
+          <i />
+        </div>
+
+        <div className="bsw-dock">
+          <b />
+          <b />
+          <b />
+        </div>
+
+        <div className="bsw-tag bsw-tag--rc">Right-click → menu</div>
+        <div className="bsw-tag bsw-tag--dock">Dock → open apps</div>
+        <div className="bsw-tag bsw-tag--drag">Drag → move windows</div>
+      </div>
     </div>
   );
 }
