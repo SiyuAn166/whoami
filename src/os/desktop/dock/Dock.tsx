@@ -1,5 +1,5 @@
 import { APPS } from "../../../apps/registry";
-import { Icon } from "../Icon";
+import { Icon } from "../icon/Icon";
 import "./Dock.css";
 
 interface DockProps {

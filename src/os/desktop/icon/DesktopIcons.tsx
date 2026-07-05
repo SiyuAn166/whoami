@@ -1,4 +1,4 @@
-import { APPS } from "../../apps/registry";
+import { APPS } from "../../../apps/registry";
 import { Icon } from "./Icon";
 import "./DesktopIcons.css";
 
