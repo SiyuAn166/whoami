@@ -55,6 +55,7 @@
   transition:
     transform 0.44s cubic-bezier(0.32, 0.72, 0, 1),
     opacity 0.34s ease 0.1s;
+  user-select: none;
 }
 
 .widgetgallery__panel.is-open {
@@ -142,7 +143,7 @@
   font-size: 13px;
   color: var(--fg);
   padding: 6px 10px 6px 26px;
-  border-radius: 8px;
+  border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
   background: color-mix(in srgb, var(--fg) 6%, transparent);
   outline: none;
