@@ -58,6 +58,8 @@
   display: grid;
   place-items: center;
   will-change: transform;
+  /* Glide between grid cells instead of tracking the cursor pixel-by-pixel. */
+  transition: transform 0.09s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .wgt-ghost-label {

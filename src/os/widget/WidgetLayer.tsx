@@ -272,10 +272,16 @@ export function WidgetLayer(props: WidgetLayerProps) {
     if (!placingId || !placeSize) return;
     const { w, h } = placeSize;
 
+    // Cursor-centre → snapped, clamped top-left. Shared by preview + drop so
+    // the ghost always previews the EXACT cell it will land in.
+    const ghostPos = (cx: number, cy: number): Pos =>
+      clampXY(w, h, snap(cx - w / 2), snap(cy - h / 2));
+
     const paint = (cx: number, cy: number) => {
       const el = ghostRef.current;
-      if (el)
-        el.style.transform = `translate3d(${cx - w / 2}px, ${cy - h / 2}px, 0)`;
+      if (!el) return;
+      const p = ghostPos(cx, cy);
+      el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
     };
 
     // Seed at center so a click without moving still lands sanely.
@@ -302,7 +308,7 @@ export function WidgetLayer(props: WidgetLayerProps) {
       e.preventDefault();
       e.stopPropagation();
       const p = lastPtr.current!;
-      const desired = clampXY(w, h, snap(p.x - w / 2), snap(p.y - h / 2));
+      const desired = ghostPos(p.x, p.y);
       const resolved = resolveCollision(placingId, desired, positions, {
         w,
         h,
