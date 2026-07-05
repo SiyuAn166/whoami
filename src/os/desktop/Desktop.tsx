@@ -6,10 +6,10 @@ import { useActiveWidgets } from "../widget/useActiveWidgets";
 import { WidgetLayer } from "../widget/WidgetLayer";
 import { useWindowManager } from "../window/WindowManager";
 import { DesktopClickMenu } from "./clickmenu/DesktopClickMenu";
-import "./Desktop.css";
-import "./DesktopIcons.css";
 import { Dock } from "./dock/Dock";
 import { MenuBar } from "./menubar/MenuBar";
+
+import "./Desktop.css";
 /** The main view of the site: menu bar, desktop icons, windows, and dock.
  */
 export function Desktop() {
