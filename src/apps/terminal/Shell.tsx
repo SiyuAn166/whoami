@@ -8,7 +8,7 @@ import { nowString } from "./shell/format";
 import type { Line, ShellProps } from "./shell/types";
 import { buildFS, pathString, type VDir } from "./vfs";
 
-import "./terminal.css";
+import "./Terminal.css";
 
 export function Shell({ data, theme, setTheme }: ShellProps) {
   const fs = useMemo<VDir>(() => buildFS(data), [data]);
@@ -105,7 +105,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
   // Auto-scroll to the prompt as the scrollback grows. Scroll only the terminal's
   // own window body (not any ancestor scroll container) to avoid nudging the desktop.
   useEffect(() => {
-    const body = bottomRef.current?.closest(".window-body");
+    const body = bottomRef.current?.closest(".shell-window");
     if (body) body.scrollTop = body.scrollHeight;
     else bottomRef.current?.scrollIntoView({ block: "end" });
   }, [lines]);
