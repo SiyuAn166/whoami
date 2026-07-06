@@ -110,7 +110,7 @@ export function useWindowManager(
             toolbar={app.renderToolbar?.(ctx)}
             footer={app.renderFooter?.(ctx)}
           >
-            {app.render(ctx)}
+            {app.render(ctx, () => close(w.id))}
           </Window>
         );
       });

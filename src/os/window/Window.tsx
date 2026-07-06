@@ -215,7 +215,6 @@ export function Window({
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
-          padding: "20px 22px",
           background: "var(--bg)",
         }}
       >

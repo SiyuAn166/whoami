@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type { PortfolioData } from "../types/portfolio";
 import type { Size } from "../os/window/types";
+import type { PortfolioData } from "../types/portfolio";
 
 export type Theme = "dark" | "light";
 
@@ -30,7 +30,7 @@ export interface AppDefinition {
   singleton?: boolean;
   /** Static titlebar text; falls back to `name` if omitted. */
   title?: string;
-  render: (ctx: AppRenderContext) => ReactNode;
+  render: (ctx: AppRenderContext, onClose?: () => void) => ReactNode;
   /** Optional chrome rendered in the titlebar row, next to the traffic lights
    * (e.g. a Finder-style navigation toolbar). When present it replaces the
    * centered titlebar title. */

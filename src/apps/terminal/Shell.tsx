@@ -6,8 +6,9 @@ import { suggest } from "./shell/completion";
 import { COARSE_POINTER, HINTS, HOST, USER } from "./shell/constants";
 import { nowString } from "./shell/format";
 import type { Line, ShellProps } from "./shell/types";
-import "./terminal.css";
 import { buildFS, pathString, type VDir } from "./vfs";
+
+import "./Terminal.css";
 
 export function Shell({ data, theme, setTheme }: ShellProps) {
   const fs = useMemo<VDir>(() => buildFS(data), [data]);
@@ -179,7 +180,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
       )}
 
       <section
-        className="text-[13px] leading-relaxed"
+        className="text-[13px] leading-relaxed shell-window"
         onClick={() => inputRef.current?.focus()}
         style={{ fontFamily: "Monaco, Consolas, 'Courier New', monospace" }}
       >
