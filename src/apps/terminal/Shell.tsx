@@ -8,7 +8,7 @@ import { nowString } from "./shell/format";
 import type { Line, ShellProps } from "./shell/types";
 import { buildFS, pathString, type VDir } from "./vfs";
 
-import "./Terminal.css";
+import "./terminal.css";
 
 export function Shell({ data, theme, setTheme }: ShellProps) {
   const fs = useMemo<VDir>(() => buildFS(data), [data]);
