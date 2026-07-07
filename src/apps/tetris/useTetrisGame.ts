@@ -200,6 +200,11 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
         // All Clear replaces the normal clear sound (predicted pre-collapse).
         sfxClear(willAllClear ? "allclear" : result.clearType);
       } else {
+        // No lines cleared, but a T-spin (incl. mini) still earns its label —
+        // just without the clear animation, B2B, or REN feedback.
+        const msg = composeMessage(result);
+        if (msg.label)
+          showToast({ label: msg.label, b2b: false, ren: 0, any: true });
         g.resolveClear();
         if (g.over) setPhase("over");
       }
