@@ -13,7 +13,7 @@ export const tetrisApp: AppDefinition = {
   title: "Tetris",
   singleton: true,
   resizable: false,
-  defaultSize: { w: 700, h: 726 },
+  defaultSize: { w: 830, h: 860 },
   minSize: { w: 700, h: 726 },
   icon: <TetrisIcon />,
   renderToolbar: () => <TetrisToolbar />,
