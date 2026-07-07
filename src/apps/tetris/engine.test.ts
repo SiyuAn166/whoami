@@ -230,6 +230,67 @@ describe("line clear & scoring", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Back-to-Back (B2B) — the field the UI badge reads is result.backToBack.
+// Rule: B2B applies to *consecutive difficult* clears (Tetris or line-clearing
+// T-spin). result.backToBack is true ONLY from the 2nd consecutive difficult
+// clear, so the FIRST Tetris must never show the badge. A non-difficult clear
+// (single/double/triple) breaks the chain. An empty drop (no clear) does NOT
+// break the difficult chain but DOES reset combo/REN.
+describe("back-to-back", () => {
+  function clearRows(g: Tetris, n: number) {
+    // Fill the bottom n rows on a clean board and run one clear cycle.
+    g.grid = emptyGrid();
+    g.pendingRows = [];
+    for (let r = TOTAL_ROWS - n; r < TOTAL_ROWS; r++)
+      for (let c = 0; c < COLS; c++) g.grid[r][c] = "I";
+    const { result } = g.lockDetect();
+    g.resolveClear();
+    return result;
+  }
+
+  it("the first Tetris does NOT report back-to-back", () => {
+    const g = new Tetris(seeded(20));
+    const r1 = clearRows(g, 4);
+    expect(r1.clearType).toBe("tetris");
+    expect(r1.backToBack).toBe(false); // first difficult clear — no badge
+  });
+
+  it("a second consecutive Tetris reports back-to-back", () => {
+    const g = new Tetris(seeded(21));
+    clearRows(g, 4);
+    const r2 = clearRows(g, 4);
+    expect(r2.backToBack).toBe(true);
+  });
+
+  it("a non-difficult clear (single) breaks the B2B chain", () => {
+    const g = new Tetris(seeded(22));
+    clearRows(g, 4); // build chain
+    clearRows(g, 4); // b2b active
+    const single = clearRows(g, 1);
+    expect(single.backToBack).toBe(false);
+    // The Tetris right after the break restarts the chain (no badge yet).
+    const restart = clearRows(g, 4);
+    expect(restart.backToBack).toBe(false);
+  });
+
+  it("an empty drop resets combo but preserves the B2B chain", () => {
+    const g = new Tetris(seeded(23));
+    clearRows(g, 4);
+    clearRows(g, 4); // b2b active, combo climbing
+    // Empty drop: no full rows.
+    g.grid = emptyGrid();
+    g.pendingRows = [];
+    const empty = g.lockDetect().result;
+    g.resolveClear();
+    expect(empty.combo).toBe(-1); // REN chain ended
+    expect(g.b2b).toBe(true); // difficult chain preserved
+    // Next Tetris continues B2B (chain was never broken by the empty drop).
+    const next = clearRows(g, 4);
+    expect(next.backToBack).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 describe("gravity", () => {
   it("gravity interval decreases as level increases", () => {
     const g = new Tetris(seeded(16));
@@ -265,5 +326,99 @@ describe("fuzz: random play never throws or corrupts the grid", () => {
         expect(g.grid[0]).toHaveLength(COLS);
       }
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T-Spin detection — including the case where NO lines are cleared, which must
+// STILL produce a message (clearType "tspin"/"tspin-mini" + a toast string).
+// A T-spin is recognized only when the last move was a rotation and >=3 of the
+// T's bounding-box corners are filled (3-corner rule).
+describe("T-spin", () => {
+  // Place a T at rot 0 so its cells occupy (x+1,y),(x,y+1),(x+1,y+1),(x+2,y+1).
+  // Corners (relative to pivot at x+1,y+1): TL=(x,y) TR=(x+2,y) BL=(x,y+2) BR=(x+2,y+2).
+  it("a T-spin with NO line cleared still yields clearType 'tspin' + a toast", () => {
+    const g = new Tetris(seeded(20));
+    g.grid = emptyGrid();
+    // Fill TL, TR (front = 2) and BL (back = 1) -> 3 corners, front === 2 -> full T-spin.
+    g.grid[18][3] = "I";
+    g.grid[18][5] = "I";
+    g.grid[20][3] = "I";
+    g.active = {
+      piece: "T",
+      x: 3,
+      y: 18,
+      rot: 0,
+      lastWasRotation: true,
+      lastKick: 0,
+    };
+
+    const { rows, result } = g.lockDetect();
+    expect(rows).toHaveLength(0); // no lines cleared
+    expect(result.clearType).toBe("tspin"); // but it IS a T-spin
+    expect(result.toast).toBe("T-SPIN"); // ...so a message must be shown
+  });
+
+  it("a T-spin MINI with no line cleared yields clearType 'tspin-mini'", () => {
+    const g = new Tetris(seeded(21));
+    g.grid = emptyGrid();
+    // Fill TL (front = 1) and BL, BR (back = 2) -> 3 corners, front < 2 -> mini.
+    g.grid[18][3] = "I";
+    g.grid[20][3] = "I";
+    g.grid[20][5] = "I";
+    g.active = {
+      piece: "T",
+      x: 3,
+      y: 18,
+      rot: 0,
+      lastWasRotation: true,
+      lastKick: 0,
+    };
+
+    const { rows, result } = g.lockDetect();
+    expect(rows).toHaveLength(0);
+    expect(result.clearType).toBe("tspin-mini");
+    expect(result.toast).toBe("T-SPIN MINI");
+  });
+
+  it("the same corners without a rotation are NOT a T-spin (no message)", () => {
+    const g = new Tetris(seeded(22));
+    g.grid = emptyGrid();
+    g.grid[18][3] = "I";
+    g.grid[18][5] = "I";
+    g.grid[20][3] = "I";
+    g.active = {
+      piece: "T",
+      x: 3,
+      y: 18,
+      rot: 0,
+      lastWasRotation: false,
+      lastKick: 0,
+    };
+
+    const { result } = g.lockDetect();
+    expect(result.clearType).toBe("none");
+    expect(result.toast).toBeNull();
+  });
+
+  it("the 5th kick (lastKick === 4) upgrades a mini into a full T-spin", () => {
+    const g = new Tetris(seeded(23));
+    g.grid = emptyGrid();
+    // Mini corner layout (front = 1) but lastKick 4 -> upgraded to full T-spin.
+    g.grid[18][3] = "I";
+    g.grid[20][3] = "I";
+    g.grid[20][5] = "I";
+    g.active = {
+      piece: "T",
+      x: 3,
+      y: 18,
+      rot: 0,
+      lastWasRotation: true,
+      lastKick: 4,
+    };
+
+    const { result } = g.lockDetect();
+    expect(result.clearType).toBe("tspin");
+    expect(result.toast).toBe("T-SPIN");
   });
 });

@@ -12,6 +12,7 @@
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "typecheck": "tsc --noEmit",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run build",
+    "test": "npx vitest run",
     "all": "npm run format && npm run lint:fix && npm run typecheck && npm run build",
     "preview": "vite preview"
   },

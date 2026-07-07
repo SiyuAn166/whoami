@@ -1,15 +1,11 @@
 import type { AppDefinition } from "../types";
 import { TetrisGame } from "./TetrisGame";
 import { TetrisIcon } from "./TetrisIcon";
+import { TetrisToolbar } from "./TetrisToolbar";
 
 /**
  * Tetris — Guideline-compliant single-player game.
- * Plugs into the window system like any other app: fixed-size window
- * (the board is a fixed 10×20 grid), singleton, not resizable.
- *
- * NOTE: field names below mirror what `WindowManager` reads from an
- * AppDefinition (id / name / defaultSize {w,h} / minSize / resizable /
- * singleton / render / icon). Adjust to your exact `apps/types.ts` if needed.
+ * Fixed-size window (fixed 10x20 board), singleton, not resizable.
  */
 export const tetrisApp: AppDefinition = {
   id: "tetris",
@@ -20,5 +16,6 @@ export const tetrisApp: AppDefinition = {
   defaultSize: { w: 700, h: 726 },
   minSize: { w: 700, h: 726 },
   icon: <TetrisIcon />,
+  renderToolbar: () => <TetrisToolbar />,
   render: (_ctx, onClose) => <TetrisGame onQuit={onClose} />,
 };

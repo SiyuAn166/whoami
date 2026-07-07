@@ -1,71 +1,84 @@
 /* ============================================================================
-   Tetris — frosted-glass game UI. Self-contained: the shell carries its own
-   deep gradient background so it looks immersive inside the plain macOS Window
-   body. All selectors are `tetris-` prefixed to avoid leaking into the desktop.
+   Tetris — V1 "Cinematic" UI (Tetris Effect vibe). Self-contained: the shell
+   carries its own deep-blue backdrop with a top radial glow + faint scanlines
+   so it looks immersive inside the plain macOS Window body. All selectors are
+   `tetris-` prefixed to avoid leaking into the desktop.
    ========================================================================== */
-
-@font-face {
-  font-family: "DSEG7";
-  src: url("https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2")
-    format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
+@import url("https://fonts.cdnfonts.com/css/seven-segment");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=JetBrains+Mono:wght@600;700&display=swap");
 
 .tetris-shell {
   position: relative;
   display: flex;
-  gap: 16px;
-  align-items: stretch;
-  padding: 18px;
-  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
-  color: #fff;
-  background:
-    radial-gradient(1200px 800px at 15% 10%, #5b3fd6 0%, transparent 55%),
-    radial-gradient(1000px 700px at 85% 20%, #d63f9e 0%, transparent 50%),
-    radial-gradient(1100px 900px at 70% 90%, #2fb6d6 0%, transparent 55%),
-    radial-gradient(900px 700px at 25% 85%, #3fd67a 0%, transparent 50%),
-    linear-gradient(135deg, #1a1030, #0c1a2e);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  font-family:
+    "Seven Segment",
+    -apple-system,
+    "SF Pro Text",
+    system-ui,
+    sans-serif;
+  color: #eaf2ff;
   overflow: hidden;
   user-select: none;
+  /* fill the whole window body (cancels its 20px 22px padding) */
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  /* cinematic backdrop: bright-ish deep blue so it never reads as pure black */
+  background:
+    radial-gradient(900px 520px at 50% -8%, #3a63c8 0%, transparent 60%),
+    radial-gradient(1100px 900px at 50% 120%, #10204a 0%, transparent 55%),
+    linear-gradient(180deg, #16244a 0%, #101a38 55%, #0b1430 100%);
 }
 
-/* soft animated aurora behind the panels */
+/* faint scanlines overlay */
+.tetris-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.035) 0px,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0.6;
+}
+
+/* soft top glow bloom behind the arena */
 .tetris-shell::before {
   content: "";
   position: absolute;
-  inset: -30%;
+  left: 50%;
+  top: -18%;
+  width: 620px;
+  height: 420px;
+  transform: translateX(-50%);
   z-index: 0;
-  background:
-    radial-gradient(
-      360px 360px at 30% 40%,
-      rgba(120, 90, 255, 0.4),
-      transparent 60%
-    ),
-    radial-gradient(
-      340px 340px at 70% 60%,
-      rgba(255, 90, 180, 0.35),
-      transparent 60%
-    ),
-    radial-gradient(
-      380px 380px at 55% 30%,
-      rgba(60, 210, 255, 0.32),
-      transparent 60%
-    );
-  filter: blur(30px);
-  animation: tetris-drift 22s ease-in-out infinite alternate;
+  background: radial-gradient(
+    closest-side,
+    rgba(90, 150, 255, 0.4),
+    transparent 70%
+  );
+  filter: blur(34px);
   pointer-events: none;
 }
 
-@keyframes tetris-drift {
-  from {
-    transform: translate(-4%, -3%) scale(1);
-  }
-
-  to {
-    transform: translate(5%, 4%) scale(1.12);
-  }
+/* the hold | board | next group — row, flush at the top edge */
+.tetris-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .tetris-col {
@@ -74,25 +87,28 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  justify-content: center;
 }
 
 .tetris-col.left {
-  width: 150px;
+  width: 130px;
 }
 
 .tetris-col.right {
-  width: 120px;
+  width: 118px;
 }
 
+/* translucent frosted panels with a cold rim */
 .tetris-panel {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 18px;
+  background: rgba(30, 52, 104, 0.34);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(130, 175, 255, 0.28);
+  border-radius: 16px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 8px 24px rgba(0, 0, 0, 0.25);
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 8px 26px rgba(0, 0, 0, 0.4),
+    0 0 22px rgba(70, 130, 255, 0.12);
   padding: 14px;
 }
 
@@ -105,71 +121,129 @@
 }
 
 .tetris-label {
+  font-family: inherit;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(180, 205, 255, 0.8);
   align-self: flex-start;
 }
 
+/* the recessed dark well matching the board */
 .tetris-well {
   border-radius: 12px;
   padding: 6px;
-  background: rgba(10, 14, 30, 0.55);
+  background: rgba(8, 14, 34, 0.6);
   box-shadow:
-    inset 0 2px 10px rgba(0, 0, 0, 0.55),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    inset 0 2px 10px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(130, 175, 255, 0.12);
 }
 
 .tetris-well canvas {
   display: block;
 }
 
-.tetris-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tetris-stat .k {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.tetris-stat .v {
-  font-family: "DSEG7", "SF Mono", ui-monospace, monospace;
-  font-size: 24px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  color: #fff;
-  text-shadow:
-    0 0 6px rgba(120, 220, 255, 0.55),
-    0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
+/* ---- playfield with cold-blue glowing rim -------------------------------- */
 .tetris-playfield-wrap {
   position: relative;
   z-index: 1;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(120, 170, 255, 0.5);
   box-shadow:
-    inset 0 2px 14px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  background: rgba(10, 14, 30, 0.55);
-  backdrop-filter: blur(6px);
+    inset 0 2px 16px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 34px rgba(70, 130, 255, 0.35),
+    0 0 70px rgba(60, 110, 255, 0.18);
+  background: rgba(7, 12, 30, 0.72);
 }
 
 .tetris-playfield-wrap canvas {
   display: block;
 }
 
+/* ---- score: number only, sits in the gap above the centered group ------- */
+.tetris-score-top {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.tetris-score-top .v {
+  font-family: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #cfe0ff;
+  text-shadow:
+    0 0 10px rgba(90, 160, 255, 0.9),
+    0 0 22px rgba(70, 130, 255, 0.55);
+}
+
+/* ----  toolbar plugin ------------------------- */
+.tetris-toolbar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 8px 0 12px;
+  gap: 8px;
+}
+
+.tetris-toolbar-title {
+  flex: 1;
+  text-align: center;
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--fg, #e6e6e6);
+  margin-left: 22px;
+}
+
+.tetris-toolbar-help {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--fg-dim, #9aa0aa);
+  background: rgba(127, 127, 127, 0.16);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.tetris-toolbar-help:hover {
+  background: rgba(127, 127, 127, 0.28);
+  color: var(--fg, #e6e6e6);
+}
+
+.tetris-toolbar-help:active {
+  transform: scale(0.92);
+}
+
+.tetris-toolbar-help:focus-visible {
+  outline: 2px solid var(--info, #0a84ff);
+  outline-offset: 1px;
+}
+
+/* ---- buttons ------------------------------------------------------------- */
 .tetris-btn {
-  border: 1px solid rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(140, 180, 255, 0.4);
   cursor: pointer;
   font-family: inherit;
   font-weight: 700;
@@ -177,13 +251,14 @@
   letter-spacing: 0.04em;
   color: #fff;
   padding: 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-radius: 13px;
+  background: rgba(50, 90, 180, 0.32);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 6px 18px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 6px 18px rgba(0, 0, 0, 0.3),
+    0 0 18px rgba(70, 130, 255, 0.18);
   transition:
     transform 0.1s,
     background 0.15s,
@@ -191,26 +266,22 @@
 }
 
 .tetris-btn:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: rgba(70, 120, 210, 0.42);
 }
 
 .tetris-btn:active {
   transform: translateY(2px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.tetris-btn.play {
-  margin-top: auto;
+.tetris-btn.ghost {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.tetris-btn.help {
-  padding: 9px 12px;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-}
-
+/* ---- overlays ------------------------------------------------------------ */
 .tetris-overlay {
   position: absolute;
   inset: 0;
@@ -218,7 +289,7 @@
   display: none;
   align-items: center;
   justify-content: center;
-  background: rgba(8, 10, 24, 0.42);
+  background: rgba(6, 12, 30, 0.5);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -233,13 +304,14 @@
   text-align: center;
   padding: 22px 24px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(30px) saturate(170%);
-  -webkit-backdrop-filter: blur(30px) saturate(170%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(30, 52, 104, 0.4);
+  backdrop-filter: blur(30px) saturate(160%);
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+  border: 1px solid rgba(140, 180, 255, 0.34);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 20px 60px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(70, 130, 255, 0.2);
 }
 
 .tetris-card.wide {
@@ -250,7 +322,7 @@
   font-size: 13px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(190, 212, 255, 0.8);
   margin-bottom: 14px;
 }
 
@@ -262,7 +334,7 @@
 
 .tetris-card .tetris-btn {
   width: 100%;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .tetris-keys {
@@ -270,7 +342,7 @@
   flex-direction: column;
   gap: 9px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(220, 232, 255, 0.9);
   margin-bottom: 16px;
 }
 
@@ -286,54 +358,224 @@
   font-size: 11px;
   font-weight: 700;
   color: #fff;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(120, 160, 255, 0.18);
+  border: 1px solid rgba(140, 180, 255, 0.32);
   border-radius: 6px;
   padding: 2px 8px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
   margin-left: 4px;
 }
 
-.tetris-toast {
-  position: absolute;
-  left: 50%;
-  top: 42%;
-  transform: translate(-50%, -50%) scale(0.5);
-  font-style: italic;
-  font-weight: 900;
-  font-size: 30px;
+/* ── Start / Game-over hint (replaces the START GAME button card) ── */
+.tetris-start-hint {
+  text-align: center;
   color: #fff;
-  opacity: 0;
-  pointer-events: none;
-  text-shadow:
-    0 3px 0 rgba(0, 0, 0, 0.25),
-    0 0 24px rgba(120, 180, 255, 0.9);
-  white-space: nowrap;
+}
+
+.tetris-start-hint h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.tetris-start-hint .tetris-final {
+  margin: 0 0 12px;
+}
+
+.tetris-press {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.82);
   letter-spacing: 0.02em;
-  z-index: 6;
+  animation: tetris-press-pulse 1.6s ease-in-out infinite;
 }
 
-.tetris-toast.show {
-  animation: tetris-pop 1.1s cubic-bezier(0.2, 1.4, 0.3, 1) forwards;
+.tetris-press kbd {
+  display: inline-block;
+  padding: 2px 9px;
+  margin: 0 3px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-@keyframes tetris-pop {
+@keyframes tetris-press-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tetris-press {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
+/* === Clear feedback: "studio" capsule ======================================
+   One horizontal precision panel. Deep-blue inset frosted card; left = vertical
+   metadata stack (system tag + big neon message); right = data metric
+   (REN count + B2B box). Text content is untouched — only styled. */
+.tetris-feed {
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 9px 12px;
+  border-radius: 13px;
+  /* deep-blue frosted body */
+  background: rgba(10, 24, 56, 0.85);
+  backdrop-filter: blur(10px) saturate(1.15);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  /* thin translucent blue hairline rim */
+  border: 1px solid rgba(90, 150, 255, 0.25);
+  /* physical inset well + very faint outward glow */
+  box-shadow:
+    inset 0 1px 6px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(120, 170, 255, 0.06),
+    0 0 14px rgba(70, 130, 255, 0.12);
+}
+
+/* Pure Pop: leap out of the matrix — gentle scale + blur-to-clear + fade. */
+.tetris-feed.show {
+  animation: tetris-feed-pop 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+@keyframes tetris-feed-pop {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.4) rotate(-6deg);
+    transform: scale(0.95);
+    filter: blur(6px);
   }
-
-  25% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.15) rotate(2deg);
-  }
-
-  55% {
-    transform: translate(-50%, -50%) scale(1) rotate(0);
-  }
-
   100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+/* LEFT — vertical metadata stack */
+.tetris-feed-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.tetris-feed-tag {
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(130, 165, 225, 0.7);
+}
+.tetris-feed-title {
+  font-family:
+    "Orbitron", "JetBrains Mono", ui-monospace, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: #eaf3ff;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  /* pure, contained digital cool glow */
+  text-shadow: 0 0 9px rgba(120, 190, 255, 0.65);
+}
+
+/* REN — standalone, NO background box. Just neon text below the capsule. */
+.tetris-ren {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 10px;
+  padding-left: 2px;
+  animation: tetris-ren-pop 0.3s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+.tetris-ren-num {
+  font-family: "Orbitron", ui-monospace, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1;
+  color: #7fe0ff;
+  text-shadow: 0 0 12px rgba(90, 200, 255, 0.7);
+}
+.tetris-ren-label {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgba(150, 210, 245, 0.85);
+  text-shadow: 0 0 8px rgba(90, 200, 255, 0.4);
+}
+@keyframes tetris-ren-pop {
+  0% {
     opacity: 0;
-    transform: translate(-50%, -58%) scale(1);
+    transform: translateY(4px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* B2B — corner sticker, out of normal flow so it never pushes or occludes
+   the REN metric. Sits on the top-right rim of the capsule. */
+.tetris-feed-b2b {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  z-index: 2;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #ece3ff;
+  padding: 3px 8px;
+  border-radius: 8px;
+  /* violet sticker — cool-toned, reads at a glance without clashing with cyan REN */
+  background: linear-gradient(180deg, #7b5cff, #5a34e6);
+  border: 1px solid rgba(178, 150, 255, 0.85);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 0 10px rgba(150, 100, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform: rotate(6deg);
+}
+/* B2B frame variant — recolour the whole capsule rim/glow amber so the
+   entire clear reads as "back-to-back", independent of the REN column. */
+.tetris-feed.b2b {
+  border-color: rgba(168, 130, 255, 0.45);
+  box-shadow:
+    inset 0 1px 6px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(150, 100, 255, 0.16),
+    0 0 18px rgba(150, 100, 255, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tetris-feed.show {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+  .tetris-ren {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

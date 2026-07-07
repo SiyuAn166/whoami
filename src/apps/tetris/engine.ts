@@ -274,13 +274,18 @@ export type ClearType =
   | "tspin-double"
   | "tspin-triple"
   | "tspin-mini-single"
-  | "tspin-mini-double";
+  | "tspin-mini-double"
+  | "allclear";
 
 export interface StepResult {
   linesCleared: number;
   clearType: ClearType;
   scoreGained: number;
   backToBack: boolean;
+  /** Length of the current back-to-back chain (consecutive difficult clears).
+   *  0 = no difficult clear; 1 = first difficult clear (badge NOT shown yet);
+   *  >=2 = B2B active (badge shown). */
+  b2bChain: number;
   combo: number;
   toast: string | null;
 }
@@ -298,6 +303,8 @@ export class Tetris {
   over = false;
   combo = -1;
   b2b = false;
+  /** Consecutive difficult-clear counter. See StepResult.b2bChain. */
+  b2bChain = 0;
   /** Rows detected as full by lockDetect(), awaiting collapse. */
   pendingRows: number[] = [];
 
@@ -459,7 +466,7 @@ export class Tetris {
    * and compute score — but DO NOT collapse the rows or spawn the next piece.
    * Full rows stay visible (in this.pendingRows) so a clear animation can play.
    */
-  lockDetect(): { rows: number[]; result: StepResult } {
+  lockDetect(): { rows: number[]; result: StepResult; willAllClear: boolean } {
     const a = this.active;
     const tspin = this.detectTSpin();
     shape(a.piece, a.rot).forEach(([cx, cy]) => {
@@ -473,8 +480,16 @@ export class Tetris {
     }
     this.pendingRows = rows;
 
+    // Predict All Clear before collapsing: removing the full rows empties the
+    // board iff every non-full row is already empty. Used to pick the SFX up
+    // front so the all-clear sound replaces (not stacks with) the normal one.
+    const drop = new Set(rows);
+    const willAllClear =
+      rows.length > 0 &&
+      this.grid.every((row, r) => drop.has(r) || row.every((c) => !c));
+
     const result = this.scoreClear(rows.length, tspin);
-    return { rows, result };
+    return { rows, result, willAllClear };
   }
 
   /** Phase 2 of a lock: collapse pendingRows and spawn the next piece.
@@ -494,6 +509,7 @@ export class Tetris {
       if (this.grid.every((row) => row.every((c) => !c))) {
         allClear = true;
         this.b2b = true; // All Clear counts as a difficult clear for B2B.
+        if (this.b2bChain < 1) this.b2bChain = 1;
         this.score += 3000 * this.level;
       }
     }
@@ -563,13 +579,21 @@ export class Tetris {
 
     let gained = base * lvl;
 
-    // Back-to-Back bonus (×1.5) for consecutive difficult clears.
+    // Back-to-Back: a chain of consecutive DIFFICULT clears (Tetris or any
+    // T-spin that clears lines). The chain is only broken by a NON-difficult
+    // LINE clear — placing pieces that clear nothing does NOT break it.
+    // The ×1.5 bonus (and the B2B badge) applies from the 2nd difficult clear
+    // onward, i.e. when b2bChain reaches >= 2.
     let b2bActive = false;
     if (cleared > 0) {
-      if (isDifficult && this.b2b) {
-        gained = Math.floor(gained * 1.5);
-        b2bActive = true;
-        toast = (toast ? toast + " " : "") + "B2B";
+      if (isDifficult) {
+        this.b2bChain += 1;
+        if (this.b2bChain >= 2) {
+          gained = Math.floor(gained * 1.5);
+          b2bActive = true;
+        }
+      } else {
+        this.b2bChain = 0; // non-difficult line clear breaks the chain
       }
       this.b2b = !!isDifficult;
     }
@@ -593,6 +617,7 @@ export class Tetris {
       clearType,
       scoreGained: gained,
       backToBack: b2bActive,
+      b2bChain: this.b2bChain,
       combo: this.combo,
       toast,
     };

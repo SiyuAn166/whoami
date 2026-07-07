@@ -137,3 +137,32 @@ export function drawCell(
   ctx.fillStyle = gBar;
   ctx.fillRect(cx, cy + half - bar, cs, bar * 2);
 }
+
+/**
+ * Draw the ghost piece as a focus/corner frame (four L-shaped corners) in the
+ * piece's own colour, instead of a translucent solid block.
+ */
+export function drawGhostCell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  color: string,
+) {
+  const o = s * 0.08;
+  const i = s * 0.2;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineJoin = "miter";
+
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = Math.max(1.6, s * 0.07);
+  ctx.strokeRect(x + o, y + o, s - o * 2, s - o * 2);
+
+  ctx.globalAlpha = 0.25;
+  ctx.lineWidth = Math.max(1, s * 0.05);
+  ctx.strokeRect(x + i, y + i, s - i * 2, s - i * 2);
+
+  ctx.restore();
+}
