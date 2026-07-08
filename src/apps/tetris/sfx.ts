@@ -1,19 +1,19 @@
-// Sound engine for Tetris — backed by the .wav assets in ./sound.
+// Sound engine for Tetris — backed by the .wav assets in ./assets/sound.
 // Uses the Web Audio API for low-latency, overlapping playback (polyphony),
 // so rapid rotates / clears never cut each other off.
 import type { ClearType } from "./engine";
 
-import allclearUrl from "./sound/allclear.wav";
-import dropUrl from "./sound/drop.wav";
-import dropdownUrl from "./sound/dropdown.wav";
-import hardDropUrl from "./sound/harddrop.wav";
-import holdUrl from "./sound/hold.wav";
-import moveUrl from "./sound/move.wav";
-import rotateUrl from "./sound/rotate.wav";
-import singleUrl from "./sound/singleline.wav";
-import tetrisUrl from "./sound/tetris.wav";
-import tspin2Url from "./sound/tspin2.wav";
-import tspin3Url from "./sound/tspin3.wav";
+import allclearUrl from "./assets/sound/allclear.wav";
+import dropUrl from "./assets/sound/drop.wav";
+import dropdownUrl from "./assets/sound/dropdown.wav";
+import hardDropUrl from "./assets/sound/harddrop.wav";
+import holdUrl from "./assets/sound/hold.wav";
+import moveUrl from "./assets/sound/move.wav";
+import rotateUrl from "./assets/sound/rotate.wav";
+import singleUrl from "./assets/sound/singleline.wav";
+import tetrisUrl from "./assets/sound/tetris.wav";
+import tspin2Url from "./assets/sound/tspin2.wav";
+import tspin3Url from "./assets/sound/tspin3.wav";
 
 type SfxName =
   | "move"
