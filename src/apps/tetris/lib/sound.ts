@@ -1,19 +1,38 @@
 // Sound engine for Tetris — backed by the .wav assets in ./assets/sound.
 // Uses the Web Audio API for low-latency, overlapping playback (polyphony),
 // so rapid rotates / clears never cut each other off.
-import type { ClearType } from "./engine";
+import {
+  CLEAR_ALLCLEAR,
+  CLEAR_TETRIS,
+  CLEAR_TSPIN,
+  CLEAR_TSPIN_DOUBLE,
+  CLEAR_TSPIN_MINI,
+  CLEAR_TSPIN_MINI_DOUBLE,
+  CLEAR_TSPIN_MINI_SINGLE,
+  CLEAR_TSPIN_SINGLE,
+  CLEAR_TSPIN_TRIPLE,
+  GAIN_ALLCLEAR,
+  GAIN_DROP,
+  GAIN_DROPDOWN,
+  GAIN_HARDDROP,
+  GAIN_HOLD,
+  GAIN_MOVE,
+  GAIN_ROTATE,
+  SOUND_RETRIGGER_MIN_GAP_MS,
+  type ClearType,
+} from "./config";
 
-import allclearUrl from "./assets/sound/allclear.wav";
-import dropUrl from "./assets/sound/drop.wav";
-import dropdownUrl from "./assets/sound/dropdown.wav";
-import hardDropUrl from "./assets/sound/harddrop.wav";
-import holdUrl from "./assets/sound/hold.wav";
-import moveUrl from "./assets/sound/move.wav";
-import rotateUrl from "./assets/sound/rotate.wav";
-import singleUrl from "./assets/sound/singleline.wav";
-import tetrisUrl from "./assets/sound/tetris.wav";
-import tspin2Url from "./assets/sound/tspin2.wav";
-import tspin3Url from "./assets/sound/tspin3.wav";
+import allclearUrl from "../assets/sound/allclear.wav";
+import dropUrl from "../assets/sound/drop.wav";
+import dropdownUrl from "../assets/sound/dropdown.wav";
+import hardDropUrl from "../assets/sound/harddrop.wav";
+import holdUrl from "../assets/sound/hold.wav";
+import moveUrl from "../assets/sound/move.wav";
+import rotateUrl from "../assets/sound/rotate.wav";
+import singleUrl from "../assets/sound/singleline.wav";
+import tetrisUrl from "../assets/sound/tetris.wav";
+import tspin2Url from "../assets/sound/tspin2.wav";
+import tspin3Url from "../assets/sound/tspin3.wav";
 
 type SfxName =
   | "move"
@@ -123,56 +142,54 @@ export function setVolume(v: number): void {
 }
 
 // ---- semantic triggers ----------------------------------------------------
-const MOVE_MIN_GAP = 40;
 let lastMoveAt = 0;
 export function sfxMove(): void {
   const now = performance.now();
-  if (now - lastMoveAt < MOVE_MIN_GAP) return;
+  if (now - lastMoveAt < SOUND_RETRIGGER_MIN_GAP_MS) return;
   lastMoveAt = now;
-  play("move", 0.15);
+  play("move", GAIN_MOVE);
 }
-const DROP_MIN_GAP = 40;
 let lastDropAt = 0;
 export function sfxDrop(): void {
   const now = performance.now();
-  if (now - lastDropAt < DROP_MIN_GAP) return;
+  if (now - lastDropAt < SOUND_RETRIGGER_MIN_GAP_MS) return;
   lastDropAt = now;
-  play("drop", 0.5);
+  play("drop", GAIN_DROP);
 }
 export function sfxDropdown(): void {
-  play("dropdown", 0.6);
+  play("dropdown", GAIN_DROPDOWN);
 }
 export function sfxRotate(): void {
-  play("rotate", 0.7);
+  play("rotate", GAIN_ROTATE);
 }
 export function sfxHardDrop(): void {
-  play("harddrop", 0.7);
+  play("harddrop", GAIN_HARDDROP);
 }
 export function sfxHold(): void {
-  play("hold", 0.45);
+  play("hold", GAIN_HOLD);
 }
 export function sfxAllClear(): void {
-  play("allclear", 0.7);
+  play("allclear", GAIN_ALLCLEAR);
 }
 
 /** Pick the right clip from the engine's ClearType. */
 export function sfxClear(clearType: ClearType): void {
   switch (clearType) {
-    case "tetris":
+    case CLEAR_TETRIS:
       play("tetris");
       return;
-    case "tspin-triple":
+    case CLEAR_TSPIN_TRIPLE:
       play("tspin3");
       return;
-    case "tspin":
-    case "tspin-mini":
-    case "tspin-single":
-    case "tspin-double":
-    case "tspin-mini-single":
-    case "tspin-mini-double":
+    case CLEAR_TSPIN:
+    case CLEAR_TSPIN_MINI:
+    case CLEAR_TSPIN_SINGLE:
+    case CLEAR_TSPIN_DOUBLE:
+    case CLEAR_TSPIN_MINI_SINGLE:
+    case CLEAR_TSPIN_MINI_DOUBLE:
       play("tspin2");
       return;
-    case "allclear":
+    case CLEAR_ALLCLEAR:
       play("allclear");
       return;
     default:

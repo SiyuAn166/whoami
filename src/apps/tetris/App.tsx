@@ -1,7 +1,7 @@
 import type { AppDefinition } from "../types";
-import { TetrisGame } from "./TetrisGame";
-import { TetrisIcon } from "./TetrisIcon";
-import { TetrisToolbar } from "./TetrisToolbar";
+import { Game } from "./Game";
+import { Icon } from "./Icon";
+import { Toolbar } from "./Toolbar";
 
 /**
  * Tetris — Guideline-compliant single-player game.
@@ -15,7 +15,7 @@ export const tetrisApp: AppDefinition = {
   resizable: false,
   defaultSize: { w: 830, h: 860 },
   minSize: { w: 700, h: 726 },
-  icon: <TetrisIcon />,
-  renderToolbar: () => <TetrisToolbar />,
-  render: (_ctx, onClose) => <TetrisGame onQuit={onClose} />,
+  icon: <Icon />,
+  renderToolbar: () => <Toolbar />,
+  render: (_ctx, onClose) => <Game onQuit={onClose} />,
 };

@@ -1,5 +1,5 @@
 /** Dock / launcher icon for the Tetris app — style 04: glossy block stack in a recessed well on a navy squircle. */
-export function TetrisIcon({ size = 44 }: { size?: number }) {
+export function Icon({ size = 44 }: { size?: number }) {
   const uid = "tetris-icon";
 
   // Tetromino palette: [base, highlight, shadow]

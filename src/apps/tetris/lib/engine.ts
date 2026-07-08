@@ -1,18 +1,38 @@
 // ============================================================================
-// Tetris engine — Guideline-compliant, framework-agnostic, zero dependencies.
+// Tetris engine — Guideline-compliant game-rule computation.
 // 7-bag randomizer · SRS rotation with full wall-kick tables · T-spin (3-corner
 // + mini) detection · hold · ghost · lock delay · line-clear scoring with
 // Back-to-Back and Combo. Pure logic only — no DOM, no React, no rendering.
+// All static data (piece/kick tables, clear-type vocabulary, toast text) lives
+// in config.ts; this file only computes over it.
 // ============================================================================
-
-export type PieceType = "I" | "O" | "T" | "S" | "Z" | "J" | "L";
-export const PIECES: PieceType[] = ["I", "O", "T", "S", "Z", "J", "L"];
-
-export const COLS = 10;
-export const ROWS = 20;
-/** Hidden rows above the visible field where pieces spawn. */
-export const HIDDEN_ROWS = 2;
-export const TOTAL_ROWS = ROWS + HIDDEN_ROWS;
+import {
+  BOX,
+  CLEAR_DOUBLE,
+  CLEAR_NONE,
+  CLEAR_SINGLE,
+  CLEAR_TETRIS,
+  CLEAR_TRIPLE,
+  CLEAR_TSPIN,
+  CLEAR_TSPIN_DOUBLE,
+  CLEAR_TSPIN_MINI,
+  CLEAR_TSPIN_MINI_DOUBLE,
+  CLEAR_TSPIN_MINI_SINGLE,
+  CLEAR_TSPIN_SINGLE,
+  CLEAR_TSPIN_TRIPLE,
+  COLS,
+  KICKS_I,
+  KICKS_JLSTZ,
+  PIECE_I,
+  PIECE_O,
+  PIECE_T,
+  PIECES,
+  SPAWN,
+  TOAST_BY_CLEAR_TYPE,
+  TOTAL_ROWS,
+  type ClearType,
+  type PieceType,
+} from "./config";
 
 /** Cell = null (empty) or a PieceType (locked block of that colour). */
 export type Cell = PieceType | null;
@@ -21,62 +41,7 @@ export type Grid = Cell[][];
 /** Rotation state 0=spawn, 1=CW, 2=180, 3=CCW. */
 export type RotState = 0 | 1 | 2 | 3;
 
-// --- Piece geometry: each piece's 4 minos in each rotation state -------------
-// Coordinates are [x, y] within a 4x4 (I) or 3x3 (others) bounding box, y down.
-const SPAWN: Record<PieceType, [number, number][]> = {
-  I: [
-    [0, 1],
-    [1, 1],
-    [2, 1],
-    [3, 1],
-  ],
-  O: [
-    [1, 0],
-    [2, 0],
-    [1, 1],
-    [2, 1],
-  ],
-  T: [
-    [1, 0],
-    [0, 1],
-    [1, 1],
-    [2, 1],
-  ],
-  S: [
-    [1, 0],
-    [2, 0],
-    [0, 1],
-    [1, 1],
-  ],
-  Z: [
-    [0, 0],
-    [1, 0],
-    [1, 1],
-    [2, 1],
-  ],
-  J: [
-    [0, 0],
-    [0, 1],
-    [1, 1],
-    [2, 1],
-  ],
-  L: [
-    [2, 0],
-    [0, 1],
-    [1, 1],
-    [2, 1],
-  ],
-};
-// Rotation pivot box size per piece.
-const BOX: Record<PieceType, number> = {
-  I: 4,
-  O: 4,
-  T: 3,
-  S: 3,
-  Z: 3,
-  J: 3,
-  L: 3,
-};
+type TSpinResult = typeof CLEAR_TSPIN | typeof CLEAR_TSPIN_MINI;
 
 /** Rotate a set of cells CW inside an n×n box. */
 function rotateCW(cells: [number, number][], n: number): [number, number][] {
@@ -95,132 +60,13 @@ export function shape(piece: PieceType, rot: RotState): [number, number][] {
   return cells;
 }
 
-// --- SRS wall-kick tables (offsets in [x, y], y DOWN) ------------------------
-// Standard SRS is defined y-up; converted to y-down here (negated y).
-type KickTable = Record<string, [number, number][]>;
-const KICKS_JLSTZ: KickTable = {
-  "0>1": [
-    [0, 0],
-    [-1, 0],
-    [-1, -1],
-    [0, 2],
-    [-1, 2],
-  ],
-  "1>0": [
-    [0, 0],
-    [1, 0],
-    [1, 1],
-    [0, -2],
-    [1, -2],
-  ],
-  "1>2": [
-    [0, 0],
-    [1, 0],
-    [1, 1],
-    [0, -2],
-    [1, -2],
-  ],
-  "2>1": [
-    [0, 0],
-    [-1, 0],
-    [-1, -1],
-    [0, 2],
-    [-1, 2],
-  ],
-  "2>3": [
-    [0, 0],
-    [1, 0],
-    [1, -1],
-    [0, 2],
-    [1, 2],
-  ],
-  "3>2": [
-    [0, 0],
-    [-1, 0],
-    [-1, 1],
-    [0, -2],
-    [-1, -2],
-  ],
-  "3>0": [
-    [0, 0],
-    [-1, 0],
-    [-1, 1],
-    [0, -2],
-    [-1, -2],
-  ],
-  "0>3": [
-    [0, 0],
-    [1, 0],
-    [1, -1],
-    [0, 2],
-    [1, 2],
-  ],
-};
-const KICKS_I: KickTable = {
-  "0>1": [
-    [0, 0],
-    [-2, 0],
-    [1, 0],
-    [-2, 1],
-    [1, -2],
-  ],
-  "1>0": [
-    [0, 0],
-    [2, 0],
-    [-1, 0],
-    [2, -1],
-    [-1, 2],
-  ],
-  "1>2": [
-    [0, 0],
-    [-1, 0],
-    [2, 0],
-    [-1, -2],
-    [2, 1],
-  ],
-  "2>1": [
-    [0, 0],
-    [1, 0],
-    [-2, 0],
-    [1, 2],
-    [-2, -1],
-  ],
-  "2>3": [
-    [0, 0],
-    [2, 0],
-    [-1, 0],
-    [2, -1],
-    [-1, 2],
-  ],
-  "3>2": [
-    [0, 0],
-    [-2, 0],
-    [1, 0],
-    [-2, 1],
-    [1, -2],
-  ],
-  "3>0": [
-    [0, 0],
-    [1, 0],
-    [-2, 0],
-    [1, 2],
-    [-2, -1],
-  ],
-  "0>3": [
-    [0, 0],
-    [-1, 0],
-    [2, 0],
-    [-1, -2],
-    [2, 1],
-  ],
-};
 function kicks(
   piece: PieceType,
   from: RotState,
   to: RotState,
 ): [number, number][] {
-  if (piece === "O") return [[0, 0]];
-  const table = piece === "I" ? KICKS_I : KICKS_JLSTZ;
+  if (piece === PIECE_O) return [[0, 0]];
+  const table = piece === PIECE_I ? KICKS_I : KICKS_JLSTZ;
   return table[`${from}>${to}`] ?? [[0, 0]];
 }
 
@@ -261,21 +107,6 @@ export interface Active {
   /** Kick index used by the last rotation (5th kick → T-spin, not mini). */
   lastKick: number;
 }
-
-export type ClearType =
-  | "none"
-  | "single"
-  | "double"
-  | "triple"
-  | "tetris"
-  | "tspin"
-  | "tspin-mini"
-  | "tspin-single"
-  | "tspin-double"
-  | "tspin-triple"
-  | "tspin-mini-single"
-  | "tspin-mini-double"
-  | "allclear";
 
 export interface StepResult {
   linesCleared: number;
@@ -323,10 +154,9 @@ export class Tetris {
 
   private spawn(piece: PieceType): Active {
     // Spawn centered near the top; y offset uses hidden rows.
-    const x = piece === "O" ? 3 : 3;
     const a: Active = {
       piece,
-      x,
+      x: 3,
       y: 0,
       rot: 0,
       lastWasRotation: false,
@@ -442,16 +272,16 @@ export class Tetris {
     return { front, back };
   }
 
-  private detectTSpin(): "tspin" | "tspin-mini" | null {
+  private detectTSpin(): TSpinResult | null {
     const a = this.active;
-    if (a.piece !== "T" || !a.lastWasRotation) return null;
+    if (a.piece !== PIECE_T || !a.lastWasRotation) return null;
     const { front, back } = this.cornersFilled(a.x, a.y);
     if (front + back < 3) return null;
     // 3-corner rule: T-spin if >=3 corners filled. Mini if front<2 unless
     // the last kick was the 5th (index 4) which upgrades to a full T-spin.
-    if (front === 2) return "tspin";
-    if (a.lastKick === 4) return "tspin";
-    return "tspin-mini";
+    if (front === 2) return CLEAR_TSPIN;
+    if (a.lastKick === 4) return CLEAR_TSPIN;
+    return CLEAR_TSPIN_MINI;
   }
 
   /** Lock the active piece, clear lines, score, and spawn next (atomic). */
@@ -518,65 +348,54 @@ export class Tetris {
     return { allClear };
   }
 
-  private scoreClear(
-    cleared: number,
-    tspin: "tspin" | "tspin-mini" | null,
-  ): StepResult {
-    let clearType: ClearType = "none";
+  private scoreClear(cleared: number, tspin: TSpinResult | null): StepResult {
+    let clearType: ClearType = CLEAR_NONE;
     let base = 0;
-    let toast: string | null = null;
     const lvl = this.level;
     const isDifficult = cleared === 4 || (tspin && cleared > 0);
 
-    if (tspin === "tspin-mini") {
+    if (tspin === CLEAR_TSPIN_MINI) {
       if (cleared === 0) {
-        clearType = "tspin-mini";
+        clearType = CLEAR_TSPIN_MINI;
         base = 100;
-        toast = "T-SPIN MINI";
       } else if (cleared === 1) {
-        clearType = "tspin-mini-single";
+        clearType = CLEAR_TSPIN_MINI_SINGLE;
         base = 200;
-        toast = "T-SPIN MINI SINGLE";
       } else {
-        clearType = "tspin-mini-double";
+        clearType = CLEAR_TSPIN_MINI_DOUBLE;
         base = 400;
-        toast = "T-SPIN MINI DOUBLE";
       }
-    } else if (tspin === "tspin") {
+    } else if (tspin === CLEAR_TSPIN) {
       if (cleared === 0) {
-        clearType = "tspin";
+        clearType = CLEAR_TSPIN;
         base = 400;
-        toast = "T-SPIN";
       } else if (cleared === 1) {
-        clearType = "tspin-single";
+        clearType = CLEAR_TSPIN_SINGLE;
         base = 800;
-        toast = "T-SPIN SINGLE";
       } else if (cleared === 2) {
-        clearType = "tspin-double";
+        clearType = CLEAR_TSPIN_DOUBLE;
         base = 1200;
-        toast = "T-SPIN DOUBLE";
       } else {
-        clearType = "tspin-triple";
+        clearType = CLEAR_TSPIN_TRIPLE;
         base = 1600;
-        toast = "T-SPIN TRIPLE";
       }
     } else {
       if (cleared === 1) {
-        clearType = "single";
+        clearType = CLEAR_SINGLE;
         base = 100;
       } else if (cleared === 2) {
-        clearType = "double";
+        clearType = CLEAR_DOUBLE;
         base = 300;
       } else if (cleared === 3) {
-        clearType = "triple";
+        clearType = CLEAR_TRIPLE;
         base = 500;
       } else if (cleared === 4) {
-        clearType = "tetris";
+        clearType = CLEAR_TETRIS;
         base = 800;
-        toast = "TETRIS";
       }
     }
 
+    const toast = TOAST_BY_CLEAR_TYPE[clearType] ?? null;
     let gained = base * lvl;
 
     // Back-to-Back: a chain of consecutive DIFFICULT clears (Tetris or any

@@ -4,16 +4,22 @@
 // mutates game state or touches React. This keeps the game loop thin and
 // makes the visuals easy to reason about / restyle in isolation.
 // ============================================================================
+import { shape, type Tetris } from "./engine";
 import {
+  BOARD_H,
+  BOARD_W,
+  CELL,
   COLS,
+  GRID_LINE_COLOR,
   HIDDEN_ROWS,
+  PIECE_COLORS,
   ROWS,
-  shape,
+  SWEEP_HEAD_COLOR_END,
+  SWEEP_HEAD_COLOR_START,
+  SWEEP_HEAD_WIDTH_PX,
   type PieceType,
-  type Tetris,
-} from "./engine";
-import { BOARD_H, BOARD_W, CELL } from "./tetrisConfig";
-import { drawCell, drawGhostCell, PIECE_COLORS } from "./tetrominoRenderer";
+} from "./config";
+import { drawCell, drawGhostCell } from "./tileRenderer";
 
 /** Snapshot of the line-clear animation, passed in from the game loop. */
 export interface ClearAnimation {
@@ -25,7 +31,7 @@ export interface ClearAnimation {
 
 /** Faint background grid. */
 function drawGrid(ctx: CanvasRenderingContext2D) {
-  ctx.strokeStyle = "rgba(255,255,255,.05)";
+  ctx.strokeStyle = GRID_LINE_COLOR;
   ctx.lineWidth = 1;
   for (let x = 0; x <= COLS; x++) {
     ctx.beginPath();
@@ -78,10 +84,10 @@ function drawClearSweep(ctx: CanvasRenderingContext2D, anim: ClearAnimation) {
     ctx.clearRect(0, y, wipeX, CELL);
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    const ex = Math.max(0, wipeX - 34);
+    const ex = Math.max(0, wipeX - SWEEP_HEAD_WIDTH_PX);
     const grad = ctx.createLinearGradient(ex, 0, wipeX, 0);
-    grad.addColorStop(0, "rgba(255,255,255,0)");
-    grad.addColorStop(1, "rgba(255,255,255,.85)");
+    grad.addColorStop(0, SWEEP_HEAD_COLOR_START);
+    grad.addColorStop(1, SWEEP_HEAD_COLOR_END);
     ctx.fillStyle = grad;
     ctx.fillRect(ex, y, wipeX - ex, CELL);
     ctx.restore();

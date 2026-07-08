@@ -1,36 +1,14 @@
 // ============================================================================
-// Locked tetromino tile renderer (spec: bevel=0.12, pit=0.12, middleBar=0.04).
-// A single tile is a self-contained "framed crystal tile": dark grid line →
-// bright beveled rim (top brightest, sides mid, bottom darkest) → matte core
-// with a subtle 「日」 inset (two shallow pits + a slight middle ridge).
-// The bevel/pit/ridge are drawn in SCREEN space and never rotate — the tile
-// is a fixed fill; only its position changes as a piece rotates.
-// All look parameters live in TILE_PARAMS so they are easy to tweak later.
+// Locked tetromino tile renderer. A single tile is a self-contained "framed
+// crystal tile": dark grid line → bright beveled rim (top brightest, sides
+// mid, bottom darkest) → matte core with a subtle 「日」 inset (two shallow
+// pits + a slight middle ridge). The bevel/pit/ridge are drawn in SCREEN
+// space and never rotate — the tile is a fixed fill; only its position
+// changes as a piece rotates. Look parameters (TILE_PARAMS) and the piece
+// colour palette (PIECE_COLORS) live in tetrisConfig.ts.
 // ============================================================================
 
-import type { PieceType } from "./engine";
-
-export const TILE_PARAMS = {
-  bevel: 0.12, // outer beveled-rim thickness (fraction of cell)
-  pit: 0.12, // 「日」 top/bottom inset depth
-  middleBar: 0.04, // middle ridge callback thickness
-  gridLine: true, // dark separating outline between cells
-  topRim: 0.55, // top edge brightness (light from above)
-  sideRim: 0.22, // left/right edge brightness
-  bottomRim: -0.42, // bottom edge (shadow)
-  outline: -0.86, // dark grid line luminance
-};
-
-/** Base colours per piece (high-saturation, opaque). */
-export const PIECE_COLORS: Record<PieceType, string> = {
-  I: "#22b6e6",
-  O: "#f2c31a",
-  T: "#a24be0",
-  S: "#3fca4e",
-  Z: "#e8483f",
-  J: "#3f6ee8",
-  L: "#f2911a",
-};
+import { PIECE_COLORS, TILE_PARAMS, type PieceType } from "./config";
 
 /** Shift a hex colour toward white (d>0) or black (d<0) by fraction |d|. */
 export function lum(hex: string, d: number): string {

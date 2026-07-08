@@ -2,6 +2,7 @@
 // TetrisGame — presentational shell. Game logic/loop/input lives in
 // useTetrisGame; this component only wires refs, HUD and overlays.
 // ============================================================================
+import { useTetrisGame, type Toast } from "./hook/useTetrisGame";
 import {
   BOARD_H,
   BOARD_W,
@@ -10,10 +11,9 @@ import {
   NEXT_COUNT,
   NEXT_SLOT_H,
   NEXT_W,
-} from "./tetrisConfig";
-import { useTetrisGame, type Toast } from "./useTetrisGame";
+} from "./lib/config";
 
-import "./Tetris.css";
+import "./style.css";
 
 /**
  * Special-clear feedback — a single horizontal "studio" capsule.
@@ -134,7 +134,7 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function TetrisGame({ onQuit }: { onQuit?: () => void }) {
+export function Game({ onQuit }: { onQuit?: () => void }) {
   const {
     phase,
     hud,

@@ -7,9 +7,41 @@
 // refs, so they never need to re-subscribe.
 // ============================================================================
 import { useEffect, useRef, useState } from "react";
-import { HIDDEN_ROWS, Tetris } from "./engine";
-
-const TOAST_MS = 1500;
+import {
+  ALL_CLEAR_TOAST,
+  ARR,
+  CLEAR_ALLCLEAR,
+  CLEAR_MS,
+  DAS,
+  HELP_EVENT,
+  HIDDEN_ROWS,
+  HOLD_CELL,
+  HOLD_H,
+  HOLD_W,
+  KEY_CONFIRM,
+  KEY_HOLD_C,
+  KEY_HOLD_C_UPPER,
+  KEY_LEFT,
+  KEY_PAUSE,
+  KEY_RIGHT,
+  KEY_ROTATE_CCW_Z,
+  KEY_ROTATE_CCW_Z_UPPER,
+  KEY_ROTATE_CW_ARROW,
+  KEY_ROTATE_CW_X,
+  KEY_ROTATE_CW_X_UPPER,
+  KEY_SOFT_DROP,
+  LOCK_DELAY,
+  LOCK_RESET_CAP,
+  NEXT_CELL,
+  NEXT_COUNT,
+  NEXT_SLOT_H,
+  NEXT_W,
+  SOFT_DROP_MS,
+  TOAST_MS,
+} from "../lib/config";
+import { Tetris } from "../lib/engine";
+import { composeMessage, type ClearMessage } from "../lib/messages";
+import { drawBoard, drawMini, type ClearAnimation } from "../lib/render";
 import {
   preloadSfx,
   sfxClear,
@@ -19,24 +51,7 @@ import {
   sfxHold,
   sfxMove,
   sfxRotate,
-} from "./sfx";
-import {
-  ARR,
-  CLEAR_MS,
-  DAS,
-  HOLD_CELL,
-  HOLD_H,
-  HOLD_W,
-  LOCK_DELAY,
-  LOCK_RESET_CAP,
-  NEXT_CELL,
-  NEXT_COUNT,
-  NEXT_SLOT_H,
-  NEXT_W,
-  SOFT_DROP_MS,
-} from "./tetrisConfig";
-import { composeMessage, type ClearMessage } from "./tetrisMessages";
-import { drawBoard, drawMini, type ClearAnimation } from "./tetrisRender";
+} from "../lib/sound";
 
 export type Phase = "idle" | "playing" | "paused" | "over";
 export interface Hud {
@@ -90,7 +105,7 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
 
   // renderRef always points at the latest draw closure so the rAF loop can
   // call it without listing it as an effect dependency.
-  const renderRef = useRef<() => void>(() => {});
+  const renderRef = useRef<() => void>(() => { });
   const toastTimer = useRef<number | null>(null);
   const feedTimer = useRef<number | null>(null);
 
@@ -125,11 +140,12 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
   }
   renderRef.current = render;
 
-  // Show a special-clear message, then auto-hide it after TOAST_MS.
-  function showToast(msg: ClearMessage) {
-    if (!msg.any) return;
+  // Show a special-clear label, then auto-hide it after TOAST_MS. B2B/REN are
+  // NOT part of this toast — they're persistent indicators tracked separately
+  // (see setB2bOn/setRen below) — so the toast only ever carries a label.
+  function showToast(label: string) {
     if (toastTimer.current !== null) clearTimeout(toastTimer.current);
-    setToast({ ...msg, key: Date.now() });
+    setToast({ label, b2b: false, ren: 0, any: true, key: Date.now() });
     toastTimer.current = window.setTimeout(() => {
       setToast(null);
       toastTimer.current = null;
@@ -150,7 +166,7 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
     let dasAcc = 0;
     let arrAcc = 0;
     const held = new Set<string>();
-    const softDropActive = () => held.has("ArrowDown");
+    const softDropActive = () => held.has(KEY_SOFT_DROP);
 
     /** Reset the lock-delay timer on a successful move/rotate near the floor. */
     function resetLockTimer() {
@@ -175,16 +191,18 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
       const visible = rows.map((r) => r - HIDDEN_ROWS).filter((r) => r >= 0);
       const cleared = visible.length > 0;
 
-      // Feedback (label / B2B / REN) is shown ONLY when this lock actually
+      // The clear-type label (e.g. "TETRIS", "T-SPIN") shows for any lock
+      // that earns one, cleared lines or not (a no-line T-spin still counts).
+      const msg = composeMessage(result);
+      if (msg.label) showToast(msg.label);
+
+      // B2B / REN, by contrast, are shown ONLY when this lock actually
       // cleared lines. A plain drop with no clear must never surface any box.
       // Source is the per-clear `result` (not the persistent engine flags):
       //   - result.backToBack -> true only on the 2nd+ consecutive difficult
       //     clear, so the first Tetris/T-spin never shows the B2B badge.
       //   - result.combo      -> REN count (>=1 from the 2nd consecutive clear).
       if (cleared) {
-        const msg = composeMessage(result);
-        if (msg.label)
-          showToast({ label: msg.label, b2b: false, ren: 0, any: true });
         setB2bOn(result.backToBack);
         setRen(result.combo >= 1 ? result.combo : 0);
         if (feedTimer.current !== null) clearTimeout(feedTimer.current);
@@ -198,13 +216,10 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
         clearStartRef.current = performance.now();
         clearingRef.current = true;
         // All Clear replaces the normal clear sound (predicted pre-collapse).
-        sfxClear(willAllClear ? "allclear" : result.clearType);
+        sfxClear(willAllClear ? CLEAR_ALLCLEAR : result.clearType);
       } else {
         // No lines cleared, but a T-spin (incl. mini) still earns its label —
         // just without the clear animation, B2B, or REN feedback.
-        const msg = composeMessage(result);
-        if (msg.label)
-          showToast({ label: msg.label, b2b: false, ren: 0, any: true });
         g.resolveClear();
         if (g.over) setPhase("over");
       }
@@ -227,8 +242,7 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
           clearingRef.current = false;
           clearRowsRef.current = [];
           const { allClear } = g.resolveClear();
-          if (allClear)
-            showToast({ label: "ALL CLEAR", b2b: false, ren: 0, any: true });
+          if (allClear) showToast(ALL_CLEAR_TOAST);
           if (g.over) setPhase("over");
         }
         renderRef.current();
@@ -289,12 +303,12 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
     function onKeyDown(e: KeyboardEvent) {
       // Non-playing states: Space starts/restarts, Esc resumes from pause.
       if (phaseRef.current !== "playing") {
-        if (e.key === "Escape" && phaseRef.current === "paused") {
+        if (e.key === KEY_PAUSE && phaseRef.current === "paused") {
           e.preventDefault();
           setPhase("playing");
         }
         if (
-          e.key === " " &&
+          e.key === KEY_CONFIRM &&
           (phaseRef.current === "idle" || phaseRef.current === "over")
         ) {
           e.preventDefault();
@@ -304,15 +318,15 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
       }
       // Ignore gameplay input during the clear animation.
       if (clearingRef.current) {
-        if (e.key === " ") e.preventDefault();
+        if (e.key === KEY_CONFIRM) e.preventDefault();
         return;
       }
 
       const g = gameRef.current!;
       switch (e.key) {
-        case "ArrowLeft":
-          if (!held.has("ArrowLeft")) {
-            held.add("ArrowLeft");
+        case KEY_LEFT:
+          if (!held.has(KEY_LEFT)) {
+            held.add(KEY_LEFT);
             dir = -1;
             dasAcc = 0;
             arrAcc = 0;
@@ -322,9 +336,9 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
             }
           }
           break;
-        case "ArrowRight":
-          if (!held.has("ArrowRight")) {
-            held.add("ArrowRight");
+        case KEY_RIGHT:
+          if (!held.has(KEY_RIGHT)) {
+            held.add(KEY_RIGHT);
             dir = 1;
             dasAcc = 0;
             arrAcc = 0;
@@ -334,40 +348,40 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
             }
           }
           break;
-        case "ArrowDown":
-          held.add("ArrowDown");
+        case KEY_SOFT_DROP:
+          held.add(KEY_SOFT_DROP);
           break;
-        case "ArrowUp":
-        case "x":
-        case "X":
+        case KEY_ROTATE_CW_ARROW:
+        case KEY_ROTATE_CW_X:
+        case KEY_ROTATE_CW_X_UPPER:
           if (g.rotate(1)) {
             resetLockTimer();
             sfxRotate();
           }
           break;
-        case "z":
-        case "Z":
+        case KEY_ROTATE_CCW_Z:
+        case KEY_ROTATE_CCW_Z_UPPER:
           if (g.rotate(-1)) {
             resetLockTimer();
             sfxRotate();
           }
           break;
-        case "c":
-        case "C":
+        case KEY_HOLD_C:
+        case KEY_HOLD_C_UPPER:
           if (g.holdPiece()) {
             grounded = false;
             lockAcc = 0;
             sfxHold();
           }
           break;
-        case " ": {
+        case KEY_CONFIRM: {
           e.preventDefault();
           g.hardDropOnly();
           sfxHardDrop();
           beginLock();
           break;
         }
-        case "Escape":
+        case KEY_PAUSE:
           e.preventDefault();
           setPhase("paused");
           break;
@@ -376,10 +390,8 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
 
     function onKeyUp(e: KeyboardEvent) {
       held.delete(e.key);
-      if (e.key === "ArrowLeft" && dir === -1)
-        dir = held.has("ArrowRight") ? 1 : 0;
-      if (e.key === "ArrowRight" && dir === 1)
-        dir = held.has("ArrowLeft") ? -1 : 0;
+      if (e.key === KEY_LEFT && dir === -1) dir = held.has(KEY_RIGHT) ? 1 : 0;
+      if (e.key === KEY_RIGHT && dir === 1) dir = held.has(KEY_LEFT) ? -1 : 0;
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -396,8 +408,8 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
   // Titlebar "?" button (rendered by window chrome) opens help via event.
   useEffect(() => {
     const openHelp = () => setHelp(true);
-    window.addEventListener("tetris:help", openHelp);
-    return () => window.removeEventListener("tetris:help", openHelp);
+    window.addEventListener(HELP_EVENT, openHelp);
+    return () => window.removeEventListener(HELP_EVENT, openHelp);
   }, []);
 
   function startGame() {

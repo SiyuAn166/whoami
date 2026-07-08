@@ -3,18 +3,9 @@
 // Run:  npx vitest            (watch)   ·   npx vitest run   (once)
 // Place at: src/apps/tetris/engine.test.ts  (next to engine.ts)
 // ============================================================================
-import { describe, it, expect } from "vitest";
-import {
-  Bag,
-  Tetris,
-  shape,
-  PIECES,
-  COLS,
-  TOTAL_ROWS,
-  type PieceType,
-  type Grid,
-  type Cell,
-} from "./engine";
+import { describe, expect, it } from "vitest";
+import { Bag, Tetris, shape, type Cell, type Grid } from "./engine";
+import { COLS, PIECES, TOTAL_ROWS, type PieceType } from "./config";
 
 // A deterministic RNG so tests are reproducible.
 function seeded(seed: number) {
