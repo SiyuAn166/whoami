@@ -12,18 +12,18 @@
 // is both back-to-back and mid-combo → label "TETRIS" + B2B badge + "2 REN").
 // ============================================================================
 import type { StepResult } from "./engine";
+import type { ClearType } from "./config";
 
 export interface ClearMessage {
   label: string | null; // special-clear name, e.g. "TETRIS"
+  clearType: ClearType; // picks the matching badge picture (see lib/images.ts)
   b2b: boolean; // Back-to-Back active this clear
   ren: number; // REN count (0 = not shown)
-  /** Convenience: is there anything worth showing at all? */
-  any: boolean;
 }
 
 export function composeMessage(result: StepResult): ClearMessage {
   const label = result.toast; // engine no longer glues B2B/REN into this
   const b2b = result.backToBack;
   const ren = result.combo >= 1 ? result.combo : 0;
-  return { label, b2b, ren, any: !!label || b2b || ren > 0 };
+  return { label, clearType: result.clearType, b2b, ren };
 }

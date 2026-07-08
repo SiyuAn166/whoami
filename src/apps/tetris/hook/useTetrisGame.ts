@@ -38,6 +38,7 @@ import {
   NEXT_W,
   SOFT_DROP_MS,
   TOAST_MS,
+  type ClearType,
 } from "../lib/config";
 import { Tetris } from "../lib/engine";
 import { composeMessage, type ClearMessage } from "../lib/messages";
@@ -143,9 +144,15 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
   // Show a special-clear label, then auto-hide it after TOAST_MS. B2B/REN are
   // NOT part of this toast — they're persistent indicators tracked separately
   // (see setB2bOn/setRen below) — so the toast only ever carries a label.
-  function showToast(label: string) {
+  function showToast(label: string, clearType: ClearType) {
     if (toastTimer.current !== null) clearTimeout(toastTimer.current);
-    setToast({ label, b2b: false, ren: 0, any: true, key: Date.now() });
+    setToast({
+      label,
+      clearType,
+      b2b: false,
+      ren: 0,
+      key: Date.now(),
+    });
     toastTimer.current = window.setTimeout(() => {
       setToast(null);
       toastTimer.current = null;
@@ -194,7 +201,7 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
       // The clear-type label (e.g. "TETRIS", "T-SPIN") shows for any lock
       // that earns one, cleared lines or not (a no-line T-spin still counts).
       const msg = composeMessage(result);
-      if (msg.label) showToast(msg.label);
+      if (msg.label) showToast(msg.label, msg.clearType);
 
       // B2B / REN, by contrast, are shown ONLY when this lock actually
       // cleared lines. A plain drop with no clear must never surface any box.
@@ -242,7 +249,7 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
           clearingRef.current = false;
           clearRowsRef.current = [];
           const { allClear } = g.resolveClear();
-          if (allClear) showToast(ALL_CLEAR_TOAST);
+          if (allClear) showToast(ALL_CLEAR_TOAST, CLEAR_ALLCLEAR);
           if (g.over) setPhase("over");
         }
         renderRef.current();
