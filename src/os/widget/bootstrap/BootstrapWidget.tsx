@@ -7,6 +7,7 @@ export const bootstrapWidget: WidgetDefinition = {
   size: "large",
   variant: "glass",
   order: 0, // first / top of the column
-  defaultPos: { x: 660, y: 180 },
+  defaultAnchor: "center", // center the welcome widget on the screen
+  defaultPos: { x: 660, y: 180 }, // fallback only (used before measurement / if anchoring is skipped)
   render: () => <BootstrapContent />,
 };

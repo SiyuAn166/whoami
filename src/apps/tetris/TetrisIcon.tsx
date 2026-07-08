@@ -15,10 +15,16 @@ export function TetrisIcon({ size = 44 }: { size?: number }) {
 
   // Stacked cells inside the well (5 columns, resting on the floor)
   const BLOCKS: { x: number; y: number; c: keyof typeof COLORS }[] = [
-    { x: 35.6, y: 85.6, c: "blue" }, { x: 35.6, y: 74.0, c: "blue" },
-    { x: 47.2, y: 85.6, c: "green" }, { x: 47.2, y: 74.0, c: "green" }, { x: 47.2, y: 62.4, c: "purple" },
-    { x: 58.8, y: 85.6, c: "red" }, { x: 58.8, y: 74.0, c: "red" },
-    { x: 70.4, y: 85.6, c: "orange" }, { x: 70.4, y: 74.0, c: "orange" }, { x: 70.4, y: 62.4, c: "yellow" },
+    { x: 35.6, y: 85.6, c: "blue" },
+    { x: 35.6, y: 74.0, c: "blue" },
+    { x: 47.2, y: 85.6, c: "green" },
+    { x: 47.2, y: 74.0, c: "green" },
+    { x: 47.2, y: 62.4, c: "purple" },
+    { x: 58.8, y: 85.6, c: "red" },
+    { x: 58.8, y: 74.0, c: "red" },
+    { x: 70.4, y: 85.6, c: "orange" },
+    { x: 70.4, y: 74.0, c: "orange" },
+    { x: 70.4, y: 62.4, c: "yellow" },
     { x: 82.0, y: 85.6, c: "cyan" },
   ];
   const CELL = 10.4;
@@ -55,7 +61,14 @@ export function TetrisIcon({ size = 44 }: { size?: number }) {
           <stop offset="1" stopColor="#4a63c8" stopOpacity="0" />
         </radialGradient>
         {Object.entries(COLORS).map(([k, [base, light]]) => (
-          <linearGradient key={k} id={`${uid}-${k}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient
+            key={k}
+            id={`${uid}-${k}`}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
             <stop offset="0" stopColor={light} />
             <stop offset="1" stopColor={base} />
           </linearGradient>
@@ -69,23 +82,49 @@ export function TetrisIcon({ size = 44 }: { size?: number }) {
       </defs>
 
       {/* squircle background */}
-      <rect x="0" y="0" width="128" height="128" rx="28.8" fill={`url(#${uid}-bg)`} />
+      <rect
+        x="0"
+        y="0"
+        width="128"
+        height="128"
+        rx="28.8"
+        fill={`url(#${uid}-bg)`}
+      />
 
       <g clipPath={`url(#${uid}-clip)`}>
         {/* ambient top glow + material sheen */}
         <rect x="0" y="0" width="128" height="128" fill={`url(#${uid}-glow)`} />
-        <rect x="1" y="1" width="126" height="60" rx="27.8" fill={`url(#${uid}-sheen)`} />
+        <rect
+          x="1"
+          y="1"
+          width="126"
+          height="60"
+          rx="27.8"
+          fill={`url(#${uid}-sheen)`}
+        />
 
         {/* recessed play-field well */}
         <rect
-          x="28" y="26" width="72" height="76" rx="7"
+          x="28"
+          y="26"
+          width="72"
+          height="76"
+          rx="7"
           fill={`url(#${uid}-well)`}
-          stroke="#3f63c0" strokeOpacity="0.45" strokeWidth="1"
+          stroke="#3f63c0"
+          strokeOpacity="0.45"
+          strokeWidth="1"
         />
 
         <g clipPath={`url(#${uid}-wellclip)`}>
           {/* inner top shadow (recess depth) */}
-          <rect x="28" y="26" width="72" height="40" fill={`url(#${uid}-inner)`} />
+          <rect
+            x="28"
+            y="26"
+            width="72"
+            height="40"
+            fill={`url(#${uid}-inner)`}
+          />
 
           {/* stacked tetromino cells */}
           {BLOCKS.map(({ x, y, c }, i) => {
@@ -93,13 +132,23 @@ export function TetrisIcon({ size = 44 }: { size?: number }) {
             return (
               <g key={i}>
                 <rect
-                  x={x} y={y} width={CELL} height={CELL} rx={RX}
+                  x={x}
+                  y={y}
+                  width={CELL}
+                  height={CELL}
+                  rx={RX}
                   fill={`url(#${uid}-${c})`}
-                  stroke={shadow} strokeWidth="0.6"
+                  stroke={shadow}
+                  strokeWidth="0.6"
                 />
                 <rect
-                  x={x + 1.1} y={y + 1.0} width={CELL - 2.2} height={CELL * 0.42}
-                  rx="1.4" fill="#ffffff" opacity="0.28"
+                  x={x + 1.1}
+                  y={y + 1.0}
+                  width={CELL - 2.2}
+                  height={CELL * 0.42}
+                  rx="1.4"
+                  fill="#ffffff"
+                  opacity="0.28"
                 />
               </g>
             );
@@ -107,7 +156,15 @@ export function TetrisIcon({ size = 44 }: { size?: number }) {
         </g>
 
         {/* bright bottom lip of the well */}
-        <rect x="28.5" y="99.5" width="71" height="2" rx="1" fill="#5b7bd8" opacity="0.35" />
+        <rect
+          x="28.5"
+          y="99.5"
+          width="71"
+          height="2"
+          rx="1"
+          fill="#5b7bd8"
+          opacity="0.35"
+        />
       </g>
     </svg>
   );

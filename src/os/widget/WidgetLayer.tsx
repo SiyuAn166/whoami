@@ -20,7 +20,8 @@ interface WidgetLayerProps extends AppRenderContext {
 }
 
 /** Invisible grid the widgets snap to on release, so they line up with each
- *  other. Smaller = finer alignment; 20px matches macOS-ish feel. */
+ *  other. Smaller = finer alignment; 20px matches macOS-ish feel.
+ */
 const GRID = 20;
 /** Pointer travel (px) below which a gesture counts as a click, not a drag. */
 const CLICK_SLOP = 4;
@@ -35,7 +36,8 @@ type Rect = { x: number; y: number; w: number; h: number };
 type PosMap = Record<string, Pos>;
 
 /** Default heights per size tier — used to stack the initial left column and
- *  to size the placement ghost before the real widget is mounted. */
+ *  to size the placement ghost before the real widget is mounted.
+ */
 const TIER_H: Record<WidgetSize, number> = {
   small: 190,
   medium: 210,
@@ -149,24 +151,47 @@ export function WidgetLayer(props: WidgetLayerProps) {
     [sizeOf, clampXY],
   );
 
-  // Right-anchored widgets: measure real width after first layout and pin to the
-  // right edge — avoids hard-coding any widget width. Skips ones already saved.
+  /** Compute the anchored top-left for a widget, using its measured size.
+   *  - "right"  → pinned to the right edge; y kept from prev/default.
+   *  - "center" → centered horizontally & vertically in the viewport.
+   *  Returns null for widgets without a positional anchor.
+   */
+  const anchoredPos = useCallback(
+    (id: string, anchor: "right" | "center", prevY: number): Pos | null => {
+      const { w: width, h: height } = sizeOf(id);
+      if (anchor === "right") {
+        const x = window.innerWidth - width - MARGIN.right;
+        return clampXY(width, height, x, prevY);
+      }
+      if (anchor === "center") {
+        const x = (window.innerWidth - width) / 2;
+        const y = (window.innerHeight - height) / 2;
+        return clampXY(width, height, x, y);
+      }
+      return null;
+    },
+    [sizeOf, clampXY],
+  );
+
+  // Anchored widgets ("right" / "center"): measure the real size after first
+  // layout and pin accordingly — avoids hard-coding any widget dimensions.
+  // Skips ones the user has already saved (dragged).
   useLayoutEffect(() => {
     const saved = loadSaved();
     setPositions((prev) => {
       let changed = false;
       const next = { ...prev };
       for (const w of visible) {
-        if (w.defaultAnchor !== "right" || saved[w.id]) continue;
-        const { w: width } = sizeOf(w.id);
-        const x = window.innerWidth - width - MARGIN.right;
-        const p = clampXY(
-          width,
-          sizeOf(w.id).h,
-          x,
-          prev[w.id]?.y ?? MARGIN.top,
+        if (!w.defaultAnchor || w.defaultAnchor === "left") continue;
+        if (saved[w.id]) continue; // respect a user-moved position
+        const prevY = prev[w.id]?.y ?? MARGIN.top;
+        const p = anchoredPos(
+          w.id,
+          w.defaultAnchor as "right" | "center",
+          prevY,
         );
-        if (prev[w.id]?.x !== p.x) {
+        if (!p) continue;
+        if (prev[w.id]?.x !== p.x || prev[w.id]?.y !== p.y) {
           next[w.id] = { ...next[w.id], ...p };
           changed = true;
         }
@@ -226,7 +251,6 @@ export function WidgetLayer(props: WidgetLayerProps) {
       };
       if (free(desired.x, desired.y))
         return clampXY(w, h, desired.x, desired.y);
-
       const maxRing = Math.ceil(
         Math.max(window.innerWidth, window.innerHeight) / GRID,
       );
@@ -271,19 +295,16 @@ export function WidgetLayer(props: WidgetLayerProps) {
   useLayoutEffect(() => {
     if (!placingId || !placeSize) return;
     const { w, h } = placeSize;
-
     // Cursor-centre → snapped, clamped top-left. Shared by preview + drop so
     // the ghost always previews the EXACT cell it will land in.
     const ghostPos = (cx: number, cy: number): Pos =>
       clampXY(w, h, snap(cx - w / 2), snap(cy - h / 2));
-
     const paint = (cx: number, cy: number) => {
       const el = ghostRef.current;
       if (!el) return;
       const p = ghostPos(cx, cy);
       el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
     };
-
     // Seed at center so a click without moving still lands sanely.
     const seed = lastPtr.current ?? {
       x: window.innerWidth / 2,
@@ -291,14 +312,12 @@ export function WidgetLayer(props: WidgetLayerProps) {
     };
     lastPtr.current = seed;
     paint(seed.x, seed.y);
-
     // Ignore the very first click (the one on the gallery "Add" button that
     // opened this mode) — arm on the next frame.
     let armed = false;
     const armId = window.setTimeout(() => {
       armed = true;
     }, 0);
-
     const onMove = (e: PointerEvent) => {
       lastPtr.current = { x: e.clientX, y: e.clientY };
       paint(e.clientX, e.clientY);
@@ -330,7 +349,6 @@ export function WidgetLayer(props: WidgetLayerProps) {
       e.stopPropagation();
       onCancelPlacing?.();
     };
-
     window.addEventListener("pointermove", onMove);
     window.addEventListener("click", onClick, true);
     window.addEventListener("keydown", onKey);
@@ -413,17 +431,36 @@ export function WidgetLayer(props: WidgetLayerProps) {
     [positions, clamp, resolveCollision],
   );
 
-  // Re-clamp everything if the window shrinks below a card's position.
+  // Re-clamp everything if the window shrinks below a card's position, and keep
+  // anchored ("right" / "center") widgets pinned on resize — unless the user
+  // has saved (dragged) them.
   useLayoutEffect(() => {
     const onResize = () =>
       setPositions((p) => {
+        const saved = loadSaved();
         const out: PosMap = {};
-        for (const id of Object.keys(p)) out[id] = clamp(id, p[id].x, p[id].y);
+        for (const id of Object.keys(p)) {
+          const def = WIDGETS.find((w) => w.id === id);
+          if (
+            def?.defaultAnchor &&
+            def.defaultAnchor !== "left" &&
+            !saved[id]
+          ) {
+            const re = anchoredPos(
+              id,
+              def.defaultAnchor as "right" | "center",
+              p[id].y,
+            );
+            out[id] = re ?? clamp(id, p[id].x, p[id].y);
+          } else {
+            out[id] = clamp(id, p[id].x, p[id].y);
+          }
+        }
         return out;
       });
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [clamp]);
+  }, [clamp, anchoredPos]);
 
   const placingDef = placingId ? WIDGETS.find((w) => w.id === placingId) : null;
 
