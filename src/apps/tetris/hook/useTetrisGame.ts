@@ -105,7 +105,7 @@ export function useTetrisGame(onQuit?: () => void): TetrisController {
 
   // renderRef always points at the latest draw closure so the rAF loop can
   // call it without listing it as an effect dependency.
-  const renderRef = useRef<() => void>(() => { });
+  const renderRef = useRef<() => void>(() => {});
   const toastTimer = useRef<number | null>(null);
   const feedTimer = useRef<number | null>(null);
 

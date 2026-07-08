@@ -34,31 +34,34 @@ import tetrisUrl from "../assets/sound/tetris.wav";
 import tspin2Url from "../assets/sound/tspin2.wav";
 import tspin3Url from "../assets/sound/tspin3.wav";
 
-type SfxName =
-  | "move"
-  | "hold"
-  | "rotate"
-  | "harddrop"
-  | "drop"
-  | "dropdown"
-  | "single"
-  | "tetris"
-  | "tspin2"
-  | "tspin3"
-  | "allclear";
+const SOUND = {
+  move: "move",
+  hold: "hold",
+  rotate: "rotate",
+  harddrop: "harddrop",
+  drop: "drop",
+  dropdown: "dropdown",
+  single: "single",
+  tetris: "tetris",
+  tspin2: "tspin2",
+  tspin3: "tspin3",
+  allclear: "allclear",
+} as const;
 
-const SRC: Record<SfxName, string> = {
-  move: moveUrl,
-  hold: holdUrl,
-  rotate: rotateUrl,
-  harddrop: hardDropUrl,
-  drop: dropUrl,
-  dropdown: dropdownUrl,
-  single: singleUrl,
-  tetris: tetrisUrl,
-  tspin2: tspin2Url,
-  tspin3: tspin3Url,
-  allclear: allclearUrl,
+type SoundName = (typeof SOUND)[keyof typeof SOUND];
+
+const SRC: Record<SoundName, string> = {
+  [SOUND.move]: moveUrl,
+  [SOUND.hold]: holdUrl,
+  [SOUND.rotate]: rotateUrl,
+  [SOUND.harddrop]: hardDropUrl,
+  [SOUND.drop]: dropUrl,
+  [SOUND.dropdown]: dropdownUrl,
+  [SOUND.single]: singleUrl,
+  [SOUND.tetris]: tetrisUrl,
+  [SOUND.tspin2]: tspin2Url,
+  [SOUND.tspin3]: tspin3Url,
+  [SOUND.allclear]: allclearUrl,
 };
 
 let ctx: AudioContext | null = null;
@@ -66,8 +69,8 @@ let master: GainNode | null = null;
 let muted = false;
 let volume = 0.7;
 
-const buffers = new Map<SfxName, AudioBuffer>();
-const pending = new Map<SfxName, Promise<AudioBuffer | null>>();
+const buffers = new Map<SoundName, AudioBuffer>();
+const pending = new Map<SoundName, Promise<AudioBuffer | null>>();
 
 function ac(): AudioContext {
   if (!ctx) {
@@ -85,7 +88,7 @@ function ac(): AudioContext {
   return ctx;
 }
 
-function load(name: SfxName): Promise<AudioBuffer | null> {
+function load(name: SoundName): Promise<AudioBuffer | null> {
   const cached = buffers.get(name);
   if (cached) return Promise.resolve(cached);
   const inflight = pending.get(name);
@@ -110,10 +113,10 @@ function load(name: SfxName): Promise<AudioBuffer | null> {
  *  (inside a user-gesture handler such as the START button). */
 export function preloadSfx(): void {
   ac();
-  (Object.keys(SRC) as SfxName[]).forEach((n) => void load(n));
+  (Object.keys(SRC) as SoundName[]).forEach((n) => void load(n));
 }
 
-function play(name: SfxName, gain = 1): void {
+function play(name: SoundName, gain = 1): void {
   if (muted) return;
   const a = ac();
   const fire = (buf: AudioBuffer) => {
@@ -147,39 +150,39 @@ export function sfxMove(): void {
   const now = performance.now();
   if (now - lastMoveAt < SOUND_RETRIGGER_MIN_GAP_MS) return;
   lastMoveAt = now;
-  play("move", GAIN_MOVE);
+  play(SOUND.move, GAIN_MOVE);
 }
 let lastDropAt = 0;
 export function sfxDrop(): void {
   const now = performance.now();
   if (now - lastDropAt < SOUND_RETRIGGER_MIN_GAP_MS) return;
   lastDropAt = now;
-  play("drop", GAIN_DROP);
+  play(SOUND.drop, GAIN_DROP);
 }
 export function sfxDropdown(): void {
-  play("dropdown", GAIN_DROPDOWN);
+  play(SOUND.dropdown, GAIN_DROPDOWN);
 }
 export function sfxRotate(): void {
-  play("rotate", GAIN_ROTATE);
+  play(SOUND.rotate, GAIN_ROTATE);
 }
 export function sfxHardDrop(): void {
-  play("harddrop", GAIN_HARDDROP);
+  play(SOUND.harddrop, GAIN_HARDDROP);
 }
 export function sfxHold(): void {
-  play("hold", GAIN_HOLD);
+  play(SOUND.hold, GAIN_HOLD);
 }
 export function sfxAllClear(): void {
-  play("allclear", GAIN_ALLCLEAR);
+  play(SOUND.allclear, GAIN_ALLCLEAR);
 }
 
 /** Pick the right clip from the engine's ClearType. */
 export function sfxClear(clearType: ClearType): void {
   switch (clearType) {
     case CLEAR_TETRIS:
-      play("tetris");
+      play(SOUND.tetris);
       return;
     case CLEAR_TSPIN_TRIPLE:
-      play("tspin3");
+      play(SOUND.tspin3);
       return;
     case CLEAR_TSPIN:
     case CLEAR_TSPIN_MINI:
@@ -187,14 +190,14 @@ export function sfxClear(clearType: ClearType): void {
     case CLEAR_TSPIN_DOUBLE:
     case CLEAR_TSPIN_MINI_SINGLE:
     case CLEAR_TSPIN_MINI_DOUBLE:
-      play("tspin2");
+      play(SOUND.tspin2);
       return;
     case CLEAR_ALLCLEAR:
-      play("allclear");
+      play(SOUND.allclear);
       return;
     default:
       // single / double / triple (no T-spin) and any fallback
-      play("single");
+      play(SOUND.single);
       return;
   }
 }
