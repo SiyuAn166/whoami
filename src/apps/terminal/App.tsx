@@ -1,7 +1,7 @@
 import type { AppDefinition } from "../types";
 import { Shell } from "./Shell";
 import { StatusBar } from "./StatusBar";
-import { TermIcon } from "./TermIcon";
+import { TermIcon } from "./Icon";
 
 const SHELL_USER = "siyu";
 const SHELL_HOST = "portfolio";

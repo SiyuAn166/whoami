@@ -1,9 +1,10 @@
 import type { AppDefinition } from "../types";
-import "./finder.css";
-import { FinderContent } from "./FinderContent";
-import { FinderFooter } from "./FinderFooter";
-import { FinderToolbar } from "./FinderToolbar";
-import { FinderIcon } from "./FinderIcon";
+import { FinderContent } from "./Content";
+import { FinderFooter } from "./Footer";
+import { FinderIcon } from "./Icon";
+import { FinderToolbar } from "./Toolbar";
+
+import "./style.css";
 
 export const finderApp: AppDefinition = {
   id: "finder",

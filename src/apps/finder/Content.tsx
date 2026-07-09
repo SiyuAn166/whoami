@@ -3,9 +3,10 @@ import { AboutMeSection } from "../section/aboutme/AboutMeSection";
 import { ExperienceSection } from "../section/experience/ExperienceSection";
 import { ProjectSection } from "../section/projects/ProjectSection";
 import { CapabilitiesSection } from "../section/skills/SkillSection";
-import { FinderSidebar } from "./FinderSidebar";
-import "./finder.css";
-import { useFinderNav } from "./finderNav";
+import { FinderSidebar } from "./Sidebar";
+import { useFinderNav } from "./nav";
+
+import "./style.css";
 
 export function FinderContent({ data }: { data: PortfolioData }) {
   const { section, sidebarOpen } = useFinderNav();

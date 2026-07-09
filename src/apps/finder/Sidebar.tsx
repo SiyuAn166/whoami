@@ -3,8 +3,9 @@ import {
   SECTION_LABEL,
   useFinderNav,
   type FinderSection,
-} from "./finderNav";
-import "./FinderSidebar.css";
+} from "./nav";
+
+import "./sidebar.css";
 
 export type { FinderSection };
 

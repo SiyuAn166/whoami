@@ -1,4 +1,4 @@
-import { resolveAsset } from "./previewUtils";
+import { resolveAsset } from "./utils";
 
 /**
  * Renders the résumé PDF inline. Falls back to a link for browsers (and most

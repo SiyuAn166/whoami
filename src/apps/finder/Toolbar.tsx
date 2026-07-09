@@ -1,10 +1,10 @@
 import {
   goBack,
   goForward,
+  SECTION_LABEL,
   toggleSidebar,
   useFinderNav,
-  SECTION_LABEL,
-} from "./finderNav";
+} from "./nav";
 
 /** Toggle-sidebar icon (macOS "sidebar.left") */
 function SidebarIcon() {

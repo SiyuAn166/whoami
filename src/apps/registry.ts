@@ -1,6 +1,6 @@
-import { finderApp } from "./finder/FinderApp";
-import { previewApp } from "./preview/PreviewApp";
-import { terminalApp } from "./terminal/TerminalApp";
+import { finderApp } from "./finder/App";
+import { previewApp } from "./preview/App";
+import { terminalApp } from "./terminal/App";
 import { tetrisApp } from "./tetris";
 import type { AppDefinition } from "./types";
 

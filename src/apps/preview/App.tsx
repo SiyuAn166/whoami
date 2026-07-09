@@ -1,7 +1,7 @@
 import type { AppDefinition } from "../types";
-import { PreviewContent } from "./PreviewContent";
-import { PreviewFooter } from "./PreviewFooter";
-import { PreviewIcon } from "./PreviewIcon";
+import { PreviewContent } from "./Content";
+import { PreviewFooter } from "./Footer";
+import { PreviewIcon } from "./Icon";
 
 /**
  * "Preview" — a macOS Preview.app-style window that embeds the résumé PDF.

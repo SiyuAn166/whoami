@@ -1,5 +1,5 @@
 import type { PortfolioData } from "../../types/portfolio";
-import { useFinderNav, SECTION_LABEL } from "./finderNav";
+import { SECTION_LABEL, useFinderNav } from "./nav";
 
 /**
  * Finder path bar — rendered below the content area via the
