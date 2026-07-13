@@ -1,0 +1,236 @@
+/* ============================================================================
+   Arcade hub — modern neon game-hall. Dark hall backdrop with a glowing
+   marquee sign and a card grid of glossy game covers. All selectors are
+   `arcade-` prefixed to avoid leaking into the desktop.
+   ========================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap");
+
+.arcade-shell {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  padding: 30px 28px 18px;
+  overflow: hidden;
+  user-select: none;
+  font-family:
+    "Orbitron",
+    -apple-system,
+    "SF Pro Text",
+    system-ui,
+    sans-serif;
+  color: #eaf2ff;
+  background:
+    radial-gradient(
+      90% 60% at 50% 0%,
+      rgba(120, 90, 255, 0.22),
+      transparent 60%
+    ),
+    radial-gradient(
+      70% 50% at 15% 100%,
+      rgba(63, 208, 255, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      70% 50% at 85% 100%,
+      rgba(255, 92, 200, 0.14),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #0f0a26 0%, #0a0820 55%, #05040f 100%);
+}
+.arcade-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+}
+
+/* marquee sign */
+.arcade-marquee {
+  position: relative;
+  z-index: 1;
+  padding: 10px 34px;
+  border-radius: 18px;
+  border: 2px solid rgba(120, 200, 255, 0.55);
+  box-shadow:
+    0 0 22px rgba(90, 160, 255, 0.5),
+    inset 0 0 18px rgba(90, 160, 255, 0.25);
+}
+.arcade-title {
+  margin: 0;
+  font-size: 46px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  background: linear-gradient(90deg, #3fd0ff, #ff5cc8, #3fd0ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 26px rgba(120, 170, 255, 0.4);
+}
+
+/* card grid */
+.arcade-grid {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.arcade-card {
+  position: relative;
+  cursor: pointer;
+  width: 240px;
+  height: 320px;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: #fff;
+  font-family: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 24, 60, 0.7),
+    rgba(14, 10, 32, 0.85)
+  );
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  overflow: hidden;
+}
+.arcade-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.14),
+    transparent 40%
+  );
+  pointer-events: none;
+}
+.arcade-card.cyan {
+  border-color: rgba(63, 208, 255, 0.55);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(63, 208, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.arcade-card.magenta {
+  border-color: rgba(255, 92, 200, 0.55);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(255, 92, 200, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.arcade-card:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+.arcade-card.cyan:hover {
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(63, 208, 255, 0.55);
+}
+.arcade-card.magenta:hover {
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(255, 92, 200, 0.55);
+}
+.arcade-card-art {
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+}
+.arcade-card-name {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.arcade-card.cyan .arcade-card-name {
+  color: #9be7ff;
+  text-shadow: 0 0 16px rgba(63, 208, 255, 0.7);
+}
+.arcade-card.magenta .arcade-card-name {
+  color: #ffb0e6;
+  text-shadow: 0 0 16px rgba(255, 92, 200, 0.7);
+}
+.arcade-card-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: rgba(210, 220, 255, 0.65);
+}
+.arcade-card-play {
+  margin-top: 6px;
+  padding: 8px 26px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.arcade-card.cyan .arcade-card-play {
+  border-color: rgba(63, 208, 255, 0.6);
+  box-shadow: 0 0 14px rgba(63, 208, 255, 0.4);
+}
+.arcade-card.magenta .arcade-card-play {
+  border-color: rgba(255, 92, 200, 0.6);
+  box-shadow: 0 0 14px rgba(255, 92, 200, 0.4);
+}
+
+/* footer nav */
+.arcade-footer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.arcade-foot-item {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: rgba(180, 195, 235, 0.55);
+  background: none;
+  border: none;
+  cursor: default;
+}
+.arcade-foot-item.active {
+  color: #3fd0ff;
+  text-shadow: 0 0 10px rgba(63, 208, 255, 0.6);
+}
+.arcade-foot-item.link {
+  cursor: pointer;
+  color: rgba(210, 220, 255, 0.8);
+}
+.arcade-foot-item.link:hover {
+  color: #fff;
+}

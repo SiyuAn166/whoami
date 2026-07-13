@@ -1,0 +1,61 @@
+/* ============================================================================
+   Tetris bottom control bar — additive to style.css. PAUSE / LEVEL / sound,
+   styled to match the neon-arcade design. Prefixed `tetris-bar-*` / reuses the
+   `.tetris-bottombar` container.
+   ========================================================================== */
+.tetris-bottombar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+.tetris-bar-btn {
+  border: 1px solid rgba(140, 180, 255, 0.4);
+  cursor: pointer;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #eaf2ff;
+  padding: 8px 16px;
+  border-radius: 11px;
+  background: rgba(50, 90, 180, 0.32);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 4px 14px rgba(0, 0, 0, 0.3),
+    0 0 14px rgba(70, 130, 255, 0.15);
+  transition:
+    transform 0.1s,
+    background 0.15s;
+}
+.tetris-bar-btn:hover {
+  background: rgba(70, 120, 210, 0.42);
+}
+.tetris-bar-btn:active {
+  transform: translateY(2px);
+}
+.tetris-bar-btn.icon {
+  padding: 8px 12px;
+  font-size: 15px;
+}
+.tetris-bar-level {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: rgba(180, 205, 255, 0.85);
+  padding: 8px 14px;
+  border-radius: 11px;
+  background: rgba(20, 30, 60, 0.5);
+  border: 1px solid rgba(120, 170, 255, 0.22);
+}
+.tetris-bar-level b {
+  color: #cfe0ff;
+  font-size: 15px;
+  text-shadow: 0 0 8px rgba(90, 160, 255, 0.6);
+  margin-left: 4px;
+}

@@ -1,7 +1,11 @@
 // ============================================================================
 // TetrisGame — presentational shell. Game logic/loop/input lives in
 // useTetrisGame; this component only wires refs, HUD and overlays.
+// (Neon-arcade update: added a bottom control bar — PAUSE / LEVEL / sound —
+//  to match the Arcade UI design. Engine + core layout unchanged.)
 // ============================================================================
+import { useState } from "react";
+import "./bottombar.css";
 import { useTetrisGame, type Toast } from "./hook/useTetrisGame";
 import {
   BOARD_H,
@@ -13,20 +17,14 @@ import {
   NEXT_W,
 } from "./lib/config";
 import {
-  BACKGROUND_IMAGE,
   B2B_BADGE_IMAGE,
+  BACKGROUND_IMAGE,
   CLEAR_BADGE_IMAGE,
   MESSAGE_IMAGE,
 } from "./lib/images";
-
+import { isMuted, setMuted } from "./lib/sound";
 import "./style.css";
 
-// Picture links, applied as inline background-image styles so every
-// consumer stays in sync with lib/images.ts without any other file needing
-// to change. Sizing/position/repeat stay in style.css.
-// The URL is quoted: an SVG data URI can contain unescaped "(" / ")" (e.g.
-// from an internal url(#gradientId) reference), which would otherwise
-// terminate an unquoted CSS url(...) early and silently drop the value.
 const shellBgStyle = { backgroundImage: `url("${BACKGROUND_IMAGE.shell}")` };
 const playfieldBgStyle = {
   backgroundImage: `url("${BACKGROUND_IMAGE.playfield}")`,
@@ -39,8 +37,6 @@ const panelBgStyle = { backgroundImage: `url("${BACKGROUND_IMAGE.panel}")` };
  * Right: data metric (REN count + B2B status box). Text content unchanged.
  */
 function ClearFeed({ toast, b2bOn }: { toast: Toast | null; b2bOn: boolean }) {
-  // The capsule now only carries the special-clear label + the B2B sticker.
-  // REN is rendered separately (see RenTag) so long names never collide with it.
   const active = !!(toast?.label || b2bOn);
   if (!active) return null;
   const statusOnly = !toast?.label;
@@ -135,9 +131,9 @@ function PauseMenu({
 /** Controls reference. */
 function HelpOverlay({ onClose }: { onClose: () => void }) {
   const rows: [string, string[]][] = [
-    ["Move", ["←", "→"]],
-    ["Rotate", ["↑", "Z", "X"]],
-    ["Soft drop", ["↓"]],
+    ["Move", ["\u2190", "\u2192"]],
+    ["Rotate", ["\u2191", "Z", "X"]],
+    ["Soft drop", ["\u2193"]],
     ["Hard drop", ["Space"]],
     ["Hold", ["C"]],
     ["Pause / Menu", ["Esc"]],
@@ -187,13 +183,23 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
     closeHelp,
   } = useTetrisGame(onQuit);
 
+  const [muted, setMutedState] = useState(false);
+  const toggleMute = () => {
+    const m = !isMuted();
+    setMuted(m);
+    setMutedState(m);
+  };
+  // The loop listens for Escape on window; dispatching it pauses (while playing)
+  // or resumes (while paused) without the hook needing a dedicated action.
+  const pressPause = () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
   return (
     <div className="tetris-shell cinematic" style={shellBgStyle}>
       {/* score sits in the gap above the centered group — number only */}
       <div className="tetris-score-top">
         <span className="v">{String(hud.score).padStart(6, "0")}</span>
       </div>
-
       <div className="tetris-main">
         {/* LEFT — Hold + special-clear messages */}
         <div className="tetris-col left">
@@ -203,9 +209,7 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
               <canvas ref={holdRef} width={HOLD_W} height={HOLD_H} />
             </div>
           </div>
-          {/* studio capsule: special-clear label + B2B sticker */}
           <ClearFeed toast={toast} b2bOn={b2bOn} />
-          {/* REN — standalone, no box, below the capsule */}
           <RenTag ren={ren} />
         </div>
 
@@ -234,6 +238,31 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="tetris-bottombar">
+        <button className="tetris-bar-btn" onClick={quit}>
+          {"\u2039 BACK"}
+        </button>
+        <button
+          className="tetris-bar-btn"
+          onClick={() =>
+            phase === "playing" || phase === "paused" ? pressPause() : start()
+          }
+        >
+          {phase === "playing"
+            ? "\u23F8 PAUSE"
+            : phase === "paused"
+              ? "\u25B6 RESUME"
+              : "\u25B6 PLAY"}
+        </button>
+        <button
+          className="tetris-bar-btn icon"
+          onClick={toggleMute}
+          aria-label="Toggle sound"
+        >
+          {muted ? "\uD83D\uDD07" : "\uD83D\uDD0A"}
+        </button>
       </div>
     </div>
   );

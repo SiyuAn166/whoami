@@ -13,9 +13,9 @@ export const HIDDEN_ROWS = 2;
 export const TOTAL_ROWS = ROWS + HIDDEN_ROWS;
 
 // --- Board geometry (pixels) ------------------------------------------------
-export const CELL = 30;
-export const BOARD_W = COLS * CELL; // 300
-export const BOARD_H = ROWS * CELL; // 600
+export const CELL = 35;
+export const BOARD_W = COLS * CELL; // 500
+export const BOARD_H = ROWS * CELL; // 1000
 
 // --- Pieces -------------------------------------------------------------------
 export type PieceType = "I" | "O" | "T" | "S" | "Z" | "J" | "L";
