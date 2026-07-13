@@ -7,10 +7,11 @@
 // onQuit that returns to the grid.
 // ============================================================================
 import { useState, type ReactNode } from "react";
-import { Game as PuyoGame } from "../puyo";
-import { Icon as PuyoIcon } from "../puyo/Icon";
-import { Game as TetrisGame } from "../tetris";
-import { Icon as TetrisIcon } from "../tetris/Icon";
+import { Game as PuyoGame } from "./puyo";
+import { Icon as PuyoIcon } from "./puyo/Icon";
+import { Game as TetrisGame } from "./tetris";
+import { Icon as TetrisIcon } from "./tetris/Icon";
+
 import "./style.css";
 
 type View = "hub" | "tetris" | "puyo";

@@ -4,7 +4,6 @@
    so it looks immersive inside the plain macOS Window body. All selectors are
    `tetris-` prefixed to avoid leaking into the desktop.
    ========================================================================== */
-@import url("https://fonts.cdnfonts.com/css/seven-segment");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=JetBrains+Mono:wght@600;700&display=swap");
 
 .tetris-shell {
@@ -15,7 +14,7 @@
   align-items: center;
   justify-content: center;
   font-family:
-    "Seven Segment",
+    "Orbitron",
     -apple-system,
     "SF Pro Text",
     system-ui,
@@ -27,7 +26,6 @@
   box-sizing: border-box;
   width: 100%;
   min-height: 100%;
-  /* cinematic backdrop — picture link supplied inline by Game.tsx from lib/images.ts */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -459,12 +457,14 @@
 .tetris-feed.show {
   animation: tetris-feed-pop 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both;
 }
+
 @keyframes tetris-feed-pop {
   0% {
     opacity: 0;
     transform: scale(0.95);
     filter: blur(6px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -480,6 +480,7 @@
   gap: 3px;
   min-width: 0;
 }
+
 .tetris-feed-tag {
   font-family: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   font-size: 9px;
@@ -488,6 +489,7 @@
   text-transform: uppercase;
   color: rgba(130, 165, 225, 0.7);
 }
+
 .tetris-feed-title-img {
   display: block;
   height: 19px;
@@ -507,6 +509,7 @@
   padding-left: 2px;
   animation: tetris-ren-pop 0.3s cubic-bezier(0.2, 0.9, 0.25, 1) both;
 }
+
 .tetris-ren-num {
   font-family: "Orbitron", ui-monospace, system-ui, sans-serif;
   font-weight: 800;
@@ -515,6 +518,7 @@
   color: #7fe0ff;
   text-shadow: 0 0 12px rgba(90, 200, 255, 0.7);
 }
+
 .tetris-ren-label {
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 11px;
@@ -523,16 +527,19 @@
   color: rgba(150, 210, 245, 0.85);
   text-shadow: 0 0 8px rgba(90, 200, 255, 0.4);
 }
+
 @keyframes tetris-ren-pop {
   0% {
     opacity: 0;
     transform: translateY(4px) scale(0.9);
   }
+
   100% {
     opacity: 1;
     transform: none;
   }
 }
+
 /* B2B — corner sticker, out of normal flow so it never pushes or occludes
    the REN metric. Sits on the top-right rim of the capsule. */
 .tetris-feed-b2b-img {
@@ -555,6 +562,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transform: rotate(6deg);
 }
+
 /* B2B frame variant — recolour the whole capsule rim/glow amber so the
    entire clear reads as "back-to-back", independent of the REN column. */
 .tetris-feed.b2b {
@@ -572,6 +580,7 @@
     filter: none;
     transform: none;
   }
+
   .tetris-ren {
     animation: none;
     opacity: 1;

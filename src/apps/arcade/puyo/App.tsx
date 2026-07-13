@@ -1,6 +1,6 @@
+import type { AppDefinition } from "../../types";
 import { Game } from "./Game";
 import { Icon } from "./Icon";
-import type { AppDefinition } from "../types";
 
 /** Standalone Puyo app definition. The Arcade hub renders <Game/> directly, but
  *  this entry lets Puyo also be launched on its own (dock/desktop) if desired. */

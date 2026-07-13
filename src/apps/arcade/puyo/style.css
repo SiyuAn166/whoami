@@ -24,14 +24,13 @@
   box-sizing: border-box;
   width: 100%;
   min-height: 100%;
-  background:
-    radial-gradient(
-      120% 80% at 50% -10%,
-      rgba(255, 90, 200, 0.18),
-      transparent 60%
-    ),
-    linear-gradient(180deg, #140a2c 0%, #0c0820 55%, #070512 100%);
+  background: url("./images/shell.png");
+
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-position: center, center, center;
+  background-size: cover, cover, cover;
 }
+
 .puyo-shell::after {
   content: "";
   position: absolute;
@@ -48,6 +47,7 @@
   mix-blend-mode: soft-light;
   opacity: 0.6;
 }
+
 .puyo-shell::before {
   content: "";
   position: absolute;
@@ -74,6 +74,7 @@
   align-items: flex-start;
   justify-content: center;
 }
+
 .puyo-col {
   position: relative;
   z-index: 1;
@@ -81,9 +82,11 @@
   flex-direction: column;
   gap: 14px;
 }
+
 .puyo-col.left {
   width: 132px;
 }
+
 .puyo-col.right {
   width: 150px;
 }
@@ -105,6 +108,7 @@
   gap: 10px;
   align-items: center;
 }
+
 .puyo-label {
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 11px;
@@ -114,9 +118,11 @@
   color: rgba(240, 190, 240, 0.8);
   align-self: flex-start;
 }
+
 .puyo-label.center {
   align-self: center;
 }
+
 .puyo-well {
   border-radius: 12px;
   padding: 6px;
@@ -125,6 +131,7 @@
     inset 0 2px 10px rgba(0, 0, 0, 0.6),
     inset 0 0 0 1px rgba(255, 120, 210, 0.12);
 }
+
 .puyo-well canvas {
   display: block;
 }
@@ -142,6 +149,7 @@
     0 0 34px rgba(255, 70, 190, 0.35),
     0 0 70px rgba(200, 50, 200, 0.18);
 }
+
 .puyo-playfield-wrap canvas {
   display: block;
 }
@@ -157,11 +165,13 @@
     0 0 22px rgba(255, 70, 190, 0.5);
   align-self: center;
 }
+
 .puyo-ring-wrap {
   display: flex;
   justify-content: center;
   padding: 4px 0 2px;
 }
+
 .puyo-ring {
   width: 92px;
   height: 92px;
@@ -171,6 +181,7 @@
   justify-content: center;
   box-shadow: 0 0 16px rgba(255, 90, 200, 0.4);
 }
+
 .puyo-ring-hole {
   width: 68px;
   height: 68px;
@@ -182,6 +193,7 @@
   justify-content: center;
   gap: 2px;
 }
+
 .puyo-ring-num {
   font-weight: 800;
   font-size: 28px;
@@ -189,16 +201,19 @@
   color: #ff8fe0;
   text-shadow: 0 0 12px rgba(255, 100, 220, 0.7);
 }
+
 .puyo-ring-label {
   font-family: "JetBrains Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.18em;
   color: rgba(240, 180, 235, 0.85);
 }
+
 .puyo-panel.statbox {
   gap: 8px;
   align-items: stretch;
 }
+
 .puyo-panel.statbox .stat {
   display: flex;
   justify-content: space-between;
@@ -207,6 +222,7 @@
   font-size: 12px;
   color: rgba(210, 190, 235, 0.9);
 }
+
 .puyo-panel.statbox .stat b {
   color: #7fe0ff;
   font-size: 15px;
@@ -230,21 +246,25 @@
     inset 0 1px 6px rgba(0, 0, 0, 0.55),
     0 0 16px rgba(255, 70, 190, 0.22);
 }
+
 .puyo-feed.show {
   animation: puyo-feed-pop 0.32s cubic-bezier(0.2, 0.9, 0.25, 1) both;
 }
+
 @keyframes puyo-feed-pop {
   0% {
     opacity: 0;
     transform: scale(0.9);
     filter: blur(6px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
     filter: blur(0);
   }
 }
+
 .puyo-feed-tag {
   font-family: "JetBrains Mono", monospace;
   font-size: 10px;
@@ -252,6 +272,7 @@
   letter-spacing: 0.28em;
   color: rgba(255, 170, 230, 0.85);
 }
+
 .puyo-feed-num {
   font-weight: 800;
   font-size: 40px;
@@ -259,6 +280,7 @@
   color: #ffb84d;
   text-shadow: 0 0 14px rgba(255, 160, 60, 0.7);
 }
+
 .puyo-feed-num .x {
   font-size: 22px;
   color: #ff8fe0;
@@ -274,6 +296,7 @@
   align-items: center;
   justify-content: center;
 }
+
 .puyo-bar-btn {
   border: 1px solid rgba(255, 120, 210, 0.4);
   cursor: pointer;
@@ -293,12 +316,15 @@
     transform 0.1s,
     background 0.15s;
 }
+
 .puyo-bar-btn:hover {
   background: rgba(130, 45, 130, 0.5);
 }
+
 .puyo-bar-btn:active {
   transform: translateY(2px);
 }
+
 .puyo-bar-btn.icon {
   padding: 8px 12px;
   font-size: 15px;
@@ -316,9 +342,11 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
 .puyo-overlay.show {
   display: flex;
 }
+
 .puyo-card {
   width: 78%;
   max-width: 250px;
@@ -334,9 +362,11 @@
     0 20px 60px rgba(0, 0, 0, 0.55),
     0 0 40px rgba(255, 70, 190, 0.2);
 }
+
 .puyo-card.wide {
   max-width: 310px;
 }
+
 .puyo-title-msg {
   font-weight: 800;
   font-size: 26px;
@@ -345,15 +375,18 @@
   color: #ff8fe0;
   text-shadow: 0 0 16px rgba(255, 100, 220, 0.7);
 }
+
 .puyo-final {
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 16px;
 }
+
 .puyo-card .puyo-btn {
   width: 100%;
   margin-top: 6px;
 }
+
 .puyo-btn {
   border: 1px solid rgba(255, 120, 210, 0.4);
   cursor: pointer;
@@ -373,15 +406,19 @@
     transform 0.1s,
     background 0.15s;
 }
+
 .puyo-btn:hover {
   background: rgba(190, 55, 165, 0.44);
 }
+
 .puyo-btn:active {
   transform: translateY(2px);
 }
+
 .puyo-btn.ghost {
   background: rgba(255, 255, 255, 0.06);
 }
+
 .puyo-keys {
   display: flex;
   flex-direction: column;
@@ -390,11 +427,13 @@
   color: rgba(240, 220, 250, 0.9);
   margin-bottom: 12px;
 }
+
 .puyo-keys .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .puyo-keys kbd,
 .puyo-press kbd {
   font-family: "JetBrains Mono", monospace;
@@ -407,31 +446,37 @@
   padding: 2px 8px;
   margin-left: 4px;
 }
+
 .puyo-help-note {
   font-size: 12px;
   color: rgba(230, 210, 245, 0.75);
   margin: 0 0 14px;
   line-height: 1.4;
 }
+
 .puyo-start-hint {
   text-align: center;
   color: #fff;
 }
+
 .puyo-press {
   margin: 0;
   font-size: 15px;
   color: rgba(255, 255, 255, 0.82);
   animation: puyo-press-pulse 1.6s ease-in-out infinite;
 }
+
 @keyframes puyo-press-pulse {
   0%,
   100% {
     opacity: 0.55;
   }
+
   50% {
     opacity: 1;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .puyo-press,
   .puyo-feed.show {

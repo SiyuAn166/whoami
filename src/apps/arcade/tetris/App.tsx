@@ -1,4 +1,4 @@
-import type { AppDefinition } from "../types";
+import type { AppDefinition } from "../../types";
 import { Game } from "./Game";
 import { Icon } from "./Icon";
 import { Toolbar } from "./Toolbar";

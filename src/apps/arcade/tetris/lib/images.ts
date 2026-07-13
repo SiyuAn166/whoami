@@ -20,7 +20,7 @@ import {
   type ClearType,
 } from "./config";
 
-import shellBgUrl from "../assets/images/backgrounds/shell.svg";
+import shellBgUrl from "../assets/images/backgrounds/shell.png";
 import playfieldBgUrl from "../assets/images/backgrounds/playfield.svg";
 import panelBgUrl from "../assets/images/backgrounds/panel.svg";
 
