@@ -1,7 +1,9 @@
 /* ============================================================================
-   Arcade hub — modern neon game-hall. Dark hall backdrop with a glowing
-   marquee sign and a card grid of glossy game covers. All selectors are
-   `arcade-` prefixed to avoid leaking into the desktop.
+   Arcade hub — modern neon game-hall.
+   Background is a photo (assets/hall.png) with a neon frame baked into its
+   CENTER; the logo + card grid are centered on top so they land inside that
+   frame. Everything scales with the window and never distorts (cover + center).
+   All selectors are `arcade-` prefixed to avoid leaking into the desktop.
    ========================================================================== */
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap");
 
@@ -10,11 +12,6 @@
   box-sizing: border-box;
   width: 100%;
   min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 26px;
-  padding: 30px 28px 18px;
   overflow: hidden;
   user-select: none;
   font-family:
@@ -24,24 +21,26 @@
     system-ui,
     sans-serif;
   color: #eaf2ff;
+  /* Photo backdrop (bottom layer) + dark tint (top layers) so UI stays legible.
+     cover = fill the window keeping aspect ratio (never stretch/distort);
+     center = keep the neon frame centered at any window size. */
   background:
     radial-gradient(
-      90% 60% at 50% 0%,
-      rgba(120, 90, 255, 0.22),
-      transparent 60%
+      70% 55% at 50% 46%,
+      rgba(5, 4, 15, 0) 0%,
+      rgba(5, 4, 15, 0.35) 100%
     ),
-    radial-gradient(
-      70% 50% at 15% 100%,
-      rgba(63, 208, 255, 0.12),
-      transparent 60%
+    linear-gradient(
+      180deg,
+      rgba(10, 8, 30, 0.35) 0%,
+      rgba(5, 4, 15, 0.55) 100%
     ),
-    radial-gradient(
-      70% 50% at 85% 100%,
-      rgba(255, 92, 200, 0.14),
-      transparent 60%
-    ),
-    linear-gradient(180deg, #0f0a26 0%, #0a0820 55%, #05040f 100%);
+    url("./assets/arcade.png");
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-position: center, center, center;
+  background-size: cover, cover, cover;
 }
+
 .arcade-scanlines {
   position: absolute;
   inset: 0;
@@ -55,64 +54,56 @@
     transparent 3px
   );
   mix-blend-mode: soft-light;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
-/* marquee sign */
-.arcade-marquee {
-  position: relative;
+/* Centered stage — logo + cards, nudged to sit on the frame's optical center. */
+.arcade-stage {
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  padding: 10px 34px;
-  border-radius: 18px;
-  border: 2px solid rgba(120, 200, 255, 0.55);
-  box-shadow:
-    0 0 22px rgba(90, 160, 255, 0.5),
-    inset 0 0 18px rgba(90, 160, 255, 0.25);
-}
-.arcade-title {
-  margin: 0;
-  font-size: 46px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  background: linear-gradient(90deg, #3fd0ff, #ff5cc8, #3fd0ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 26px rgba(120, 170, 255, 0.4);
-}
-
-/* card grid */
-.arcade-grid {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  display: flex;
-  gap: 26px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  width: 100%;
-}
-.arcade-card {
-  position: relative;
-  cursor: pointer;
-  width: 240px;
-  height: 320px;
-  border-radius: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 24px;
-  color: #fff;
-  font-family: inherit;
-  background: linear-gradient(
-    180deg,
-    rgba(30, 24, 60, 0.7),
-    rgba(14, 10, 32, 0.85)
-  );
+  gap: clamp(14px, 3vh, 30px);
+  transform: translateY(-8%);
+  padding: 4%;
+  box-sizing: border-box;
+}
+
+/* neon logo sign (replaces the old text title) */
+.arcade-logo {
+  width: min(32vw, 340px);
+  aspect-ratio: 1855 / 444;
+  background: url("./assets/arcade-title.png") center / contain no-repeat;
+  filter: drop-shadow(0 0 26px rgba(120, 170, 255, 0.45));
+  transform: translateY(-55%);
+}
+
+/* card grid */
+.arcade-grid {
+  display: flex;
+  gap: clamp(18px, 4vw, 44px);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* card grid — each card is now a full poster cover (title baked into the art) */
+.arcade-card {
+  position: relative;
+  cursor: pointer;
+  width: 16vw;
+  /* card is a 3:5 poster; keep it proportional to the cover art */
+  aspect-ratio: 3 / 5;
+  border-radius: 22px;
+  padding: 0;
   border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background-position: center;
+  background-repeat: no-repeat;
+  /* cover = fill the card keeping aspect ratio, never stretch/distort */
+  background-size: cover;
   box-shadow:
     0 18px 44px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
@@ -122,6 +113,8 @@
     border-color 0.2s ease;
   overflow: hidden;
 }
+
+/* subtle top gloss over the cover */
 .arcade-card::before {
   content: "";
   position: absolute;
@@ -129,91 +122,69 @@
   border-radius: 22px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.14),
-    transparent 40%
+    rgba(255, 255, 255, 0.12),
+    transparent 34%
   );
   pointer-events: none;
 }
+
+/* full-bleed cover art per game */
 .arcade-card.cyan {
+  background-image: url("./assets/tetris-cover.png");
   border-color: rgba(63, 208, 255, 0.55);
   box-shadow:
     0 18px 44px rgba(0, 0, 0, 0.5),
     0 0 28px rgba(63, 208, 255, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
+
 .arcade-card.magenta {
+  background-image: url("./assets/puyo-cover.png");
   border-color: rgba(255, 92, 200, 0.55);
   box-shadow:
     0 18px 44px rgba(0, 0, 0, 0.5),
     0 0 28px rgba(255, 92, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
+
 .arcade-card:hover {
   transform: translateY(-6px) scale(1.02);
 }
+
 .arcade-card.cyan:hover {
   box-shadow:
     0 24px 54px rgba(0, 0, 0, 0.55),
     0 0 40px rgba(63, 208, 255, 0.55);
 }
+
 .arcade-card.magenta:hover {
   box-shadow:
     0 24px 54px rgba(0, 0, 0, 0.55),
     0 0 40px rgba(255, 92, 200, 0.55);
 }
-.arcade-card-art {
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
-}
-.arcade-card-name {
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-.arcade-card.cyan .arcade-card-name {
-  color: #9be7ff;
-  text-shadow: 0 0 16px rgba(63, 208, 255, 0.7);
-}
-.arcade-card.magenta .arcade-card-name {
-  color: #ffb0e6;
-  text-shadow: 0 0 16px rgba(255, 92, 200, 0.7);
-}
-.arcade-card-tag {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: rgba(210, 220, 255, 0.65);
-}
+
+/* title/icon are baked into the cover art — hide the DOM icon/text/PLAY */
+.arcade-card-art,
+.arcade-card-name,
+.arcade-card-tag,
 .arcade-card-play {
-  margin-top: 6px;
-  padding: 8px 26px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-.arcade-card.cyan .arcade-card-play {
-  border-color: rgba(63, 208, 255, 0.6);
-  box-shadow: 0 0 14px rgba(63, 208, 255, 0.4);
-}
-.arcade-card.magenta .arcade-card-play {
-  border-color: rgba(255, 92, 200, 0.6);
-  box-shadow: 0 0 14px rgba(255, 92, 200, 0.4);
+  display: none;
 }
 
-/* footer nav */
+/* footer nav — pinned to the bottom so it never pushes the centered stage */
 .arcade-footer {
-  position: relative;
-  z-index: 1;
-  width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   gap: 28px;
   align-items: center;
   justify-content: center;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 0 14px;
 }
+
 .arcade-foot-item {
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
@@ -223,14 +194,17 @@
   border: none;
   cursor: default;
 }
+
 .arcade-foot-item.active {
   color: #3fd0ff;
   text-shadow: 0 0 10px rgba(63, 208, 255, 0.6);
 }
+
 .arcade-foot-item.link {
   cursor: pointer;
   color: rgba(210, 220, 255, 0.8);
 }
+
 .arcade-foot-item.link:hover {
   color: #fff;
 }
