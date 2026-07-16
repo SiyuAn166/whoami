@@ -5,7 +5,7 @@
 // Enter launches, Esc backs out. Games come from the registry in games.ts, so
 // the hub is generic — register a game there and its cover shows up here.
 // ============================================================================
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GAMES } from "./games";
 import "./style.css";
 
@@ -21,6 +21,25 @@ export function Hub({ onClose }: { onClose?: () => void }) {
       setBooting(false);
     }, 460);
   }, []);
+
+  // Touch: horizontal swipe moves selection (tap is handled by the cards'
+  // onClick — tapping a neighbour selects it, tapping the focused one launches).
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current || booting) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) setSel((sn) => Math.min(GAMES.length - 1, sn + 1));
+      else setSel((sn) => Math.max(0, sn - 1));
+    }
+    touchStart.current = null;
+  };
 
   useEffect(() => {
     if (view !== "hub") return;
@@ -64,8 +83,18 @@ export function Hub({ onClose }: { onClose?: () => void }) {
     >
       <div className="arc-ambient" aria-hidden />
 
-      <main className="arc-stage">
-        <div className="arc-rail">
+      <main
+        className="arc-stage"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div
+          className="arc-rail"
+          style={{
+            ["--sel" as string]: sel,
+            ["--n" as string]: GAMES.length,
+          }}
+        >
           {GAMES.map((g, i) => {
             const d = i - sel;
             return (
@@ -101,14 +130,15 @@ export function Hub({ onClose }: { onClose?: () => void }) {
       </main>
 
       <footer className="arc-hints">
-        <span>
+        <span className="arc-hint-touch">Swipe &middot; Tap to play</span>
+        <span className="arc-hint-key">
           <kbd>&#8592;</kbd>
           <kbd>&#8594;</kbd> Select
         </span>
-        <span>
+        <span className="arc-hint-key">
           <kbd>&#8629;</kbd> Start
         </span>
-        <span>
+        <span className="arc-hint-key">
           <kbd>Esc</kbd> Exit
         </span>
       </footer>

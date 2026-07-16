@@ -107,3 +107,8 @@
   visibility: visible;
   transform: translateX(-50%) translateY(0) scale(1);
 }
+
+.dock-icon:focus,
+.dock-icon:focus-visible {
+  outline: none;
+}
