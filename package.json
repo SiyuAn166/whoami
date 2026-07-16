@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run build",
     "test": "npx vitest run",
-    "all": "npm run format && npm run lint:fix && npm run typecheck && npm run build",
+    "all": "npm run format --loglevel error -- --log-level warn && npm run lint:fix --loglevel error -- --quiet && npm run typecheck --loglevel error && npm run build --loglevel error",
     "preview": "vite preview"
   },
   "dependencies": {

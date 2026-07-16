@@ -30,7 +30,7 @@ export const COLOR_KEYS = [
   "purple",
 ] as const;
 /** How many colours are in play. Puyo Tsu standard is 4. */
-export const NUM_COLORS = 4;
+export const NUM_COLORS = 5;
 export const ALL_COLORS: Color[] = [1, 2, 3, 4, 5];
 
 // ---- Atlas sizing ---------------------------------------------------------
