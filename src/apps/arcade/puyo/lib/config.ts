@@ -1,99 +1,151 @@
-// ============================================================================
-// Puyo static resources — board geometry, colours, rule tables, timing, keys.
-// Nothing here computes: engine.ts (pure rules) and the view layer read from it.
-// Mirrors the tetris/lib/config.ts split so both games share one architecture.
-// ============================================================================
+// Board geometry, atlas sizing, timings and Puyo Puyo Tsu scoring tables.
+// Everything tunable lives here so the rest of the bundle stays declarative.
+//
+// Geometry mirrors puyogg/puyosim-gg exactly so the layout.png field frame and
+// the puyo.json spritesheet line up pixel-for-pixel (native 64x60 cells).
 
-// --- Board geometry ----------------------------------------------------------
+import type { Color } from "./types";
+
+// ---- Board geometry -------------------------------------------------------
 export const COLS = 6;
-export const ROWS = 12;
-/** Hidden rows above the visible field where the pair spawns. */
-export const HIDDEN_ROWS = 2;
-export const TOTAL_ROWS = ROWS + HIDDEN_ROWS; // 14
+/** Total rows including hidden rows at the top. */
+export const ROWS = 13;
+/** Hidden rows at the top (puyos here never pop). */
+export const HIDDEN_ROWS = 1;
+/** Visible playfield rows. */
+export const VISIBLE_ROWS = ROWS - HIDDEN_ROWS; // 12
+/** Spawn column (0-indexed 3rd column, classic PPT spawn). */
+export const SPAWN_COL = 2;
+/** Axis spawn row: above the death-X (outside the frame), classic PPT spawn. */
+export const SPAWN_ROW = HIDDEN_ROWS - 1;
 
-// --- Board geometry (pixels) -------------------------------------------------
-export const CELL = 50;
-export const BOARD_W = COLS * CELL; // 300
-export const BOARD_H = ROWS * CELL; // 600
+// ---- Colours --------------------------------------------------------------
+/** Atlas frame prefixes, indexed by Color (1..5). Index 0 unused. */
+export const COLOR_KEYS = [
+  "",
+  "red",
+  "green",
+  "blue",
+  "yellow",
+  "purple",
+] as const;
+/** How many colours are in play. Puyo Tsu standard is 4. */
+export const NUM_COLORS = 4;
+export const ALL_COLORS: Color[] = [1, 2, 3, 4, 5];
 
-// --- Colours -----------------------------------------------------------------
-export type PuyoColor = "R" | "G" | "B" | "Y" | "P";
-export const COLORS: PuyoColor[] = ["R", "G", "B", "Y", "P"];
-/** How many distinct colours are actually put in play (<= COLORS.length). */
-export const COLOR_COUNT = 5;
+// ---- Atlas sizing ---------------------------------------------------------
+// puyo.json frames are 64x60 with 72px stepping. We render at native size so
+// the connection nubs of neighbouring frames meet exactly, like puyo.gg.
+export const FRAME_W = 64;
+export const FRAME_H = 60;
+/** Displayed cell size in px (native). */
+export const CELL_W = 64;
+export const CELL_H = 60;
+export const SCALE_X = CELL_W / FRAME_W; // 1
+export const SCALE_Y = CELL_H / FRAME_H; // 1
 
-/** Base colours per puyo (high-saturation, glossy). */
-export const PUYO_COLORS: Record<PuyoColor, string> = {
-  R: "#f0483f",
-  G: "#3fca4e",
-  B: "#3f6ee8",
-  Y: "#f2c31a",
-  P: "#a24be0",
-};
+export const BOARD_W = COLS * CELL_W; // 384
+export const BOARD_H = VISIBLE_ROWS * CELL_H; // 720
 
-/** Group size required to pop. */
-export const CLEAR_MIN = 4;
+// ---- Field frame layout (layout.png, from puyosim-gg frame.ts) ------------
+// Border sprite positions are relative to the frame container origin.
+export const FRAME = {
+  totalW: 436,
+  totalH: 836,
+  border: {
+    top: { x: 0, y: 0 },
+    leftTop: { x: 0, y: 52 },
+    leftBot: { x: 0, y: 404 },
+    rightTop: { x: 417, y: 52 },
+    rightBot: { x: 417, y: 404 },
+    bottom: { x: 0, y: 770 },
+  },
+  /** Where the puyo field content container sits inside the frame. */
+  fieldX: 25,
+  fieldY: 52,
+  /** Inner clip rect for the playable area (hides the hidden spawn row). */
+  clip: { x: 17, y: 52, w: 402, h: 718 },
+} as const;
 
-// --- Side panels -------------------------------------------------------------
-export const NEXT_COUNT = 2; // upcoming pairs previewed
-export const NEXT_W = 96;
-export const NEXT_SLOT_H = 82;
-export const NEXT_CELL = 26;
+// ---- Stage (canvas) layout -----------------------------------------------
+// Frame is placed at (frameX, frameY); everything else is positioned relative
+// to puyosim's absolute coordinates (their frame sat at y=132).
+export const STAGE = {
+  width: 640,
+  height: 992,
+  frameX: 16,
+  frameY: 132, // headroom above the frame for the spawn area (puyosim-style)
+  // offsets below are frame-relative (added to frameX/frameY)
+  next: { x: 452, y: 56 }, // next window: top aligned just below the top border
+  score: { x: 30, y: 800 }, // score text baseline area on bottom tray
+  chain: { x: 432, y: 700 }, // chain counter (chain_font), scale 0.85
+  garbage: { x: 337, y: 783, scale: 0.7 },
+} as const;
 
-// --- Input timing (ms) -------------------------------------------------------
-export const DAS = 140; // delayed auto-shift before repeat kicks in
-export const ARR = 45; // auto-repeat rate once shifting
-export const SOFT_DROP_MS = 45; // gravity interval while soft-dropping
-export const LOCK_DELAY = 500; // grace time on the floor before locking
+// ---- Timings (ms) ---------------------------------------------------------
+export const TIMING = {
+  gravity: 780,
+  softDrop: 45,
+  lockDelay: 480,
+  das: 150,
+  arr: 32,
+  popMs: 450,
+  dropPerRowMs: 80, // linear fall: ms per row (constant-speed gravity)
+  bounceFrameMs: 22, // ms per squash/stretch frame on landing
+  bounceMs: 308, // total landing bounce = 14 frames * bounceFrameMs
+  settlePause: 90,
+  chainPopupMs: 900,
+} as const;
 
-// --- Base gravity (ms per cell) ---------------------------------------------
-export const GRAVITY_MS = 720;
-export function gravityMsForChainCount(cleared: number): number {
-  // Speeds up a little as the board fills — cleared = total puyos removed.
-  return Math.max(160, GRAVITY_MS - Math.floor(cleared / 24) * 60);
-}
-
-// --- Chain animation timing (ms) --------------------------------------------
-export const FLASH_MS = 480; // how long a group blinks + pops before removal
-export const POP_MS = 200; // settle beat between successive chain pops
-// Post-lock / post-pop settle uses REAL gravity: every puyo accelerates at the
-// same rate (cells per ms^2), so nearer puyos land first and a puyo dropping
-// into a deep gap keeps falling longer. Duration scales with the fall distance
-// instead of a fixed snap. SETTLE_MIN_MS is a floor so tiny 1-cell drops read.
-export const FALL_ACCEL = 0.0001; // gravity for the settle animation (cells/ms^2)
-export const SETTLE_MIN_MS = 200; // minimum settle duration, ms
-export const TOAST_MS = 1400; // how long the chain badge lingers after a chain
-
-// --- Scoring (Puyo Puyo Tsu formula) ----------------------------------------
-// step score = 10 * totalCleared * clamp(chainPower + colorBonus + groupBonus, 1, 999)
-// Indexed by 1-based chain number; index 0 unused, chain 1 -> 0.
+// ---- Scoring (Puyo Puyo Tsu) ---------------------------------------------
+/** Chain power, indexed by chain number (chain 1 -> index 1). */
 export const CHAIN_POWER = [
   0, 0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416,
-  448, 480, 512, 544, 576, 608, 640, 672,
+  448, 480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800,
 ];
-/** Indexed by number of distinct colours cleared in the same chain step. */
+
+/** Colour bonus, indexed by number of distinct colours cleared in a step. */
 export const COLOR_BONUS = [0, 0, 3, 6, 12, 24];
-/** Extra bonus for oversized groups. */
+
+/** Group bonus by group size (>=11 -> 10). */
 export function groupBonus(size: number): number {
-  if (size <= 4) return 0;
   if (size >= 11) return 10;
-  return (
-    ({ 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7 } as Record<number, number>)[size] ??
-    0
-  );
+  const table = [0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7];
+  return table[size] ?? 0;
 }
 
-// --- Keyboard controls -------------------------------------------------------
-export const KEY_LEFT = "ArrowLeft";
-export const KEY_RIGHT = "ArrowRight";
-export const KEY_SOFT_DROP = "ArrowDown";
-export const KEY_ROTATE_CW_ARROW = "ArrowUp";
-export const KEY_ROTATE_CW_X = "x";
-export const KEY_ROTATE_CW_X_UPPER = "X";
-export const KEY_ROTATE_CCW_Z = "z";
-export const KEY_ROTATE_CCW_Z_UPPER = "Z";
-export const KEY_HARD_DROP = " ";
-export const KEY_PAUSE = "Escape";
+/** Minimum group size that pops. */
+export const POP_MIN = 4;
 
-/** Custom window event the titlebar "?" button fires to open in-game help. */
-export const HELP_EVENT = "puyo:help";
+/** All-clear (zenkeshi) bonus. */
+export const ALL_CLEAR_BONUS = 3600;
+
+// ---- Garbage / nuisance (Puyo Puyo Tsu) ----------------------------------
+/** Target points: score per single garbage puyo. Standard Tsu value. */
+export const TARGET_POINT = 70;
+
+/** Nuisance icon denominations, largest first. Frame names live in puyo atlas. */
+export const GARBAGE_ICONS: { value: number; frame: string }[] = [
+  { value: 720, frame: "crown.png" },
+  { value: 360, frame: "moon.png" },
+  { value: 180, frame: "star.png" },
+  { value: 30, frame: "rock.png" },
+  { value: 6, frame: "line.png" },
+  { value: 1, frame: "unit.png" },
+];
+
+/**
+ * Break a garbage count into atlas icon frames (greedy, largest first).
+ * Capped at `maxIcons` slots to fit the tray, biggest denominations kept.
+ */
+export function garbageToIcons(n: number, maxIcons = 6): string[] {
+  const out: string[] = [];
+  let rem = Math.max(0, Math.floor(n));
+  for (const { value, frame } of GARBAGE_ICONS) {
+    let cnt = Math.floor(rem / value);
+    rem -= cnt * value;
+    while (cnt-- > 0 && out.length < maxIcons) out.push(frame);
+    if (out.length >= maxIcons) break;
+  }
+  return out;
+}

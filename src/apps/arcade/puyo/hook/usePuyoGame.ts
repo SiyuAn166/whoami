@@ -1,463 +1,562 @@
-// ============================================================================
-// usePuyoGame — the game's beating heart as a single hook.
-// Owns: the Puyo engine, the requestAnimationFrame loop, gravity & lock-delay,
-// keyboard input (DAS/ARR), the chain-resolution animation, and sound.
-// Returns immutable state for rendering plus canvas refs and player actions.
-// Loop and listeners are wired ONCE on mount and read live values through refs.
-// ============================================================================
-import { useEffect, useRef, useState } from "react";
+// The game-loop hook: owns the mutable game state, drives the Pixi stage via
+// its ticker, handles keyboard input (DAS/ARR), and exposes HUD state + actions
+// to React. Practice mode = no auto gravity / no lock delay; Play mode = full.
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ARR,
-  CELL,
-  DAS,
-  FLASH_MS,
-  HELP_EVENT,
-  KEY_HARD_DROP,
-  KEY_LEFT,
-  KEY_PAUSE,
-  KEY_RIGHT,
-  KEY_ROTATE_CCW_Z,
-  KEY_ROTATE_CCW_Z_UPPER,
-  KEY_ROTATE_CW_ARROW,
-  KEY_ROTATE_CW_X,
-  KEY_ROTATE_CW_X_UPPER,
-  KEY_SOFT_DROP,
-  LOCK_DELAY,
-  NEXT_CELL,
-  NEXT_COUNT,
-  NEXT_SLOT_H,
-  NEXT_W,
-  POP_MS,
-  FALL_ACCEL,
-  SETTLE_MIN_MS,
-  SOFT_DROP_MS,
-  TOAST_MS,
-  gravityMsForChainCount,
+  emptyGrid,
+  lockPiece,
+  move as movePiece,
+  rotate as rotatePiece,
+  stepDown,
+  hardDropPiece,
+  isTopOut,
+  applyGravity,
+  resolveChains,
+  isAllClear,
+  pieceCells,
+} from "../lib/engine";
+import { ColorBag } from "../lib/rng";
+import {
+  TIMING,
+  SPAWN_COL,
+  SPAWN_ROW,
+  ROWS,
+  HIDDEN_ROWS,
+  TARGET_POINT,
 } from "../lib/config";
-import { Puyo } from "../lib/engine";
-import { drawBoard, drawNext } from "../lib/render";
-import {
-  isMuted,
-  preloadSfx,
-  setMuted,
-  sfxAllClear,
-  sfxDrop,
-  sfxHardDrop,
-  sfxLand,
-  sfxMove,
-  sfxPop,
-  sfxRotate,
-} from "../lib/sound";
+import type { Grid, Piece, Color, ChainStep, Mode } from "../lib/types";
+import { PuyoStage } from "../pixi/PuyoStage";
 
-export type Phase = "idle" | "playing" | "paused" | "over";
+const ALL_CLEAR_BONUS = 3600;
 
-export interface Hud {
+export type Status = "loading" | "control" | "resolve" | "paused" | "gameover";
+
+interface Hud {
+  status: Status;
   score: number;
-  chainMax: number;
-  cleared: number;
+  chain: number;
+  maxChain: number;
+  next: [Color, Color][];
+  mode: Mode;
 }
 
-export interface PuyoController {
+type Phase = "predrop" | "pop" | "drop" | "pause";
+
+interface GameState {
+  grid: Grid;
+  piece: Piece | null;
+  bag: ColorBag;
+  queue: [Color, Color][]; // upcoming pairs (index 0 = next)
+  status: Status;
+  score: number;
+  chain: number;
+  maxChain: number;
+  // garbage tally
+  chainScore: number;
+  garbageLeftover: number;
+  garbageSent: number;
+  // gravity / lock
+  gravAccum: number;
+  lockAccum: number;
+  grounded: boolean;
+  softDrop: boolean;
+  // horizontal auto-shift
+  dir: -1 | 0 | 1;
+  dasAccum: number;
+  arrAccum: number;
+  // resolve playback
+  steps: ChainStep[];
+  stepIndex: number;
   phase: Phase;
-  hud: Hud;
-  chain: number; // live chain count during a resolving reaction (0 when idle)
-  help: boolean;
-  muted: boolean;
-  boardRef: React.RefObject<HTMLCanvasElement | null>;
-  nextRef: React.RefObject<HTMLCanvasElement | null>;
-  start: () => void;
-  resume: () => void;
-  pause: () => void;
-  quit: () => void;
-  toggleMute: () => void;
-  closeHelp: () => void;
+  phaseT: number;
+  phaseDur: number;
+  predrop: { from: Grid; to: Grid; bounce: Set<string> } | null;
+  resolveFinal: Grid;
+  // runtime mode: "play" = auto gravity, "practice" = 0 gravity. Toggled live.
+  mode: Mode;
 }
 
-export function usePuyoGame(onQuit?: () => void): PuyoController {
-  const boardRef = useRef<HTMLCanvasElement>(null);
-  const nextRef = useRef<HTMLCanvasElement>(null);
-  const gameRef = useRef<Puyo | null>(null);
-
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [hud, setHud] = useState<Hud>({ score: 0, chainMax: 0, cleared: 0 });
-  const [chain, setChain] = useState(0);
-  const [help, setHelp] = useState(false);
-  const [muted, setMutedState] = useState(false);
-
-  const phaseRef = useRef<Phase>("idle");
-  phaseRef.current = phase;
-
-  // True while a chain reaction is animating — freezes gravity & input.
-  const resolvingRef = useRef(false);
-  // Whether the active pair should be drawn (false during resolve / spawn gap).
-  const hasActiveRef = useRef(false);
-  const chainTimer = useRef<number | null>(null);
-  const badgeTimer = useRef<number | null>(null);
-  // Cells blinking/popping this chain link + when the flash started (for the loop).
-  const flashCellsRef = useRef<[number, number][] | null>(null);
-  const flashStartRef = useRef(0);
-  // Puyos currently falling+settling after a pop (from/to rows) + start time.
-  const settleRef = useRef<{
-    moves: { col: number; from: number; to: number }[];
-    start: number;
-  } | null>(null);
-
-  const renderRef = useRef<() => void>(() => {});
-
-  function render() {
-    const g = gameRef.current;
-    const bctx = boardRef.current?.getContext("2d");
-    if (bctx) {
-      const showActive =
-        hasActiveRef.current &&
-        (phaseRef.current === "playing" || phaseRef.current === "paused");
-      const flash = flashCellsRef.current
-        ? {
-            cells: flashCellsRef.current,
-            t: performance.now() - flashStartRef.current,
-          }
-        : null;
-      // Only predict a clear while the pair is live and controllable — not while
-      // a chain is resolving or the pair is hidden.
-      const predict =
-        showActive && g && phaseRef.current === "playing" ? g.predict() : null;
-      // Post-pop settle: draw each moved puyo lifted toward its old row, easing to 0.
-      let fall: Map<string, number> | null = null;
-      if (settleRef.current) {
-        const { moves, start } = settleRef.current;
-        // Cells fallen so far under constant gravity: d = 1/2 * a * t^2. Each
-        // puyo is drawn lifted toward its OLD row by however far it still has to
-        // go, so they all accelerate together and land at distance-scaled times.
-        const t = performance.now() - start;
-        const fallenCells = 0.5 * FALL_ACCEL * t * t;
-        fall = new Map();
-        for (const m of moves) {
-          const dist = m.to - m.from; // cells to fall (positive = downward)
-          const remaining = Math.max(0, dist - fallenCells);
-          fall.set(m.to + "," + m.col, -remaining * CELL);
-        }
-      }
-      // Active pair snaps cell-to-cell as gravity steps it down a full row per
-      // tick — no sub-cell glide. (Post-pop air-puyo settle still animates below.)
-      const pairOffsetPx = 0;
-      drawBoard(
-        bctx,
-        g ? g.grid : null,
-        showActive && g ? g.pair : null,
-        showActive && g ? g.ghostSettled() : null,
-        flash,
-        predict,
-        fall,
-        pairOffsetPx,
-      );
+// Where the just-locked pair comes to rest after gravity, as "r,c" keys.
+// Gravity preserves vertical order within a column, so a placed cell at index
+// k among its column's occupied rows lands at index k in the settled column.
+function settledPositions(
+  locked: Grid,
+  settled: Grid,
+  placed: { r: number; c: number }[],
+): Set<string> {
+  const set = new Set<string>();
+  for (const { r, c } of placed) {
+    const lrows: number[] = [];
+    const srows: number[] = [];
+    for (let rr = 0; rr < ROWS; rr++) {
+      if (locked[rr][c] !== 0) lrows.push(rr);
+      if (settled[rr][c] !== 0) srows.push(rr);
     }
-    const nctx = nextRef.current?.getContext("2d");
-    if (nctx) {
-      nctx.clearRect(0, 0, NEXT_W, NEXT_COUNT * NEXT_SLOT_H);
-      if (g) drawNext(nctx, g.next(NEXT_COUNT), NEXT_W, NEXT_SLOT_H, NEXT_CELL);
-    }
-    if (g) setHud({ score: g.score, chainMax: g.chainMax, cleared: g.cleared });
+    const k = lrows.indexOf(r);
+    const dr = k >= 0 && k < srows.length ? srows[k] : r;
+    if (dr >= HIDDEN_ROWS) set.add(`${dr},${c}`);
   }
-  renderRef.current = render;
+  return set;
+}
 
-  // ---- chain resolution animation -----------------------------------------
-  function beginResolve() {
-    const g = gameRef.current!;
-    resolvingRef.current = true;
-    hasActiveRef.current = false;
-    let chainIdx = 0;
+export function usePuyoGame(initialMode: Mode = "play") {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<PuyoStage | null>(null);
+  const gs = useRef<GameState | null>(null);
+  const [hud, setHud] = useState<Hud>({
+    status: "loading",
+    score: 0,
+    chain: 0,
+    maxChain: 0,
+    next: [],
+    mode: initialMode,
+  });
 
-    // Once puyos have settled: detect groups, blink them, then remove+score.
-    const detect = () => {
-      const groups = g.findClearGroups();
-      renderRef.current();
-      if (groups.length === 0) {
-        finishResolve();
-        return;
-      }
-      // FLASH phase: puyos stay on the board and blink; the loop animates them.
-      const cells: [number, number][] = [];
-      for (const grp of groups) for (const cell of grp) cells.push(cell);
-      flashCellsRef.current = cells;
-      flashStartRef.current = performance.now();
-      // COMMIT phase: after the flash, actually remove + score, then next link.
-      chainTimer.current = window.setTimeout(() => {
-        flashCellsRef.current = null;
-        const result = g.commitClear(++chainIdx, groups);
-        setChain(result.chain);
-        sfxPop(result.chain);
-        renderRef.current();
-        chainTimer.current = window.setTimeout(step, POP_MS);
-      }, FLASH_MS);
-    };
+  const syncHud = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    setHud({
+      status: g.status,
+      score: g.score,
+      chain: g.chain,
+      maxChain: g.maxChain,
+      next: g.queue.slice(0, 2),
+      mode: g.mode,
+    });
+  }, []);
 
-    // Apply gravity; if puyos fall, animate the settle. Whether we WAIT for that
-    // fall before spawning the next pair depends on if a chain is coming:
-    //   • chain coming -> stay frozen, animate the fall, then pop (detect()).
-    //   • no chain     -> spawn the next pair NOW and let the old puyos finish
-    //     falling underneath (purely visual; the grid is already settled), so
-    //     the player never waits on the settle animation to regain control.
-    const step = () => {
-      const moves = g.applyGravityAnimated();
-      if (moves.length === 0) {
-        detect();
-        return;
-      }
-      settleRef.current = { moves, start: performance.now() };
-      // Fall runs until the FARTHEST puyo lands: t = sqrt(2d/a) — a real fall.
-      let maxDist = 0;
-      for (const m of moves) maxDist = Math.max(maxDist, m.to - m.from);
-      const dur = Math.max(
-        SETTLE_MIN_MS,
-        Math.sqrt((2 * maxDist) / FALL_ACCEL),
-      );
-      const willClear = g.findClearGroups().length > 0;
-      if (willClear) {
-        // Real chain — keep the board frozen through the fall, then pop.
-        chainTimer.current = window.setTimeout(() => {
-          settleRef.current = null;
-          detect();
-        }, dur);
-      } else {
-        // No chain — spawn immediately; just clear the settle overlay when the
-        // fall finishes, without blocking control on it.
-        chainTimer.current = window.setTimeout(() => {
-          settleRef.current = null;
-          renderRef.current();
-        }, dur);
-        finishResolve();
-      }
-    };
-    // Start the post-lock settle immediately — no mid-air hang before it falls.
-    step();
-  }
-
-  function finishResolve() {
-    const g = gameRef.current!;
-    if (g.isAllClear() && g.cleared > 0) {
-      g.score += 2100;
-      sfxAllClear();
-    }
-    resolvingRef.current = false;
-    g.spawnActive();
-    if (g.over) {
-      setPhase("over");
-      renderRef.current();
+  // ---- spawning ----------------------------------------------------------
+  const spawnNext = useCallback(() => {
+    const g = gs.current!;
+    // Placed + no clear has already happened before this call. Game over is
+    // decided by the death cell (the red X on the 3rd column), NOT by whether
+    // the pair fits in the hidden spawn row — that fires one puyo too late.
+    // Top-out only applies in play mode; practice never ends.
+    if (g.mode === "play" && isTopOut(g.grid)) {
+      g.piece = null;
+      g.status = "gameover";
+      stageRef.current?.hideActive();
+      syncHud();
       return;
     }
-    hasActiveRef.current = true;
-    renderRef.current();
-    // Fade the chain badge shortly after the reaction ends.
-    if (badgeTimer.current !== null) clearTimeout(badgeTimer.current);
-    badgeTimer.current = window.setTimeout(() => setChain(0), TOAST_MS);
-  }
+    // Not topped out: consume the next pair (peeked, so the queue/RNG only
+    // advances when a piece actually spawns) and enqueue a fresh one.
+    const [axis, sat] = g.queue.shift()!;
+    g.queue.push(g.bag.pair());
+    const p: Piece = { r: SPAWN_ROW, c: SPAWN_COL, axis, sat, orient: 0 };
+    g.piece = p;
+    stageRef.current?.setNext(g.queue.slice(0, 2));
+    g.gravAccum = 0;
+    g.lockAccum = 0;
+    g.grounded = false;
+    g.status = "control";
+    stageRef.current?.showActive(g.grid, p);
+    syncHud();
+  }, [syncHud]);
 
-  // ---- game loop + input (mounted once) ------------------------------------
+  // ---- locking + starting a resolve --------------------------------------
+  const beginResolve = useCallback(() => {
+    const g = gs.current!;
+    if (!g.piece) return;
+    const placed = pieceCells(g.piece);
+    // Practice mode never tops out, so a pair resting partly out of the board
+    // (any cell in a hidden row) must NOT be placed — the player has to move it
+    // to a column with room. Play mode places it and tops out on next spawn.
+    if (g.mode === "practice" && placed.some((c) => c.r < HIDDEN_ROWS)) {
+      return;
+    }
+    const locked = lockPiece(g.grid, g.piece);
+    g.piece = null;
+    stageRef.current?.hideActive();
+
+    const settled = applyGravity(locked);
+    const res = resolveChains(locked);
+    g.steps = res.steps;
+    g.resolveFinal = res.finalGrid;
+    g.stepIndex = 0;
+    g.phaseT = 0;
+    g.chain = 0;
+    g.chainScore = 0;
+    g.garbageSent = 0;
+    g.garbageLeftover = 0;
+    stageRef.current?.setGarbage(0);
+
+    stageRef.current?.puyo.syncStatic(locked);
+
+    // Always play a landing phase so the just-placed pair squashes/bounces on
+    // impact, even when neither puyo falls any further. Puyos that also drop
+    // (split / uneven ground) bounce via their fall; the ones that don't are
+    // force-bounced at their resting cells.
+    g.predrop = {
+      from: locked,
+      to: settled,
+      bounce: settledPositions(locked, settled, placed),
+    };
+    g.phase = "predrop";
+    g.phaseDur = dropDuration(locked, settled);
+    g.status = "resolve";
+    syncHud();
+  }, [syncHud]);
+
+  const dropDuration = (from: Grid, to: Grid): number => {
+    const md = stageRef.current?.puyo.maxDrop(from, to) ?? 0;
+    // Longest fall (constant speed) + the landing bounce tail. With no fall at
+    // all (md === 0) it's just the in-place bounce.
+    return TIMING.dropPerRowMs * md + TIMING.bounceMs;
+  };
+
+  const startStep = useCallback(
+    (i: number) => {
+      const g = gs.current!;
+      const step = g.steps[i];
+      g.stepIndex = i;
+      g.phase = "pop";
+      g.phaseT = 0;
+      g.phaseDur = TIMING.popMs;
+      g.chain = step.chain;
+      g.maxChain = Math.max(g.maxChain, step.chain);
+      stageRef.current?.puyo.syncStatic(step.before);
+      stageRef.current?.fx.spawnBurst(step.popped);
+      if (step.chain >= 1) stageRef.current?.showChain(step.chain);
+      g.score += step.score;
+      g.chainScore += step.score;
+      stageRef.current?.setScore(g.score);
+      // Live nuisance count: recompute each pop step so the tray grows as the
+      // chain progresses (matches puyosim). Committed for real in finishResolve.
+      stageRef.current?.setGarbage(Math.floor(g.chainScore / TARGET_POINT));
+      syncHud();
+    },
+    [syncHud],
+  );
+
+  const finishResolve = useCallback(() => {
+    const g = gs.current!;
+    const final = g.resolveFinal;
+    g.grid = final;
+    stageRef.current?.puyo.syncStatic(final);
+    if (g.steps.length > 0 && isAllClear(final)) {
+      g.score += ALL_CLEAR_BONUS;
+      g.chainScore += ALL_CLEAR_BONUS;
+      stageRef.current?.setScore(g.score);
+    }
+    // Garbage sent = chain score / target point, carrying the fractional
+    // remainder into the next chain (standard Puyo Tsu nuisance calc).
+    g.garbageSent = Math.floor(g.chainScore / TARGET_POINT);
+    stageRef.current?.setGarbage(g.garbageSent);
+    g.steps = [];
+    spawnNext();
+  }, [spawnNext]);
+
+  // ---- main tick ---------------------------------------------------------
+  const tick = useCallback(
+    (ms: number) => {
+      const g = gs.current;
+      const stage = stageRef.current;
+      if (!g || !stage) return;
+
+      if (g.status === "control" && g.piece) {
+        // Horizontal auto-shift.
+        if (g.dir !== 0) {
+          g.dasAccum += ms;
+          if (g.dasAccum >= TIMING.das) {
+            g.arrAccum += ms;
+            while (g.arrAccum >= TIMING.arr) {
+              const np = movePiece(g.grid, g.piece, g.dir);
+              g.piece = np;
+              g.arrAccum -= TIMING.arr;
+            }
+          }
+        }
+
+        if (g.mode === "play") {
+          const interval = g.softDrop ? TIMING.softDrop : TIMING.gravity;
+          g.gravAccum += ms;
+          let moved = false;
+          while (g.gravAccum >= interval) {
+            const np = stepDown(g.grid, g.piece);
+            if (np) {
+              g.piece = np;
+              g.gravAccum -= interval;
+              moved = true;
+              g.grounded = false;
+              g.lockAccum = 0;
+            } else {
+              g.gravAccum = 0;
+              g.grounded = true;
+              break;
+            }
+          }
+          if (g.grounded) {
+            g.lockAccum += ms;
+            if (g.lockAccum >= TIMING.lockDelay) {
+              beginResolve();
+              return;
+            }
+          }
+          void moved;
+        } else {
+          // Practice: no auto gravity (the pair floats until soft-dropped), but
+          // once it can't fall any further it auto-locks after a short delay,
+          // so placement is detected without pressing Space.
+          if (g.softDrop && stepDown(g.grid, g.piece)) {
+            g.gravAccum += ms;
+            while (g.gravAccum >= TIMING.softDrop) {
+              const np = stepDown(g.grid, g.piece);
+              if (np) {
+                g.piece = np;
+                g.grounded = false;
+                g.lockAccum = 0;
+              }
+              g.gravAccum -= TIMING.softDrop;
+            }
+          }
+          if (g.piece && stepDown(g.grid, g.piece) === null) {
+            g.grounded = true;
+            g.lockAccum += ms;
+            if (g.lockAccum >= TIMING.lockDelay) {
+              beginResolve();
+              return;
+            }
+          } else {
+            g.grounded = false;
+            g.lockAccum = 0;
+          }
+        }
+        if (g.piece) stage.showActive(g.grid, g.piece);
+        return;
+      }
+
+      if (g.status === "resolve") {
+        g.phaseT += ms;
+        const t = Math.min(g.phaseT / g.phaseDur, 1);
+        if (g.phase === "predrop" && g.predrop) {
+          stage.puyo.renderDrops(
+            g.predrop.from,
+            g.predrop.to,
+            g.phaseT,
+            g.predrop.bounce,
+          );
+          if (t >= 1) {
+            stage.puyo.syncStatic(g.predrop.to);
+            g.predrop = null;
+            if (g.steps.length > 0) startStep(0);
+            else finishResolve();
+          }
+        } else if (g.phase === "pop") {
+          const step = g.steps[g.stepIndex];
+          stage.puyo.renderPops(step.popped, t);
+          if (t >= 1) {
+            stage.puyo.syncStatic(step.afterPop);
+            g.phase = "drop";
+            g.phaseT = 0;
+            g.phaseDur = dropDuration(step.afterPop, step.after);
+          }
+        } else if (g.phase === "drop") {
+          const step = g.steps[g.stepIndex];
+          stage.puyo.renderDrops(step.afterPop, step.after, g.phaseT);
+          if (t >= 1) {
+            stage.puyo.syncStatic(step.after);
+            g.phase = "pause";
+            g.phaseT = 0;
+            g.phaseDur = TIMING.settlePause;
+          }
+        } else if (g.phase === "pause") {
+          if (t >= 1) {
+            const next = g.stepIndex + 1;
+            if (next < g.steps.length) startStep(next);
+            else finishResolve();
+          }
+        }
+      }
+    },
+    [beginResolve, finishResolve, startStep],
+  );
+
+  // ---- input -------------------------------------------------------------
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      const g = gs.current;
+      const stage = stageRef.current;
+      if (!g || !stage) return;
+      if (g.status !== "control" || !g.piece) return;
+      switch (e.code) {
+        case "ArrowLeft":
+          e.preventDefault();
+          if (g.dir !== -1) {
+            g.piece = movePiece(g.grid, g.piece, -1);
+            g.dir = -1;
+            g.dasAccum = 0;
+            g.arrAccum = 0;
+            g.lockAccum = 0;
+          }
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          if (g.dir !== 1) {
+            g.piece = movePiece(g.grid, g.piece, 1);
+            g.dir = 1;
+            g.dasAccum = 0;
+            g.arrAccum = 0;
+            g.lockAccum = 0;
+          }
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          g.softDrop = true;
+          break;
+        case "KeyZ":
+        case "ControlLeft":
+          e.preventDefault();
+          g.piece = rotatePiece(g.grid, g.piece, -1);
+          g.lockAccum = 0;
+          break;
+        case "KeyX":
+        case "ArrowUp":
+          e.preventDefault();
+          g.piece = rotatePiece(g.grid, g.piece, 1);
+          g.lockAccum = 0;
+          break;
+        case "Space": {
+          e.preventDefault();
+          g.piece = hardDropPiece(g.grid, g.piece);
+          beginResolve();
+          return;
+        }
+        default:
+          return;
+      }
+      stage.showActive(g.grid, g.piece);
+    },
+    [beginResolve],
+  );
+
+  const onKeyUp = useCallback((e: KeyboardEvent) => {
+    const g = gs.current;
+    if (!g) return;
+    if (e.code === "ArrowDown") g.softDrop = false;
+    if (e.code === "ArrowLeft" && g.dir === -1) {
+      g.dir = 0;
+    }
+    if (e.code === "ArrowRight" && g.dir === 1) {
+      g.dir = 0;
+    }
+  }, []);
+
+  // ---- lifecycle ---------------------------------------------------------
   useEffect(() => {
-    let raf = 0;
-    let last = performance.now();
-    let dropAcc = 0;
-    let lockAcc = 0;
-    let grounded = false;
-    let dir = 0;
-    let dasAcc = 0;
-    let arrAcc = 0;
-    const held = new Set<string>();
-    const softActive = () => held.has(KEY_SOFT_DROP);
+    let cancelled = false;
+    const stage = new PuyoStage();
+    stageRef.current = stage;
 
-    function lockNow() {
-      const g = gameRef.current!;
-      sfxLand();
-      g.lockPair();
-      grounded = false;
-      lockAcc = 0;
-      beginResolve();
-    }
+    const bag = new ColorBag();
+    gs.current = {
+      grid: emptyGrid(),
+      piece: null,
+      bag,
+      queue: [bag.pair(), bag.pair(), bag.pair()],
+      status: "loading",
+      score: 0,
+      chain: 0,
+      maxChain: 0,
+      chainScore: 0,
+      garbageLeftover: 0,
+      garbageSent: 0,
+      gravAccum: 0,
+      lockAccum: 0,
+      grounded: false,
+      softDrop: false,
+      dir: 0,
+      dasAccum: 0,
+      arrAccum: 0,
+      steps: [],
+      stepIndex: 0,
+      phase: "pop",
+      phaseT: 0,
+      phaseDur: 0,
+      predrop: null,
+      resolveFinal: emptyGrid(),
+      mode: initialMode,
+    };
 
-    function loop(now: number) {
-      raf = requestAnimationFrame(loop);
-      const dt = now - last;
-      last = now;
-      const g = gameRef.current;
-      if (!g || phaseRef.current !== "playing" || resolvingRef.current) {
-        renderRef.current();
-        return;
-      }
-
-      // Horizontal DAS/ARR.
-      if (dir !== 0) {
-        dasAcc += dt;
-        if (dasAcc >= DAS) {
-          arrAcc += dt;
-          while (arrAcc >= ARR) {
-            if (g.move(dir)) sfxMove();
-            arrAcc -= ARR;
-          }
-        }
-      }
-
-      // Gravity.
-      const interval = softActive()
-        ? Math.min(gravityMsForChainCount(g.cleared), SOFT_DROP_MS)
-        : gravityMsForChainCount(g.cleared);
-      dropAcc += dt;
-      if (dropAcc >= interval) {
-        dropAcc = 0;
-        if (g.softDrop()) {
-          if (softActive()) g.score += 1;
-          sfxDrop();
-          grounded = false;
-          lockAcc = 0;
-        } else {
-          grounded = true;
-        }
-      }
-
-      // Lock delay once resting.
-      if (grounded) {
-        if (g.canFall()) {
-          grounded = false;
-          lockAcc = 0;
-        } else {
-          lockAcc += dt;
-          if (lockAcc >= LOCK_DELAY) lockNow();
-        }
-      }
-      renderRef.current();
-    }
-    raf = requestAnimationFrame(loop);
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (phaseRef.current !== "playing") {
-        if (e.key === KEY_PAUSE && phaseRef.current === "paused") {
-          e.preventDefault();
-          setPhase("playing");
-        }
-        if (
-          e.key === KEY_HARD_DROP &&
-          (phaseRef.current === "idle" || phaseRef.current === "over")
-        ) {
-          e.preventDefault();
-          startGame();
-        }
-        return;
-      }
-      if (resolvingRef.current) {
-        if (e.key === KEY_HARD_DROP) e.preventDefault();
-        return;
-      }
-      const g = gameRef.current!;
-      switch (e.key) {
-        case KEY_LEFT:
-          if (!held.has(KEY_LEFT)) {
-            held.add(KEY_LEFT);
-            dir = -1;
-            dasAcc = 0;
-            arrAcc = 0;
-            if (g.move(-1)) {
-              sfxMove();
-              if (grounded) lockAcc = 0;
-            }
-          }
-          break;
-        case KEY_RIGHT:
-          if (!held.has(KEY_RIGHT)) {
-            held.add(KEY_RIGHT);
-            dir = 1;
-            dasAcc = 0;
-            arrAcc = 0;
-            if (g.move(1)) {
-              sfxMove();
-              if (grounded) lockAcc = 0;
-            }
-          }
-          break;
-        case KEY_SOFT_DROP:
-          held.add(KEY_SOFT_DROP);
-          break;
-        case KEY_ROTATE_CW_ARROW:
-        case KEY_ROTATE_CW_X:
-        case KEY_ROTATE_CW_X_UPPER:
-          if (g.rotate(1)) {
-            sfxRotate();
-            if (grounded) lockAcc = 0;
-          }
-          break;
-        case KEY_ROTATE_CCW_Z:
-        case KEY_ROTATE_CCW_Z_UPPER:
-          if (g.rotate(-1)) {
-            sfxRotate();
-            if (grounded) lockAcc = 0;
-          }
-          break;
-        case KEY_HARD_DROP:
-          e.preventDefault();
-          g.hardDrop();
-          sfxHardDrop();
-          lockNow();
-          break;
-        case KEY_PAUSE:
-          e.preventDefault();
-          setPhase("paused");
-          break;
-      }
-    }
-
-    function onKeyUp(e: KeyboardEvent) {
-      held.delete(e.key);
-      if (e.key === KEY_LEFT && dir === -1) dir = held.has(KEY_RIGHT) ? 1 : 0;
-      if (e.key === KEY_RIGHT && dir === 1) dir = held.has(KEY_LEFT) ? -1 : 0;
-    }
+    (async () => {
+      if (!hostRef.current) return;
+      await stage.init(hostRef.current);
+      stage.setGhostEnabled(initialMode === "play");
+      if (cancelled) return;
+      stage.onTick(tick);
+      stage.puyo.syncStatic(gs.current!.grid);
+      stage.setScore(0);
+      spawnNext();
+    })();
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     return () => {
-      cancelAnimationFrame(raf);
-      if (chainTimer.current !== null) clearTimeout(chainTimer.current);
-      if (badgeTimer.current !== null) clearTimeout(badgeTimer.current);
+      cancelled = true;
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      stage.destroy();
+      stageRef.current = null;
+      gs.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const openHelp = () => setHelp(true);
-    window.addEventListener(HELP_EVENT, openHelp);
-    return () => window.removeEventListener(HELP_EVENT, openHelp);
-  }, []);
+  // ---- actions -----------------------------------------------------------
+  const pause = useCallback(() => {
+    const g = gs.current;
+    if (g && g.status === "control") {
+      g.status = "paused";
+      g.softDrop = false;
+      g.dir = 0;
+      syncHud();
+    }
+  }, [syncHud]);
 
-  function startGame() {
-    preloadSfx();
-    gameRef.current = new Puyo();
-    resolvingRef.current = false;
-    hasActiveRef.current = true;
-    flashCellsRef.current = null;
-    settleRef.current = null;
-    setChain(0);
-    setHelp(false);
-    if (chainTimer.current !== null) clearTimeout(chainTimer.current);
-    if (badgeTimer.current !== null) clearTimeout(badgeTimer.current);
-    setPhase("playing");
-  }
+  const resume = useCallback(() => {
+    const g = gs.current;
+    if (g && g.status === "paused") {
+      g.status = "control";
+      syncHud();
+    }
+  }, [syncHud]);
 
-  return {
-    phase,
-    hud,
-    chain,
-    help,
-    muted,
-    boardRef,
-    nextRef,
-    start: startGame,
-    resume: () => setPhase("playing"),
-    pause: () => setPhase("paused"),
-    quit: () => (onQuit ? onQuit() : setPhase("idle")),
-    toggleMute: () => {
-      const m = !isMuted();
-      setMuted(m);
-      setMutedState(m);
-    },
-    closeHelp: () => setHelp(false),
-  };
+  // Play/pause toggle: flips gravity on/off (play <-> practice) at runtime.
+  const toggleMode = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    g.mode = g.mode === "play" ? "practice" : "play";
+    stageRef.current?.setGhostEnabled(g.mode === "play");
+    // Reset fall/lock accumulators so the switch takes effect cleanly.
+    g.gravAccum = 0;
+    g.lockAccum = 0;
+    g.grounded = false;
+    syncHud();
+  }, [syncHud]);
+
+  const restart = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    g.grid = emptyGrid();
+    g.piece = null;
+    g.bag = new ColorBag();
+    g.queue = [g.bag.pair(), g.bag.pair(), g.bag.pair()];
+    g.score = 0;
+    g.chain = 0;
+    g.maxChain = 0;
+    g.chainScore = 0;
+    g.garbageLeftover = 0;
+    g.garbageSent = 0;
+    g.steps = [];
+    g.predrop = null;
+    g.softDrop = false;
+    g.dir = 0;
+    stageRef.current?.puyo.syncStatic(g.grid);
+    stageRef.current?.setScore(0);
+    stageRef.current?.setGarbage(0);
+    stageRef.current?.hideChain();
+    spawnNext();
+  }, [spawnNext]);
+
+  return { hostRef, hud, pause, resume, restart, toggleMode };
 }
