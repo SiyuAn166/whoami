@@ -160,13 +160,10 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const g = gs.current!;
     if (!g.piece) return;
     const placed = pieceCells(g.piece);
-    // Both modes may stack puyos into the two hidden rows above the visible
-    // field — EXCEPT the red-X (death) column, which must never accept a puyo
-    // in the hidden rows. In play mode a filled death column tops out on the
-    // next spawn (isTopOut), so this only actively fires in practice, where
-    // there is no top-out: the pair is refused and the player must move it to
-    // another column.
-    if (placed.some((c) => c.c === SPAWN_COL && c.r < HIDDEN_ROWS)) {
+    // Practice mode never tops out, so a pair resting partly out of the board
+    // (any cell in a hidden row) must NOT be placed — the player has to move it
+    // to a column with room. Play mode places it and tops out on next spawn.
+    if (g.mode === "practice" && placed.some((c) => c.r < HIDDEN_ROWS)) {
       return;
     }
     sfx.placed();
@@ -428,6 +425,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
           break;
         case "ArrowDown":
           e.preventDefault();
+          if (!g.softDrop) g.gravAccum = 0;
           g.softDrop = true;
           break;
         case "KeyZ":
@@ -563,6 +561,49 @@ export function usePuyoGame(initialMode: Mode = "play") {
     syncHud();
   }, [syncHud]);
 
+  // ---- touch / imperative actions (mobile) -------------------------------
+  // These mirror the keyboard handlers but are driven by pointer gestures in
+  // Game.tsx. Each is a no-op unless a piece is under player control, so they
+  // are safe to fire at any time. Discrete column steps (not DAS/ARR) so a
+  // finger drag maps 1 column-width -> 1 column move; g.dir stays 0.
+  const touchMove = useCallback((dir: -1 | 1) => {
+    const g = gs.current;
+    const stage = stageRef.current;
+    if (!g || !stage || g.status !== "control" || !g.piece) return;
+    const before = g.piece.c;
+    g.piece = movePiece(g.grid, g.piece, dir);
+    if (g.piece.c !== before) sfx.move();
+    g.lockAccum = 0;
+    stage.showActive(g.grid, g.piece);
+  }, []);
+
+  const touchRotate = useCallback((dir: -1 | 1) => {
+    const g = gs.current;
+    const stage = stageRef.current;
+    if (!g || !stage || g.status !== "control" || !g.piece) return;
+    sfx.unlock();
+    g.piece = rotatePiece(g.grid, g.piece, dir);
+    sfx.spin();
+    g.lockAccum = 0;
+    stage.showActive(g.grid, g.piece);
+  }, []);
+
+  // Discrete one-cell drop for touch drag: moving the finger down by one
+  // cell-height steps the pair down exactly one row (fully controllable,
+  // no accumulator burst). Resets lock delay so it doesn't lock mid-drag.
+  const touchStepDown = useCallback(() => {
+    const g = gs.current;
+    const stage = stageRef.current;
+    if (!g || !stage || g.status !== "control" || !g.piece) return;
+    const np = stepDown(g.grid, g.piece);
+    if (np) {
+      g.piece = np;
+      g.grounded = false;
+      g.lockAccum = 0;
+      stage.showActive(g.grid, g.piece);
+    }
+  }, []);
+
   const restart = useCallback(() => {
     const g = gs.current;
     if (!g) return;
@@ -587,5 +628,15 @@ export function usePuyoGame(initialMode: Mode = "play") {
     spawnNext();
   }, [spawnNext]);
 
-  return { hostRef, hud, pause, resume, restart, toggleMode };
+  return {
+    hostRef,
+    hud,
+    pause,
+    resume,
+    restart,
+    toggleMode,
+    touchMove,
+    touchRotate,
+    touchStepDown,
+  };
 }

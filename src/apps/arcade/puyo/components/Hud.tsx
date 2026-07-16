@@ -1,6 +1,7 @@
-// Slim side panel. Score, next-pair and the live chain popup are rendered
-// inside the Pixi canvas (puyo.gg style), so the HUD only carries the mode
-// badge, a best-chain stat, an action box (play/pause + restart) and a legend.
+// Slim side panel. Score, next-pair and the live chain popup live inside the
+// Pixi canvas (puyo.gg style), so the HUD only carries a compact header (the
+// mode badge doubles as the play/pause toggle + a restart button), a one-line
+// best-chain stat and a controls legend that swaps for touch devices.
 import type { Mode } from "../lib/types";
 
 export function Hud({
@@ -17,67 +18,61 @@ export function Hud({
   const playing = mode === "play";
   return (
     <aside className="puyo-hud">
-      <div className={`puyo-badge ${mode}`}>
-        {playing ? "PLAY" : "PRACTICE"}
+      <div className="puyo-hud-top">
+        <button
+          className={`puyo-badge ${mode}`}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            onToggleMode?.();
+          }}
+          aria-label={
+            playing ? "Pause gravity (practice)" : "Start gravity (play)"
+          }
+          title={playing ? "Tap for practice" : "Tap to play"}
+        >
+          <span className="puyo-badge-dot">
+            {playing ? "\u23F8" : "\u25B6"}
+          </span>
+          {playing ? "PLAY" : "PRACTICE"}
+        </button>
+        <button
+          className="puyo-icon-btn"
+          onClick={(e) => {
+            e.currentTarget.blur();
+            onRestart?.();
+          }}
+          aria-label="Restart"
+          title="Restart"
+        >
+          <span className="puyo-icon-restart">&#x21ba;</span>
+        </button>
       </div>
 
-      <div className="puyo-hud-block">
-        <span className="puyo-hud-label">Best chain</span>
-        <span className="puyo-hud-value chain">
-          {maxChain > 0 ? `${maxChain}` : "-"}
+      <div className="puyo-best">
+        <span className="puyo-best-label">Best</span>
+        <span className="puyo-best-value">
+          {maxChain > 0 ? `\u00d7${maxChain}` : "\u2013"}
         </span>
       </div>
 
-      <div className="puyo-hud-block puyo-actions">
-        <span className="puyo-hud-label">Actions</span>
-        <div className="puyo-action-row">
-          <button
-            className="puyo-icon-btn"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onToggleMode?.();
-            }}
-            aria-label={
-              playing ? "Pause gravity (practice)" : "Start gravity (play)"
-            }
-            title={
-              playing ? "Pause gravity (practice)" : "Start gravity (play)"
-            }
-          >
-            <span className="puyo-icon-mode">
-              {playing ? "\u23F8" : "\u25B6"}
-            </span>
-          </button>
-          <button
-            className="puyo-icon-btn"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onRestart?.();
-            }}
-            aria-label="Restart"
-            title="Restart"
-          >
-            <span className="puyo-icon-restart">&#x21ba;</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="puyo-hud-block puyo-legend">
-        <span className="puyo-hud-label">Controls</span>
+      <div className="puyo-legend keyboard">
         <span className="puyo-key-row">
-          <b>&larr; &rarr;</b> move
-        </span>
-        <span className="puyo-key-row">
-          <b>&darr;</b> soft drop
+          <b>&larr; &rarr;</b> move <b>&darr;</b> drop
         </span>
         <span className="puyo-key-row">
           <b>Z / X</b> rotate
         </span>
         <span className="puyo-key-row">
-          <b>Space</b> {playing ? "hard drop" : "place"}
+          <b>Space</b> {playing ? "hard drop" : "place"} <b>Esc</b> pause
+        </span>
+      </div>
+
+      <div className="puyo-legend touch">
+        <span className="puyo-key-row">
+          <b>Drag</b> move <b>&darr;</b> soft drop
         </span>
         <span className="puyo-key-row">
-          <b>P / Esc</b> pause
+          <b>Tap</b> rotate
         </span>
       </div>
     </aside>
