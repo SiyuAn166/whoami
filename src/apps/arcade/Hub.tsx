@@ -19,7 +19,7 @@ export function Hub({ onClose }: { onClose?: () => void }) {
     window.setTimeout(() => {
       setView(id);
       setBooting(false);
-    }, 420);
+    }, 460);
   }, []);
 
   useEffect(() => {
@@ -71,12 +71,14 @@ export function Hub({ onClose }: { onClose?: () => void }) {
             return (
               <button
                 key={g.id}
-                className={`arc-card ${i === sel ? "on" : "off"}`}
+                className={`arc-card ${i === sel ? "on" : "off"} ${
+                  booting && i === sel ? "booting" : ""
+                }`}
                 style={{
                   ["--d" as string]: d,
                   ["--card-accent" as string]: g.accent,
                 }}
-                onMouseEnter={() => setSel(i)}
+                onMouseEnter={() => !booting && setSel(i)}
                 onClick={() => (i === sel ? launch(g.id) : setSel(i))}
                 aria-label={g.name}
               >
@@ -110,8 +112,6 @@ export function Hub({ onClose }: { onClose?: () => void }) {
           <kbd>Esc</kbd> Exit
         </span>
       </footer>
-
-      {booting && <div className="arc-boot" aria-hidden />}
     </div>
   );
 }

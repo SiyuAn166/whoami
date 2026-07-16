@@ -5,4 +5,15 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/whoami/' : '/',
   plugins: [react()],
+
+  build: {
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pixi: ["pixi.js"],
+        },
+      },
+    },
+  },
 })

@@ -308,6 +308,31 @@ export function useTetrisGame(
     refreshQueue();
   }, [refreshQueue, sound, spawn]);
 
+  const pause = useCallback(() => {
+    const g = gs.current;
+    if (!g || g.status !== "control") return;
+    g.status = "paused";
+    // release any held input so nothing carries over on resume
+    g.dir = 0;
+    g.charged = false;
+    g.softDrop = false;
+    syncHud();
+  }, [syncHud]);
+
+  const resume = useCallback(() => {
+    const g = gs.current;
+    if (!g || g.status !== "paused") return;
+    g.status = "control";
+    syncHud();
+  }, [syncHud]);
+
+  const togglePause = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    if (g.status === "control") pause();
+    else if (g.status === "paused") resume();
+  }, [pause, resume]);
+
   const reset = useCallback(() => {
     const st = stageRef.current;
     gs.current = {
@@ -418,6 +443,14 @@ export function useTetrisGame(
       const g = gs.current;
       if (!g) return;
       soundRef.current?.resume();
+      // while paused, swallow all keys except Esc (which resumes)
+      if (g.status === "paused") {
+        if (e.code === "Escape") {
+          togglePause();
+          e.preventDefault();
+        }
+        return;
+      }
       switch (e.code) {
         case "ArrowLeft":
           if (g.dir !== -1) {
@@ -462,6 +495,10 @@ export function useTetrisGame(
           holdPiece();
           e.preventDefault();
           break;
+        case "Escape":
+          togglePause();
+          e.preventDefault();
+          break;
         default:
           break;
       }
@@ -495,7 +532,15 @@ export function useTetrisGame(
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [hardDrop, holdPiece, softDrop, soundRef, tryMove, tryRotate]);
+  }, [
+    hardDrop,
+    holdPiece,
+    softDrop,
+    soundRef,
+    tryMove,
+    tryRotate,
+    togglePause,
+  ]);
 
-  return { hud, reset };
+  return { hud, reset, togglePause };
 }

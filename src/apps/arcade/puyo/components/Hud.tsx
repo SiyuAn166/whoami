@@ -33,7 +33,10 @@ export function Hud({
         <div className="puyo-action-row">
           <button
             className="puyo-icon-btn"
-            onClick={onToggleMode}
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onToggleMode?.();
+            }}
             aria-label={
               playing ? "Pause gravity (practice)" : "Start gravity (play)"
             }
@@ -47,7 +50,10 @@ export function Hud({
           </button>
           <button
             className="puyo-icon-btn"
-            onClick={onRestart}
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onRestart?.();
+            }}
             aria-label="Restart"
             title="Restart"
           >

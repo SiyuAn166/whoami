@@ -13,7 +13,7 @@ export interface Piece {
   o: Orient; // rotation state
 }
 
-export type Status = "control" | "resolving" | "gameover";
+export type Status = "control" | "resolving" | "paused" | "gameover";
 
 export type ClearKind =
   | "none"

@@ -15,9 +15,8 @@ export const Game: React.FC<GameProps> = ({ onQuit }) => {
   const stageRef = useRef<TetrisStage | null>(null);
   const soundRef = useRef<SoundBank | null>(null);
   const [booted, setBooted] = useState(false);
-  const [muted, setMuted] = useState(false);
 
-  const { hud, reset } = useTetrisGame(stageRef, soundRef, booted);
+  const { hud, reset, togglePause } = useTetrisGame(stageRef, soundRef, booted);
 
   useEffect(() => {
     let disposed = false;
@@ -47,24 +46,17 @@ export const Game: React.FC<GameProps> = ({ onQuit }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [booted]);
 
-  const toggleMute = () => {
-    const m = !muted;
-    setMuted(m);
-    soundRef.current?.setMuted(m);
-  };
-
   return (
     <div className="tetris-root">
-      <Hud
-        hud={hud}
-        muted={muted}
-        onRestart={() => reset()}
-        onToggleMute={toggleMute}
-        onQuit={onQuit}
-      />
+      <Hud hud={hud} onRestart={() => reset()} />
       <div className="tetris-stage-wrap">
         <div ref={hostRef} className="tetris-canvas-host" />
-        <Overlays hud={hud} onRestart={() => reset()} />
+        <Overlays
+          hud={hud}
+          onRestart={() => reset()}
+          onResume={togglePause}
+          onQuit={onQuit}
+        />
       </div>
       <Controls />
     </div>

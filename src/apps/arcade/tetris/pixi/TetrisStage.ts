@@ -1,17 +1,17 @@
 import { Application, Container } from "pixi.js";
 import {
-  COLS,
-  VISIBLE_ROWS,
   CELL,
+  COLS,
   NEXT_COUNT,
+  VISIBLE_ROWS,
   type PieceType,
 } from "../lib/config";
 import type { Grid, Piece } from "../lib/types";
-import { bakeTiles, type TileTextures } from "./tiles";
-import { BoardLayer } from "./boardLayer";
 import { ActiveLayer } from "./activeLayer";
-import { SideLayer } from "./sideLayer";
+import { BoardLayer } from "./boardLayer";
 import { FxLayer } from "./fxLayer";
+import { SideLayer } from "./sideLayer";
+import { bakeTiles, type TileTextures } from "./tiles";
 
 // Owns the Pixi Application and the whole scene graph. Framework-free:
 // the React hook drives it purely through these methods.
@@ -40,12 +40,19 @@ export class TetrisStage {
     await this.app.init({
       width,
       height,
-      background: 0x05060f,
+      backgroundAlpha: 0,
       antialias: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2),
       autoDensity: true,
     });
-    host.appendChild(this.app.canvas);
+    // Responsive: letterbox the fixed-resolution scene into its host so the
+    // canvas scales with the window (mirrors PuyoStage).
+    const cv = this.app.canvas;
+    cv.style.display = "block";
+    cv.style.width = "100%";
+    cv.style.height = "100%";
+    cv.style.objectFit = "contain";
+    host.appendChild(cv);
 
     this.tiles = bakeTiles(CELL, Math.min(window.devicePixelRatio || 1, 2) + 1);
 

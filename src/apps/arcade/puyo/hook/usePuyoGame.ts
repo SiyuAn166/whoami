@@ -26,6 +26,7 @@ import {
 } from "../lib/config";
 import type { Grid, Piece, Color, ChainStep, Mode } from "../lib/types";
 import { PuyoStage } from "../pixi/PuyoStage";
+import { sfx } from "../lib/sound";
 
 const ALL_CLEAR_BONUS = 3600;
 
@@ -165,6 +166,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     if (g.mode === "practice" && placed.some((c) => c.r < HIDDEN_ROWS)) {
       return;
     }
+    sfx.placed();
     const locked = lockPiece(g.grid, g.piece);
     g.piece = null;
     stageRef.current?.hideActive();
@@ -217,7 +219,10 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.maxChain = Math.max(g.maxChain, step.chain);
       stageRef.current?.puyo.syncStatic(step.before);
       stageRef.current?.fx.spawnBurst(step.popped);
-      if (step.chain >= 1) stageRef.current?.showChain(step.chain);
+      if (step.chain >= 1) {
+        stageRef.current?.showChain(step.chain);
+        sfx.chain(step.chain);
+      }
       g.score += step.score;
       g.chainScore += step.score;
       stageRef.current?.setScore(g.score);
@@ -347,9 +352,22 @@ export function usePuyoGame(initialMode: Mode = "play") {
           stage.puyo.renderPops(step.popped, t);
           if (t >= 1) {
             stage.puyo.syncStatic(step.afterPop);
-            g.phase = "drop";
-            g.phaseT = 0;
-            g.phaseDur = dropDuration(step.afterPop, step.after);
+            // Only enter the drop phase when something actually falls. On steps
+            // where the cleared group had nothing above it (maxDrop === 0) the
+            // old code still reserved a full bounce tail (bounceMs) of frozen
+            // screen, so the chain cadence stalled on some steps but not others
+            // -> the "inconsistent" drop timing. Skip straight to the pause.
+            const md = stage.puyo.maxDrop(step.afterPop, step.after);
+            if (md === 0) {
+              stage.puyo.syncStatic(step.after);
+              g.phase = "pause";
+              g.phaseT = 0;
+              g.phaseDur = TIMING.settlePause;
+            } else {
+              g.phase = "drop";
+              g.phaseT = 0;
+              g.phaseDur = TIMING.dropPerRowMs * md + TIMING.bounceMs;
+            }
           }
         } else if (g.phase === "drop") {
           const step = g.steps[g.stepIndex];
@@ -378,12 +396,15 @@ export function usePuyoGame(initialMode: Mode = "play") {
       const g = gs.current;
       const stage = stageRef.current;
       if (!g || !stage) return;
+      sfx.unlock();
       if (g.status !== "control" || !g.piece) return;
       switch (e.code) {
         case "ArrowLeft":
           e.preventDefault();
           if (g.dir !== -1) {
+            const before = g.piece.c;
             g.piece = movePiece(g.grid, g.piece, -1);
+            if (g.piece.c !== before) sfx.move();
             g.dir = -1;
             g.dasAccum = 0;
             g.arrAccum = 0;
@@ -393,7 +414,9 @@ export function usePuyoGame(initialMode: Mode = "play") {
         case "ArrowRight":
           e.preventDefault();
           if (g.dir !== 1) {
+            const before = g.piece.c;
             g.piece = movePiece(g.grid, g.piece, 1);
+            if (g.piece.c !== before) sfx.move();
             g.dir = 1;
             g.dasAccum = 0;
             g.arrAccum = 0;
@@ -408,12 +431,14 @@ export function usePuyoGame(initialMode: Mode = "play") {
         case "ControlLeft":
           e.preventDefault();
           g.piece = rotatePiece(g.grid, g.piece, -1);
+          sfx.spin();
           g.lockAccum = 0;
           break;
         case "KeyX":
         case "ArrowUp":
           e.preventDefault();
           g.piece = rotatePiece(g.grid, g.piece, 1);
+          sfx.spin();
           g.lockAccum = 0;
           break;
         case "Space": {
@@ -481,6 +506,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     (async () => {
       if (!hostRef.current) return;
       await stage.init(hostRef.current);
+      sfx.preload();
       stage.setGhostEnabled(initialMode === "play");
       if (cancelled) return;
       stage.onTick(tick);

@@ -193,22 +193,22 @@
 }
 
 /* ---------- boot flash ---------- */
-.arc-boot {
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  background: #fff;
-  animation: arc-boot 0.42s ease forwards;
-  pointer-events: none;
+/* Launch: the focused cover card zooms up in place and fades out (Switch-style),
+   instead of a full white flash. Add class `booting` to the focused .arc-card. */
+.arc-card.booting {
+  z-index: 20;
+  animation: arc-boot-zoom 0.46s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
-@keyframes arc-boot {
+.arc-card.booting .arc-gloss {
+  opacity: 0;
+}
+@keyframes arc-boot-zoom {
   0% {
-    opacity: 0;
-  }
-  40% {
-    opacity: 0.92;
+    transform: scale(1.04);
+    opacity: 1;
   }
   100% {
+    transform: scale(2.5);
     opacity: 0;
   }
 }

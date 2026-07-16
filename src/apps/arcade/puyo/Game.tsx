@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { Hud } from "./components/Hud";
 import { GameOverOverlay, PauseOverlay } from "./components/Overlays";
 import { usePuyoGame } from "./hook/usePuyoGame";
+
 import "./style.css";
 
 export function Game({ onQuit }: { onQuit?: () => void }) {
