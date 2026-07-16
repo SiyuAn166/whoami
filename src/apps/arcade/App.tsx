@@ -2,7 +2,8 @@ import type { AppDefinition } from "../types";
 import { Hub } from "./Hub";
 import { Icon } from "./Icon";
 
-/** The Arcade — a single desktop app whose hub launches Tetris & Puyo. */
+/** The Arcade — a single desktop app whose console hub launches every
+ *  registered game (see games.ts). */
 export const arcadeApp: AppDefinition = {
   id: "arcade",
   name: "Arcade",

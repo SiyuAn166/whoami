@@ -1,210 +1,214 @@
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Saira:wght@400;500;600&display=swap");
+
 /* ============================================================================
-   Arcade hub — modern neon game-hall.
-   Background is a photo (assets/hall.png) with a neon frame baked into its
-   CENTER; the logo + card grid are centered on top so they land inside that
-   frame. Everything scales with the window and never distorts (cover + center).
-   All selectors are `arcade-` prefixed to avoid leaking into the desktop.
-   ========================================================================== */
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap");
+   Arcade hub — console-style home. A horizontal cover carousel on a dark
+   gradient; the focused cover is large and lit, neighbors flank it smaller and
+   dimmed. Accent color follows the focused game (set inline via --accent).
+   ============================================================================ */
 
-.arcade-shell {
+.arc-home {
+  --bg0: #14161d;
+  --bg1: #0a0b10;
+  --ink: #eef1f5;
+  --dim: #8b909b;
+  --accent: #45d3ff;
+
+  /* Fill the window BODY, not the whole window. Using absolute+inset:0 here
+     escapes to .mac-window (the nearest positioned ancestor) and paints over
+     the titlebar, blocking the traffic-light buttons. relative + 100% keeps
+     the hub inside the body and still acts as the containing block for the
+     absolutely-positioned .arc-ambient / .arc-boot children. */
   position: relative;
-  box-sizing: border-box;
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  user-select: none;
+  background: radial-gradient(120% 90% at 50% 8%, var(--bg0), var(--bg1) 70%);
+  color: var(--ink);
   font-family:
-    "Orbitron",
-    -apple-system,
-    "SF Pro Text",
+    "Nunito",
+    "Segoe UI",
     system-ui,
+    -apple-system,
     sans-serif;
-  color: #eaf2ff;
-  /* Photo backdrop (bottom layer) + dark tint (top layers) so UI stays legible.
-     cover = fill the window keeping aspect ratio (never stretch/distort);
-     center = keep the neon frame centered at any window size. */
-  background:
-    radial-gradient(
-      70% 55% at 50% 46%,
-      rgba(5, 4, 15, 0) 0%,
-      rgba(5, 4, 15, 0.35) 100%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(10, 8, 30, 0.35) 0%,
-      rgba(5, 4, 15, 0.55) 100%
-    ),
-    url("./assets/arcade.png");
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  background-position: center, center, center;
-  background-size: cover, cover, cover;
+  user-select: none;
 }
 
-.arcade-scanlines {
+/* accent glow that follows the selection */
+.arc-ambient {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.03) 0px,
-    rgba(255, 255, 255, 0.03) 1px,
-    transparent 1px,
-    transparent 3px
+  left: 50%;
+  top: 46%;
+  width: 1100px;
+  height: 1100px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 26%, transparent) 0%,
+    transparent 60%
   );
-  mix-blend-mode: soft-light;
-  opacity: 0.5;
+  filter: blur(30px);
+  pointer-events: none;
+  transition: background 0.4s ease;
 }
 
-/* Centered stage — logo + cards, nudged to sit on the frame's optical center. */
-.arcade-stage {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
+/* ---------- header ---------- */
+.arc-head {
+  position: relative;
+  z-index: 2;
+  padding: 30px 44px 0;
+}
+.arc-brand {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--dim);
+}
+
+/* ---------- carousel ---------- */
+.arc-stage {
+  position: relative;
+  z-index: 2;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(14px, 3vh, 30px);
-  transform: translateY(-8%);
-  padding: 4%;
-  box-sizing: border-box;
+  gap: 34px;
 }
-
-/* neon logo sign (replaces the old text title) */
-.arcade-logo {
-  width: min(32vw, 340px);
-  aspect-ratio: 1855 / 444;
-  background: url("./assets/arcade-title.png") center / contain no-repeat;
-  filter: drop-shadow(0 0 26px rgba(120, 170, 255, 0.45));
-  transform: translateY(-55%);
-}
-
-/* card grid */
-.arcade-grid {
+.arc-rail {
+  position: relative;
   display: flex;
-  gap: clamp(18px, 4vw, 44px);
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
+  gap: 40px;
+  perspective: 1400px;
 }
-
-/* card grid — each card is now a full poster cover (title baked into the art) */
-.arcade-card {
+.arc-card {
+  --d: 0;
   position: relative;
-  cursor: pointer;
-  width: 16vw;
-  /* card is a 3:5 poster; keep it proportional to the cover art */
-  aspect-ratio: 3 / 5;
-  border-radius: 22px;
+  flex: 0 0 auto;
+  width: 380px;
+  height: 380px; /* 1:1 */
   padding: 0;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-  background-position: center;
-  background-repeat: no-repeat;
-  /* cover = fill the card keeping aspect ratio, never stretch/distort */
-  background-size: cover;
-  box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  border: none;
+  border-radius: 22px;
   overflow: hidden;
+  cursor: pointer;
+  background: #1b1e26;
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.28s ease,
+    opacity 0.28s ease,
+    filter 0.28s ease;
 }
-
-/* subtle top gloss over the cover */
-.arcade-card::before {
-  content: "";
+.arc-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.arc-gloss {
   position: absolute;
   inset: 0;
-  border-radius: 22px;
   background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.12),
-    transparent 34%
+    115deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0) 42%
   );
   pointer-events: none;
 }
-
-/* full-bleed cover art per game */
-.arcade-card.cyan {
-  background-image: url("./assets/tetris-cover.png");
-  border-color: rgba(63, 208, 255, 0.55);
+.arc-card.off {
+  transform: scale(0.78) translateY(6px);
+  opacity: 0.5;
+  filter: saturate(0.75) brightness(0.8);
+}
+.arc-card.on {
+  transform: scale(1.06);
+  opacity: 1;
   box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.5),
-    0 0 28px rgba(63, 208, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 0 0 3px #fff,
+    0 0 0 8px var(--card-accent),
+    0 0 46px color-mix(in srgb, var(--card-accent) 65%, transparent),
+    0 30px 60px rgba(0, 0, 0, 0.6);
 }
 
-.arcade-card.magenta {
-  background-image: url("./assets/puyo-cover.png");
-  border-color: rgba(255, 92, 200, 0.55);
-  box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.5),
-    0 0 28px rgba(255, 92, 200, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+/* ---------- marquee ---------- */
+.arc-meta {
+  text-align: center;
+  min-height: 84px;
+}
+.arc-title {
+  margin: 0;
+  font-family: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.arc-tag {
+  margin: 8px 0 0;
+  font-family: "Saira", "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--dim);
+  text-transform: uppercase;
 }
 
-.arcade-card:hover {
-  transform: translateY(-6px) scale(1.02);
-}
-
-.arcade-card.cyan:hover {
-  box-shadow:
-    0 24px 54px rgba(0, 0, 0, 0.55),
-    0 0 40px rgba(63, 208, 255, 0.55);
-}
-
-.arcade-card.magenta:hover {
-  box-shadow:
-    0 24px 54px rgba(0, 0, 0, 0.55),
-    0 0 40px rgba(255, 92, 200, 0.55);
-}
-
-/* title/icon are baked into the cover art — hide the DOM icon/text/PLAY */
-.arcade-card-art,
-.arcade-card-name,
-.arcade-card-tag,
-.arcade-card-play {
-  display: none;
-}
-
-/* footer nav — pinned to the bottom so it never pushes the centered stage */
-.arcade-footer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+/* ---------- hints ---------- */
+.arc-hints {
+  position: relative;
   z-index: 2;
   display: flex;
-  gap: 28px;
-  align-items: center;
   justify-content: center;
-  padding: 12px 0 14px;
+  gap: 30px;
+  padding: 0 0 26px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--dim);
+}
+.arc-hints span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.arc-hints kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 7px;
+  background: #23262f;
+  border: 1px solid #33373f;
+  box-shadow: 0 2px 0 #16181e;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
 }
 
-.arcade-foot-item {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  color: rgba(180, 195, 235, 0.55);
-  background: none;
-  border: none;
-  cursor: default;
+/* ---------- boot flash ---------- */
+.arc-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  background: #fff;
+  animation: arc-boot 0.42s ease forwards;
+  pointer-events: none;
 }
-
-.arcade-foot-item.active {
-  color: #3fd0ff;
-  text-shadow: 0 0 10px rgba(63, 208, 255, 0.6);
-}
-
-.arcade-foot-item.link {
-  cursor: pointer;
-  color: rgba(210, 220, 255, 0.8);
-}
-
-.arcade-foot-item.link:hover {
-  color: #fff;
+@keyframes arc-boot {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+  }
 }
