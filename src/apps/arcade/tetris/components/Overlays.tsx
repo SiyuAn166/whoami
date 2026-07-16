@@ -96,10 +96,3 @@ export const Overlays: React.FC<Props> = ({
 
   return null;
 };
-
-export const Controls: React.FC = () => (
-  <div className="tetris-help">
-    <div>← → move · ↓ soft · Space hard · Esc pause</div>
-    <div>↑ / X rotate CW · Z rotate CCW · C hold</div>
-  </div>
-);

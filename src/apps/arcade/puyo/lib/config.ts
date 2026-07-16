@@ -9,9 +9,15 @@ import type { Color } from "./types";
 // ---- Board geometry -------------------------------------------------------
 export const COLS = 6;
 /** Total rows including hidden rows at the top. */
-export const ROWS = 13;
-/** Hidden rows at the top (puyos here never pop). */
-export const HIDDEN_ROWS = 1;
+export const ROWS = 14;
+/**
+ * Hidden rows at the top (puyos here never pop and are not drawn).
+ * Two rows of overflow headroom above the visible field: every column
+ * except the death-X column (SPAWN_COL) may rest puyos here. The death
+ * column tops out the instant a puyo settles on the visible top cell
+ * (grid[HIDDEN_ROWS][SPAWN_COL]), so it can never use this headroom.
+ */
+export const HIDDEN_ROWS = 2;
 /** Visible playfield rows. */
 export const VISIBLE_ROWS = ROWS - HIDDEN_ROWS; // 12
 /** Spawn column (0-indexed 3rd column, classic PPT spawn). */

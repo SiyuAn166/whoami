@@ -6,15 +6,9 @@ interface Props {
   onRestart: () => void;
 }
 
-const RestartIcon = () => (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-    <path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
-  </svg>
-);
-
 export const Hud: React.FC<Props> = ({ hud, onRestart }) => {
   return (
-    <div className="tetris-hud">
+    <aside className="tetris-hud">
       <div className="tetris-stats">
         <div className="stat">
           <span>SCORE</span>
@@ -29,11 +23,48 @@ export const Hud: React.FC<Props> = ({ hud, onRestart }) => {
           <b>{hud.lines}</b>
         </div>
       </div>
-      <div className="tetris-controls">
-        <button className="tbtn" title="Restart" onClick={onRestart}>
-          <RestartIcon />
-        </button>
+
+      <div className="tetris-hud-block tetris-actions">
+        <span className="tetris-hud-label">Actions</span>
+        <div className="tetris-action-row">
+          <button
+            className="tetris-icon-btn"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onRestart();
+            }}
+            aria-label="Restart"
+            title="Restart"
+          >
+            <span className="tetris-icon-restart">&#x21ba;</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      <div className="tetris-help">
+        <span className="help-label">CONTROLS</span>
+        <span className="help-row">
+          <b>&larr; &rarr;</b> move
+        </span>
+        <span className="help-row">
+          <b>&darr;</b> soft drop
+        </span>
+        <span className="help-row">
+          <b>&uarr; / X</b> rotate CW
+        </span>
+        <span className="help-row">
+          <b>Z</b> rotate CCW
+        </span>
+        <span className="help-row">
+          <b>Space</b> hard drop
+        </span>
+        <span className="help-row">
+          <b>C</b> hold
+        </span>
+        <span className="help-row">
+          <b>Esc</b> pause
+        </span>
+      </div>
+    </aside>
   );
 };

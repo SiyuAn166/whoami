@@ -160,10 +160,13 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const g = gs.current!;
     if (!g.piece) return;
     const placed = pieceCells(g.piece);
-    // Practice mode never tops out, so a pair resting partly out of the board
-    // (any cell in a hidden row) must NOT be placed — the player has to move it
-    // to a column with room. Play mode places it and tops out on next spawn.
-    if (g.mode === "practice" && placed.some((c) => c.r < HIDDEN_ROWS)) {
+    // Both modes may stack puyos into the two hidden rows above the visible
+    // field — EXCEPT the red-X (death) column, which must never accept a puyo
+    // in the hidden rows. In play mode a filled death column tops out on the
+    // next spawn (isTopOut), so this only actively fires in practice, where
+    // there is no top-out: the pair is refused and the player must move it to
+    // another column.
+    if (placed.some((c) => c.c === SPAWN_COL && c.r < HIDDEN_ROWS)) {
       return;
     }
     sfx.placed();

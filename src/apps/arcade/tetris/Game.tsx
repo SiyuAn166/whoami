@@ -3,7 +3,7 @@ import { TetrisStage } from "./pixi/TetrisStage";
 import { SoundBank } from "./lib/sound";
 import { useTetrisGame } from "./hook/useTetrisGame";
 import { Hud } from "./components/Hud";
-import { Overlays, Controls } from "./components/Overlays";
+import { Overlays } from "./components/Overlays";
 import "./style.css";
 
 export interface GameProps {
@@ -58,7 +58,6 @@ export const Game: React.FC<GameProps> = ({ onQuit }) => {
           onQuit={onQuit}
         />
       </div>
-      <Controls />
     </div>
   );
 };

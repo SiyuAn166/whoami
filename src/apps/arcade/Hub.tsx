@@ -130,7 +130,7 @@ export function Hub({ onClose }: { onClose?: () => void }) {
       </main>
 
       <footer className="arc-hints">
-        <span className="arc-hint-touch">Swipe &middot; Tap to play</span>
+        {/* <span className="arc-hint-touch">Swipe &middot; Tap to play</span> */}
         <span className="arc-hint-key">
           <kbd>&#8592;</kbd>
           <kbd>&#8594;</kbd> Select
