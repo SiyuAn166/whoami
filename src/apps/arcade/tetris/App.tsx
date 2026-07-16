@@ -1,21 +1,20 @@
 import type { AppDefinition } from "../../types";
 import { Game } from "./Game";
 import { Icon } from "./Icon";
-import { Toolbar } from "./Toolbar";
 
-/**
- * Tetris — Guideline-compliant single-player game.
- * Fixed-size window (fixed 10x20 board), singleton, not resizable.
+/** Standalone Tetris app definition.
+ *  The Arcade hub renders <Game/> directly, but this entry lets Tetris also be
+ *  launched on its own (dock/desktop) if desired — mirrors puyo/App.tsx.
  */
 export const tetrisApp: AppDefinition = {
   id: "tetris",
   name: "Tetris",
-  title: "Tetris",
-  singleton: true,
-  resizable: false,
-  defaultSize: { w: 830, h: 860 },
-  minSize: { w: 700, h: 726 },
   icon: <Icon />,
-  renderToolbar: () => <Toolbar />,
+  showOnDesktop: false,
+  defaultSize: { w: 900, h: 820 },
+  minSize: { w: 720, h: 720 },
+  resizable: true,
+  singleton: true,
+  title: "Tetris",
   render: (_ctx, onClose) => <Game onQuit={onClose} />,
 };

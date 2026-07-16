@@ -1,451 +1,501 @@
-// ============================================================================
-// useTetrisGame — the game's beating heart as a single hook.
-// Owns: the Tetris engine instance, the requestAnimationFrame loop, gravity &
-// lock-delay, keyboard input (DAS/ARR), the line-clear animation, and sound.
-// Returns immutable state for rendering plus canvas refs and player actions.
-// The loop and listeners are wired ONCE on mount and read live values through
-// refs, so they never need to re-subscribe.
-// ============================================================================
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ALL_CLEAR_TOAST,
-  ARR,
-  CLEAR_ALLCLEAR,
-  CLEAR_MS,
-  DAS,
-  HELP_EVENT,
-  HIDDEN_ROWS,
-  HOLD_CELL,
-  HOLD_H,
-  HOLD_W,
-  KEY_CONFIRM,
-  KEY_HOLD_C,
-  KEY_HOLD_C_UPPER,
-  KEY_LEFT,
-  KEY_PAUSE,
-  KEY_RIGHT,
-  KEY_ROTATE_CCW_Z,
-  KEY_ROTATE_CCW_Z_UPPER,
-  KEY_ROTATE_CW_ARROW,
-  KEY_ROTATE_CW_X,
-  KEY_ROTATE_CW_X_UPPER,
-  KEY_SOFT_DROP,
   LOCK_DELAY,
-  LOCK_RESET_CAP,
-  NEXT_CELL,
-  NEXT_COUNT,
-  NEXT_SLOT_H,
-  NEXT_W,
-  SOFT_DROP_MS,
-  TOAST_MS,
-  type ClearType,
+  MAX_LOCK_RESETS,
+  DAS,
+  ARR,
+  SOFT_DROP_FACTOR,
+  gravityMs,
+  SCORE,
+  type PieceType,
 } from "../lib/config";
-import { Tetris } from "../lib/engine";
-import { composeMessage, type ClearMessage } from "../lib/messages";
-import { drawBoard, drawMini, type ClearAnimation } from "../lib/render";
+import type { Grid, Piece, Status, HudSnapshot, ClearKind } from "../lib/types";
 import {
-  preloadSfx,
-  sfxClear,
-  sfxDrop,
-  sfxDropdown,
-  sfxHardDrop,
-  sfxHold,
-  sfxMove,
-  sfxRotate,
-} from "../lib/sound";
+  emptyGrid,
+  spawnPiece,
+  fits,
+  move,
+  rotate,
+  lockPiece,
+  ghostRow,
+  fullRows,
+  clearRows,
+  isAllClear,
+  detectTSpin,
+  classify,
+  baseScore,
+  levelForLines,
+} from "../lib/engine";
+import { Bag } from "../lib/rng";
+import { SoundBank } from "../lib/sound";
+import { TetrisStage } from "../pixi/TetrisStage";
 
-export type Phase = "idle" | "playing" | "paused" | "over";
-export interface Hud {
+interface GameState {
+  grid: Grid;
+  piece: Piece | null;
+  hold: PieceType | null;
+  canHold: boolean;
+  bag: Bag;
+  status: Status;
   score: number;
   lines: number;
   level: number;
-}
-export interface Toast extends ClearMessage {
-  key: number;
-}
-
-export interface TetrisController {
-  phase: Phase;
-  hud: Hud;
-  toast: Toast | null;
-  b2bOn: boolean;
-  ren: number;
-  help: boolean;
-  boardRef: React.RefObject<HTMLCanvasElement | null>;
-  holdRef: React.RefObject<HTMLCanvasElement | null>;
-  nextRef: React.RefObject<HTMLCanvasElement | null>;
-  start: () => void; // new game
-  resume: () => void; // un-pause
-  quit: () => void; // leave (delegates to onQuit)
-  closeHelp: () => void;
+  combo: number;
+  b2b: boolean;
+  // timers
+  gravAccum: number;
+  lockAccum: number;
+  lockResets: number;
+  grounded: boolean;
+  softDrop: boolean;
+  lastActionRotate: boolean;
+  lastKickIndex: number;
+  // DAS/ARR
+  dir: -1 | 0 | 1;
+  dasAccum: number;
+  arrAccum: number;
+  charged: boolean;
 }
 
-export function useTetrisGame(onQuit?: () => void): TetrisController {
-  const boardRef = useRef<HTMLCanvasElement>(null);
-  const holdRef = useRef<HTMLCanvasElement>(null);
-  const nextRef = useRef<HTMLCanvasElement>(null);
-  const gameRef = useRef<Tetris | null>(null);
+const TOAST: Partial<Record<ClearKind, string>> = {
+  tetris: "TETRIS!",
+  tspin: "T-SPIN",
+  "tspin-single": "T-SPIN SINGLE",
+  "tspin-double": "T-SPIN DOUBLE",
+  "tspin-triple": "T-SPIN TRIPLE",
+  "tspin-mini": "T-SPIN MINI",
+  "tspin-mini-single": "T-SPIN MINI",
+};
 
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [hud, setHud] = useState<Hud>({ score: 0, lines: 0, level: 1 });
-  const [help, setHelp] = useState(false);
-  const [toast, setToast] = useState<Toast | null>(null);
-  // Persistent status (TETR.IO-style): B2B and REN live as long as their chain
-  // survives — they do NOT fade with the transient clear label.
-  const [b2bOn, setB2bOn] = useState(false);
-  const [ren, setRen] = useState(0);
+export function useTetrisGame(
+  stageRef: React.MutableRefObject<TetrisStage | null>,
+  soundRef: React.MutableRefObject<SoundBank | null>,
+  ready: boolean,
+) {
+  const gs = useRef<GameState | null>(null);
+  const [hud, setHud] = useState<HudSnapshot>({
+    score: 0,
+    level: 0,
+    lines: 0,
+    combo: 0,
+    status: "control",
+  });
 
-  // Live mirrors read by the loop/listeners without re-subscribing.
-  const phaseRef = useRef<Phase>("idle");
-  phaseRef.current = phase;
-
-  // Line-clear animation state (read by the renderer).
-  const clearingRef = useRef(false);
-  const clearRowsRef = useRef<number[]>([]);
-  const clearStartRef = useRef(0);
-
-  // renderRef always points at the latest draw closure so the rAF loop can
-  // call it without listing it as an effect dependency.
-  const renderRef = useRef<() => void>(() => {});
-  const toastTimer = useRef<number | null>(null);
-  const feedTimer = useRef<number | null>(null);
-
-  // ---- draw everything + sync HUD -----------------------------------------
-  function render() {
-    const g = gameRef.current;
-    const anim: ClearAnimation = {
-      active: clearingRef.current,
-      rows: clearRowsRef.current,
-      startedAt: clearStartRef.current,
-      durationMs: CLEAR_MS,
-    };
-    const bctx = boardRef.current?.getContext("2d");
-    if (bctx) {
-      const showActive =
-        phaseRef.current === "playing" || phaseRef.current === "paused";
-      drawBoard(bctx, g, showActive, anim);
-    }
-    const hctx = holdRef.current?.getContext("2d");
-    if (hctx) {
-      hctx.clearRect(0, 0, HOLD_W, HOLD_H);
-      if (g?.hold) drawMini(hctx, g.hold, HOLD_W, HOLD_H, 0, HOLD_CELL);
-    }
-    const nctx = nextRef.current?.getContext("2d");
-    if (nctx) {
-      nctx.clearRect(0, 0, NEXT_W, NEXT_COUNT * NEXT_SLOT_H);
-      g?.next(NEXT_COUNT).forEach((k, i) =>
-        drawMini(nctx, k, NEXT_W, NEXT_SLOT_H, i * NEXT_SLOT_H, NEXT_CELL),
-      );
-    }
-    if (g) setHud({ score: g.score, lines: g.lines, level: g.level });
-  }
-  renderRef.current = render;
-
-  // Show a special-clear label, then auto-hide it after TOAST_MS. B2B/REN are
-  // NOT part of this toast — they're persistent indicators tracked separately
-  // (see setB2bOn/setRen below) — so the toast only ever carries a label.
-  function showToast(label: string, clearType: ClearType) {
-    if (toastTimer.current !== null) clearTimeout(toastTimer.current);
-    setToast({
-      label,
-      clearType,
-      b2b: false,
-      ren: 0,
-      key: Date.now(),
+  const syncHud = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    setHud({
+      score: g.score,
+      level: g.level,
+      lines: g.lines,
+      combo: g.combo,
+      status: g.status,
     });
-    toastTimer.current = window.setTimeout(() => {
-      setToast(null);
-      toastTimer.current = null;
-    }, TOAST_MS);
-  }
+  }, []);
 
-  // ---- game loop + input (mounted once) -----------------------------------
-  useEffect(() => {
-    let raf = 0;
-    let last = performance.now();
-    let dropAcc = 0;
-    let lockAcc = 0;
-    let lockResets = 0;
-    let grounded = false;
+  const sound = useCallback(
+    (name: Parameters<SoundBank["play"]>[0]) => {
+      soundRef.current?.play(name);
+    },
+    [soundRef],
+  );
 
-    // Horizontal auto-shift state.
-    let dir = 0;
-    let dasAcc = 0;
-    let arrAcc = 0;
-    const held = new Set<string>();
-    const softDropActive = () => held.has(KEY_SOFT_DROP);
-
-    /** Reset the lock-delay timer on a successful move/rotate near the floor. */
-    function resetLockTimer() {
-      if (grounded) {
-        lockAcc = 0;
-        lockResets++;
-      }
+  const drawActive = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    const st = stageRef.current;
+    if (!st) return;
+    if (!g.piece) {
+      st.clearActive();
+      return;
     }
+    st.setActive(g.piece, ghostRow(g.grid, g.piece));
+  }, [stageRef]);
 
-    /**
-     * Settle the current piece: detect full rows & score, then either play the
-     * clear animation (rows collapse afterwards) or spawn the next piece now.
-     */
-    function beginLock() {
-      const g = gameRef.current!;
-      const { rows, result, willAllClear } = g.lockDetect();
+  const refreshQueue = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    stageRef.current?.setNext(g.bag.peek(5));
+    stageRef.current?.setHold(g.hold);
+  }, [stageRef]);
 
-      grounded = false;
-      lockAcc = 0;
-      lockResets = 0;
-
-      const visible = rows.map((r) => r - HIDDEN_ROWS).filter((r) => r >= 0);
-      const cleared = visible.length > 0;
-
-      // The clear-type label (e.g. "TETRIS", "T-SPIN") shows for any lock
-      // that earns one, cleared lines or not (a no-line T-spin still counts).
-      const msg = composeMessage(result);
-      if (msg.label) showToast(msg.label, msg.clearType);
-
-      // B2B / REN, by contrast, are shown ONLY when this lock actually
-      // cleared lines. A plain drop with no clear must never surface any box.
-      // Source is the per-clear `result` (not the persistent engine flags):
-      //   - result.backToBack -> true only on the 2nd+ consecutive difficult
-      //     clear, so the first Tetris/T-spin never shows the B2B badge.
-      //   - result.combo      -> REN count (>=1 from the 2nd consecutive clear).
-      if (cleared) {
-        setB2bOn(result.backToBack);
-        setRen(result.combo >= 1 ? result.combo : 0);
-        if (feedTimer.current !== null) clearTimeout(feedTimer.current);
-        feedTimer.current = window.setTimeout(() => {
-          setB2bOn(false);
-          setRen(0);
-          feedTimer.current = null;
-        }, TOAST_MS);
-
-        clearRowsRef.current = visible;
-        clearStartRef.current = performance.now();
-        clearingRef.current = true;
-        // All Clear replaces the normal clear sound (predicted pre-collapse).
-        sfxClear(willAllClear ? CLEAR_ALLCLEAR : result.clearType);
-      } else {
-        // No lines cleared, but a T-spin (incl. mini) still earns its label —
-        // just without the clear animation, B2B, or REN feedback.
-        g.resolveClear();
-        if (g.over) setPhase("over");
-      }
-    }
-
-    function loop(now: number) {
-      raf = requestAnimationFrame(loop);
-      const dt = now - last;
-      last = now;
-
-      const g = gameRef.current;
-      if (!g || phaseRef.current !== "playing") {
-        renderRef.current();
+  const spawn = useCallback(
+    (type?: PieceType) => {
+      const g = gs.current;
+      if (!g) return;
+      const t = type ?? g.bag.next();
+      const p = spawnPiece(t);
+      if (!fits(g.grid, p)) {
+        // top-out ends the game
+        g.piece = null;
+        g.status = "gameover";
+        stageRef.current?.clearActive();
+        syncHud();
         return;
       }
+      g.piece = p;
+      g.canHold = true;
+      g.grounded = false;
+      g.lockAccum = 0;
+      g.lockResets = 0;
+      g.gravAccum = 0;
+      g.lastActionRotate = false;
+      g.status = "control";
+      refreshQueue();
+      drawActive();
+      syncHud();
+    },
+    [drawActive, refreshQueue, stageRef, syncHud],
+  );
 
-      // While the clear sweep plays: freeze gravity/input, then collapse rows.
-      if (clearingRef.current) {
-        if (now - clearStartRef.current >= CLEAR_MS) {
-          clearingRef.current = false;
-          clearRowsRef.current = [];
-          const { allClear } = g.resolveClear();
-          if (allClear) showToast(ALL_CLEAR_TOAST, CLEAR_ALLCLEAR);
-          if (g.over) setPhase("over");
-        }
-        renderRef.current();
-        return;
-      }
+  const resolveLock = useCallback(() => {
+    const g = gs.current;
+    if (!g || !g.piece) return;
+    const tspin = detectTSpin(
+      g.grid,
+      g.piece,
+      g.lastActionRotate,
+      g.lastKickIndex,
+    );
+    g.grid = lockPiece(g.grid, g.piece);
+    const rows = fullRows(g.grid);
+    const n = rows.length;
+    const kind = classify(n, tspin);
 
-      // Horizontal DAS/ARR — one sound per cell actually moved.
-      if (dir !== 0) {
-        dasAcc += dt;
-        if (dasAcc >= DAS) {
-          arrAcc += dt;
-          while (arrAcc >= ARR) {
-            if (g.move(dir)) sfxMove();
-            arrAcc -= ARR;
-          }
-        }
-      }
+    // difficult clear = Tetris, or any T-spin / T-spin mini that clears >=1 line
+    const difficult = kind === "tetris" || (kind.startsWith("tspin") && n > 0);
+    // back-to-back only exists from the 2nd consecutive difficult clear onward
+    const wasB2B = g.b2b;
+    const isB2B = difficult && wasB2B;
 
-      // Gravity (faster while soft-dropping). Soft drop & natural fall share
-      // this path, so both play the per-cell drop sound.
-      const gInterval = g.gravityMs();
-      const interval = softDropActive()
-        ? Math.min(gInterval, SOFT_DROP_MS)
-        : gInterval;
-      dropAcc += dt;
-      if (dropAcc >= interval) {
-        dropAcc = 0;
-        if (g.softDrop()) {
-          if (softDropActive()) g.score += 1;
-          sfxDrop();
-          grounded = false;
-          lockAcc = 0;
-        } else {
-          grounded = true;
-        }
-      }
-
-      // Lock delay once resting on the stack.
-      if (grounded) {
-        if (
-          !g.collides(g.active.x, g.active.y + 1, g.active.rot, g.active.piece)
-        ) {
-          grounded = false;
-          lockAcc = 0;
-        } else {
-          lockAcc += dt;
-          if (lockAcc >= LOCK_DELAY || lockResets >= LOCK_RESET_CAP) {
-            sfxDropdown(); // soft/natural landing only — hard drop uses its own
-            beginLock();
-          }
-        }
-      }
-
-      renderRef.current();
-    }
-    raf = requestAnimationFrame(loop);
-
-    function onKeyDown(e: KeyboardEvent) {
-      // Non-playing states: Space starts/restarts, Esc resumes from pause.
-      if (phaseRef.current !== "playing") {
-        if (e.key === KEY_PAUSE && phaseRef.current === "paused") {
-          e.preventDefault();
-          setPhase("playing");
-        }
-        if (
-          e.key === KEY_CONFIRM &&
-          (phaseRef.current === "idle" || phaseRef.current === "over")
-        ) {
-          e.preventDefault();
-          startGame();
-        }
-        return;
-      }
-      // Ignore gameplay input during the clear animation.
-      if (clearingRef.current) {
-        if (e.key === KEY_CONFIRM) e.preventDefault();
-        return;
-      }
-
-      const g = gameRef.current!;
-      switch (e.key) {
-        case KEY_LEFT:
-          if (!held.has(KEY_LEFT)) {
-            held.add(KEY_LEFT);
-            dir = -1;
-            dasAcc = 0;
-            arrAcc = 0;
-            if (g.move(-1)) {
-              resetLockTimer();
-              sfxMove();
-            }
-          }
-          break;
-        case KEY_RIGHT:
-          if (!held.has(KEY_RIGHT)) {
-            held.add(KEY_RIGHT);
-            dir = 1;
-            dasAcc = 0;
-            arrAcc = 0;
-            if (g.move(1)) {
-              resetLockTimer();
-              sfxMove();
-            }
-          }
-          break;
-        case KEY_SOFT_DROP:
-          held.add(KEY_SOFT_DROP);
-          break;
-        case KEY_ROTATE_CW_ARROW:
-        case KEY_ROTATE_CW_X:
-        case KEY_ROTATE_CW_X_UPPER:
-          if (g.rotate(1)) {
-            resetLockTimer();
-            sfxRotate();
-          }
-          break;
-        case KEY_ROTATE_CCW_Z:
-        case KEY_ROTATE_CCW_Z_UPPER:
-          if (g.rotate(-1)) {
-            resetLockTimer();
-            sfxRotate();
-          }
-          break;
-        case KEY_HOLD_C:
-        case KEY_HOLD_C_UPPER:
-          if (g.holdPiece()) {
-            grounded = false;
-            lockAcc = 0;
-            sfxHold();
-          }
-          break;
-        case KEY_CONFIRM: {
-          e.preventDefault();
-          g.hardDropOnly();
-          sfxHardDrop();
-          beginLock();
-          break;
-        }
-        case KEY_PAUSE:
-          e.preventDefault();
-          setPhase("paused");
-          break;
-      }
+    // scoring
+    if (kind !== "none") {
+      let pts = baseScore(kind) * (g.level + 1);
+      if (isB2B) pts = Math.floor(pts * SCORE.b2bMultiplier);
+      g.score += pts;
+      // difficult clear sustains/starts the chain; a non-difficult LINE clear
+      // breaks it; a clear of 0 lines leaves the chain untouched
+      if (difficult) g.b2b = true;
+      else if (n > 0) g.b2b = false;
     }
 
-    function onKeyUp(e: KeyboardEvent) {
-      held.delete(e.key);
-      if (e.key === KEY_LEFT && dir === -1) dir = held.has(KEY_RIGHT) ? 1 : 0;
-      if (e.key === KEY_RIGHT && dir === 1) dir = held.has(KEY_LEFT) ? -1 : 0;
+    // combo
+    if (n > 0) {
+      g.combo += 1;
+      if (g.combo > 1)
+        g.score += SCORE.comboUnit * (g.combo - 1) * (g.level + 1);
+    } else {
+      g.combo = 0;
     }
 
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    return () => {
-      cancelAnimationFrame(raf);
-      if (toastTimer.current !== null) clearTimeout(toastTimer.current);
-      if (feedTimer.current !== null) clearTimeout(feedTimer.current);
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
+    g.lines += n;
+    g.level = levelForLines(g.lines);
+
+    // sounds + toast
+    if (n === 4) sound("tetris");
+    else if (kind.startsWith("tspin")) sound(n >= 2 ? "tspin3" : "tspin2");
+    else if (n > 0) sound("lineClear");
+    else sound("drop");
+    const msg = TOAST[kind];
+    if (msg) stageRef.current?.toast(msg);
+    if (isB2B) {
+      stageRef.current?.toast("BACK-TO-BACK", 0x8fd8ff);
+    }
+    if (g.combo > 1) stageRef.current?.toast(`${g.combo - 1} REN`, 0xffb0e0);
+
+    g.piece = null;
+    g.status = "resolving";
+    syncHud();
+
+    const finish = () => {
+      const gg = gs.current;
+      if (!gg) return;
+      gg.grid = clearRows(gg.grid, rows);
+      stageRef.current?.syncBoard(gg.grid);
+      if (n > 0 && isAllClear(gg.grid)) {
+        gg.score += SCORE.allClearBonus * (gg.level + 1);
+        sound("allClear");
+        stageRef.current?.toast("ALL CLEAR!", 0x9effa0);
+      }
+      spawn();
     };
+
+    if (n > 0) {
+      stageRef.current?.syncBoard(g.grid);
+      stageRef.current?.flashRows(rows, finish);
+    } else {
+      stageRef.current?.syncBoard(g.grid);
+      finish();
+    }
+  }, [sound, spawn, stageRef, syncHud]);
+
+  const tryMove = useCallback(
+    (dc: number) => {
+      const g = gs.current;
+      if (!g || !g.piece || g.status !== "control") return;
+      const np = move(g.grid, g.piece, 0, dc);
+      if (np) {
+        g.piece = np;
+        g.lastActionRotate = false;
+        if (g.grounded && g.lockResets < MAX_LOCK_RESETS) {
+          g.lockAccum = 0;
+          g.lockResets++;
+        }
+        sound("move");
+        drawActive();
+      }
+    },
+    [drawActive, sound],
+  );
+
+  const tryRotate = useCallback(
+    (dir: 1 | -1) => {
+      const g = gs.current;
+      if (!g || !g.piece || g.status !== "control") return;
+      const res = rotate(g.grid, g.piece, dir);
+      if (res) {
+        g.piece = res.piece;
+        g.lastActionRotate = true;
+        g.lastKickIndex = res.kickIndex;
+        if (g.grounded && g.lockResets < MAX_LOCK_RESETS) {
+          g.lockAccum = 0;
+          g.lockResets++;
+        }
+        sound("rotate");
+        drawActive();
+      }
+    },
+    [drawActive, sound],
+  );
+
+  const softDrop = useCallback((on: boolean) => {
+    const g = gs.current;
+    if (!g) return;
+    // Clear any gravity accumulated under the previous (slower) rate so
+    // switching soft-drop on can't dump several leftover cells at once.
+    if (on !== g.softDrop) g.gravAccum = 0;
+    g.softDrop = on;
   }, []);
 
-  // Titlebar "?" button (rendered by window chrome) opens help via event.
+  const hardDrop = useCallback(() => {
+    const g = gs.current;
+    if (!g || !g.piece || g.status !== "control") return;
+    const dest = ghostRow(g.grid, g.piece);
+    const dist = dest.r - g.piece.r;
+    g.score += dist * SCORE.hardDropPerCell;
+    g.piece = dest;
+    g.lastActionRotate = false;
+    sound("hardDrop");
+    resolveLock();
+  }, [resolveLock, sound]);
+
+  const holdPiece = useCallback(() => {
+    const g = gs.current;
+    if (!g || !g.piece || !g.canHold || g.status !== "control") return;
+    const cur = g.piece.type;
+    sound("hold");
+    if (g.hold == null) {
+      g.hold = cur;
+      g.canHold = false;
+      spawn();
+    } else {
+      const swap = g.hold;
+      g.hold = cur;
+      g.canHold = false;
+      spawn(swap);
+    }
+    g.canHold = false;
+    refreshQueue();
+  }, [refreshQueue, sound, spawn]);
+
+  const reset = useCallback(() => {
+    const st = stageRef.current;
+    gs.current = {
+      grid: emptyGrid(),
+      piece: null,
+      hold: null,
+      canHold: true,
+      bag: new Bag(),
+      status: "control",
+      score: 0,
+      lines: 0,
+      level: 0,
+      combo: 0,
+      b2b: false,
+      gravAccum: 0,
+      lockAccum: 0,
+      lockResets: 0,
+      grounded: false,
+      softDrop: false,
+      lastActionRotate: false,
+      lastKickIndex: 0,
+      dir: 0,
+      dasAccum: 0,
+      arrAccum: 0,
+      charged: false,
+    };
+    st?.syncBoard(gs.current.grid);
+    spawn();
+    syncHud();
+  }, [spawn, stageRef, syncHud]);
+
+  // ---- main tick ----
+  const tick = useCallback(
+    (dtMs: number) => {
+      const g = gs.current;
+      if (!g) return;
+      if (g.status !== "control" || !g.piece) return;
+
+      // DAS / ARR horizontal auto-shift
+      if (g.dir !== 0) {
+        if (!g.charged) {
+          g.dasAccum += dtMs;
+          if (g.dasAccum >= DAS) {
+            g.charged = true;
+            g.arrAccum = 0;
+          }
+        } else {
+          g.arrAccum += dtMs;
+          while (g.arrAccum >= ARR) {
+            g.arrAccum -= ARR;
+            tryMove(g.dir);
+          }
+        }
+      }
+
+      const grav = gravityMs(g.level) / (g.softDrop ? SOFT_DROP_FACTOR : 1);
+      {
+        g.gravAccum += dtMs;
+        while (g.gravAccum >= grav) {
+          g.gravAccum -= grav;
+          const np = move(g.grid, g.piece, 1, 0);
+          if (np) {
+            g.piece = np;
+            if (g.softDrop) g.score += SCORE.softDropPerCell;
+            g.grounded = false;
+            drawActive();
+          } else {
+            g.grounded = true;
+            break;
+          }
+        }
+      }
+
+      // lock delay
+      const canFall = !!move(g.grid, g.piece, 1, 0);
+      if (!canFall) {
+        g.grounded = true;
+        g.lockAccum += dtMs;
+        if (g.lockAccum >= LOCK_DELAY || g.lockResets >= MAX_LOCK_RESETS) {
+          resolveLock();
+        }
+      } else {
+        g.grounded = false;
+        g.lockAccum = 0;
+      }
+    },
+    [drawActive, resolveLock, tryMove],
+  );
+
+  // keep latest tick in a ref so the ticker callback is stable
+  const tickRef = useRef(tick);
   useEffect(() => {
-    const openHelp = () => setHelp(true);
-    window.addEventListener(HELP_EVENT, openHelp);
-    return () => window.removeEventListener(HELP_EVENT, openHelp);
-  }, []);
+    tickRef.current = tick;
+  }, [tick]);
 
-  function startGame() {
-    preloadSfx();
-    gameRef.current = new Tetris();
-    clearingRef.current = false;
-    clearRowsRef.current = [];
-    setToast(null);
-    setB2bOn(false);
-    setRen(0);
-    if (toastTimer.current !== null) clearTimeout(toastTimer.current);
-    if (feedTimer.current !== null) clearTimeout(feedTimer.current);
-    setHelp(false);
-    setPhase("playing");
-  }
+  // wire exactly one ticker callback once the stage is ready
+  useEffect(() => {
+    if (!ready) return;
+    const st = stageRef.current;
+    if (!st) return;
+    st.onTick((dt) => tickRef.current(dt));
+    return () => st.offTick();
+  }, [ready, stageRef]);
 
-  return {
-    phase,
-    hud,
-    toast,
-    b2bOn,
-    ren,
-    help,
-    boardRef,
-    holdRef,
-    nextRef,
-    start: startGame,
-    resume: () => setPhase("playing"),
-    quit: () => (onQuit ? onQuit() : setPhase("idle")),
-    closeHelp: () => setHelp(false),
-  };
+  // ---- keyboard ----
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      const g = gs.current;
+      if (!g) return;
+      soundRef.current?.resume();
+      switch (e.code) {
+        case "ArrowLeft":
+          if (g.dir !== -1) {
+            g.dir = -1;
+            g.charged = false;
+            g.dasAccum = 0;
+            tryMove(-1);
+          }
+          e.preventDefault();
+          break;
+        case "ArrowRight":
+          if (g.dir !== 1) {
+            g.dir = 1;
+            g.charged = false;
+            g.dasAccum = 0;
+            tryMove(1);
+          }
+          e.preventDefault();
+          break;
+        case "ArrowDown":
+          softDrop(true);
+          e.preventDefault();
+          break;
+        case "ArrowUp":
+        case "KeyX":
+          tryRotate(1);
+          e.preventDefault();
+          break;
+        case "KeyZ":
+        case "ControlLeft":
+        case "ControlRight":
+          tryRotate(-1);
+          e.preventDefault();
+          break;
+        case "Space":
+          hardDrop();
+          e.preventDefault();
+          break;
+        case "KeyC":
+        case "ShiftLeft":
+        case "ShiftRight":
+          holdPiece();
+          e.preventDefault();
+          break;
+        default:
+          break;
+      }
+    };
+    const up = (e: KeyboardEvent) => {
+      const g = gs.current;
+      if (!g) return;
+      switch (e.code) {
+        case "ArrowLeft":
+          if (g.dir === -1) {
+            g.dir = 0;
+            g.charged = false;
+          }
+          break;
+        case "ArrowRight":
+          if (g.dir === 1) {
+            g.dir = 0;
+            g.charged = false;
+          }
+          break;
+        case "ArrowDown":
+          softDrop(false);
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [hardDrop, holdPiece, softDrop, soundRef, tryMove, tryRotate]);
+
+  return { hud, reset };
 }

@@ -1,14 +1,15 @@
-// ============================================================================
-// Locked tetromino tile renderer. A single tile is a self-contained "framed
-// crystal tile": dark grid line → bright beveled rim (top brightest, sides
-// mid, bottom darkest) → matte core with a subtle 「日」 inset (two shallow
-// pits + a slight middle ridge). The bevel/pit/ridge are drawn in SCREEN
-// space and never rotate — the tile is a fixed fill; only its position
-// changes as a piece rotates. Look parameters (TILE_PARAMS) and the piece
-// colour palette (PIECE_COLORS) live in tetrisConfig.ts.
-// ============================================================================
+import { Texture } from "pixi.js";
+import { PIECE_COLORS, PIECES, TILE, type PieceType } from "../lib/config";
 
-import { PIECE_COLORS, TILE_PARAMS, type PieceType } from "./config";
+// ---------------------------------------------------------------------------
+// Locked tetromino tile renderer — a self-contained "framed crystal tile":
+//   dark grid line → bright beveled rim (top brightest, sides mid, bottom
+//   darkest) → matte core with a subtle 「日」 inset (two shallow pits + a
+//   slight middle ridge). Bevel/pit/ridge are drawn in SCREEN space and never
+//   rotate; the tile is a fixed fill and only its position changes as a piece
+//   rotates. Baked ONCE to an offscreen canvas and uploaded as a PIXI.Texture.
+//   Ghost = focus/corner frame (nested strokes) in the piece's own colour.
+// ---------------------------------------------------------------------------
 
 /** Shift a hex colour toward white (d>0) or black (d<0) by fraction |d|. */
 export function lum(hex: string, d: number): string {
@@ -28,10 +29,7 @@ export function lum(hex: string, d: number): string {
   return `rgb(${r | 0},${g | 0},${b | 0})`;
 }
 
-/**
- * Draw one tile at (x,y) with side length `s` for the given piece colour.
- * Pure canvas 2D — used for the board, ghost, hold and next previews alike.
- */
+/** Draw one framed-crystal tile at (x,y) with side length `s`. */
 export function drawCell(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -39,13 +37,13 @@ export function drawCell(
   s: number,
   piece: PieceType,
 ): void {
-  const P = TILE_PARAMS;
+  const P = TILE;
   const base = PIECE_COLORS[piece];
 
   // Dark grid line (full cell), then inset the tile body by a hairline.
   ctx.fillStyle = lum(base, P.outline);
   ctx.fillRect(x, y, s, s);
-  const inset = P.gridLine ? Math.max(1, s * 0.045) : 0;
+  const inset = Math.max(1, s * 0.045);
   const x0 = x + inset,
     y0 = y + inset,
     ss = s - inset * 2;
@@ -116,10 +114,7 @@ export function drawCell(
   ctx.fillRect(cx, cy + half - bar, cs, bar * 2);
 }
 
-/**
- * Draw the ghost piece as a focus/corner frame (four L-shaped corners) in the
- * piece's own colour, instead of a translucent solid block.
- */
+/** Draw the ghost as a focus/corner frame (nested strokes) in the piece colour. */
 export function drawGhostCell(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -143,4 +138,45 @@ export function drawGhostCell(
   ctx.strokeRect(x + i, y + i, s - i * 2, s - i * 2);
 
   ctx.restore();
+}
+
+function makeCanvas(size: number): HTMLCanvasElement {
+  const c = document.createElement("canvas");
+  c.width = size;
+  c.height = size;
+  return c;
+}
+
+export interface TileTextures {
+  solid: Record<PieceType, Texture>;
+  ghost: Record<PieceType, Texture>;
+}
+
+// Bake all tile + ghost textures at the given cell size (device-pixel aware).
+export function bakeTiles(cellSize: number, resolution = 2): TileTextures {
+  const size = Math.round(cellSize * resolution);
+  const solid = {} as Record<PieceType, Texture>;
+  const ghost = {} as Record<PieceType, Texture>;
+
+  for (const type of PIECES) {
+    const color = PIECE_COLORS[type];
+
+    const c1 = makeCanvas(size);
+    const ctx1 = c1.getContext("2d")!;
+    ctx1.imageSmoothingEnabled = true;
+    drawCell(ctx1, 0, 0, size, type);
+    const t1 = Texture.from(c1);
+    t1.source.scaleMode = "linear";
+    solid[type] = t1;
+
+    const c2 = makeCanvas(size);
+    const ctx2 = c2.getContext("2d")!;
+    ctx2.imageSmoothingEnabled = true;
+    drawGhostCell(ctx2, 0, 0, size, color);
+    const t2 = Texture.from(c2);
+    t2.source.scaleMode = "linear";
+    ghost[type] = t2;
+  }
+
+  return { solid, ghost };
 }
