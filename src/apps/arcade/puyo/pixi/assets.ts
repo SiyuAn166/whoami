@@ -104,11 +104,6 @@ export function puyoFrame(color: Color, mask: number): string {
   return `${COLOR_KEYS[color]}_${mask}.png`;
 }
 
-/** Ghost / landing-shadow frame for a colour. */
-export function shadowFrame(color: Color): string {
-  return `shadow_${COLOR_KEYS[color]}.png`;
-}
-
 /** Burst frame (0 or 1) used during the pop animation. */
 export function burstFrame(color: Color, i: 0 | 1): string {
   return `${COLOR_KEYS[color]}_burst_${i}.png`;

@@ -50,9 +50,6 @@ export const CELL_H = 60;
 export const SCALE_X = CELL_W / FRAME_W; // 1
 export const SCALE_Y = CELL_H / FRAME_H; // 1
 
-export const BOARD_W = COLS * CELL_W; // 384
-export const BOARD_H = VISIBLE_ROWS * CELL_H; // 720
-
 // ---- Field frame layout (layout.png, from puyosim-gg frame.ts) ------------
 // Border sprite positions are relative to the frame container origin.
 export const FRAME = {

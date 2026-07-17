@@ -521,6 +521,8 @@ export function usePuyoGame(initialMode: Mode = "play") {
       stage.setGhostEnabled(initialMode === "play");
       if (cancelled) return;
       stage.onTick(tick);
+      stage.bindControls(toggleMode, restart);
+      stage.setMode(gs.current!.mode);
       stage.puyo.syncStatic(gs.current!.grid);
       stage.setScore(0);
       spawnNext();
@@ -564,6 +566,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     if (!g) return;
     g.mode = g.mode === "play" ? "practice" : "play";
     stageRef.current?.setGhostEnabled(g.mode === "play");
+    stageRef.current?.setMode(g.mode);
     // Reset fall/lock accumulators so the switch takes effect cleanly.
     g.gravAccum = 0;
     g.lockAccum = 0;
@@ -614,6 +617,12 @@ export function usePuyoGame(initialMode: Mode = "play") {
     }
   }, []);
 
+  // Screen-space hit-test for the in-canvas control buttons, so Game.tsx can
+  // skip starting a board touch-gesture when a tap lands on them.
+  const hitControls = useCallback((x: number, y: number): boolean => {
+    return stageRef.current?.hitControls(x, y) ?? false;
+  }, []);
+
   const restart = useCallback(() => {
     const g = gs.current;
     if (!g) return;
@@ -648,5 +657,6 @@ export function usePuyoGame(initialMode: Mode = "play") {
     touchMove,
     touchRotate,
     touchStepDown,
+    hitControls,
   };
 }

@@ -4,17 +4,7 @@
 // best-chain stat and a controls legend that swaps for touch devices.
 import type { Mode } from "../lib/types";
 
-export function Hud({
-  maxChain,
-  mode,
-  onRestart,
-  onToggleMode,
-}: {
-  maxChain: number;
-  mode: Mode;
-  onRestart?: () => void;
-  onToggleMode?: () => void;
-}) {
+export function Hud({ maxChain, mode }: { maxChain: number; mode: Mode }) {
   const playing = mode === "play";
   return (
     <aside className="puyo-hud">
@@ -23,42 +13,6 @@ export function Hud({
         <span className="puyo-best-value">
           {maxChain > 0 ? `\u00d7${maxChain}` : "\u2013"}
         </span>
-      </div>
-
-      <div className="puyo-hud-top">
-        <div className="puyo-ctrl">
-          <button
-            role="switch"
-            aria-checked={playing}
-            className={`puyo-switch ${mode}`}
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onToggleMode?.();
-            }}
-            aria-label={playing ? "Switch to practice" : "Switch to play"}
-            title={playing ? "Tap for practice" : "Tap to play"}
-          >
-            <span className="puyo-switch-thumb" aria-hidden="true" />
-          </button>
-          <span className="puyo-ctrl-label">
-            {playing ? "Play" : "Practice"}
-          </span>
-        </div>
-
-        <div className="puyo-ctrl">
-          <button
-            className="puyo-icon-btn"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onRestart?.();
-            }}
-            aria-label="Restart"
-            title="Restart"
-          >
-            <span className="puyo-icon-restart" aria-hidden="true" />
-          </button>
-          <span className="puyo-ctrl-label">Restart</span>
-        </div>
       </div>
 
       <div className="puyo-legend keyboard">

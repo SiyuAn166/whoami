@@ -11,10 +11,11 @@ import {
   STAGE,
   garbageToIcons,
 } from "../lib/config";
-import type { Color, Grid, Piece } from "../lib/types";
+import type { Color, Grid, Mode, Piece } from "../lib/types";
 import { ActiveLayer } from "./activeLayer";
 import { frame, hasLayout, layoutFrame, loadAssets } from "./assets";
 import { ChainCounter } from "./chainCounter";
+import { ControlPanel } from "./controls";
 import { cellX, cellY } from "./coords";
 import { FieldFrame } from "./fieldFrame";
 import { FxLayer } from "./fxLayer";
@@ -33,6 +34,7 @@ export class PuyoStage {
   private nextWindow!: NextWindow;
   private chainCounter!: ChainCounter;
   private scoreDisplay!: ScoreDisplay;
+  private controls!: ControlPanel;
   private tickCb: ((dt: number) => void) | null = null;
   private destroyed = false;
   private ghostEnabled = true;
@@ -150,8 +152,15 @@ export class PuyoStage {
     this.nextWindow.y = STAGE.next.y;
     frameC.addChild(this.nextWindow);
 
+    // ---- Controls (play/practice toggle + restart), below the next window ---
+    this.controls = new ControlPanel();
+    this.controls.x = STAGE.next.x;
+    this.controls.y = STAGE.next.y + 304 + 24; // next window is 304 tall
+    frameC.addChild(this.controls);
+
     this.app.ticker.add((ticker) => {
       this.fx.update(ticker.deltaTime);
+      this.controls.update(ticker.deltaTime);
       this.chainCounter.update(ticker.deltaTime, ticker.deltaMS);
       if (this.tickCb) this.tickCb(ticker.deltaMS);
     });
@@ -213,6 +222,33 @@ export class PuyoStage {
 
   hideChain(): void {
     this.chainCounter?.hideNow();
+  }
+
+  /** Wire the in-canvas control buttons to the game hook. */
+  bindControls(onToggle: () => void, onRestart: () => void): void {
+    this.controls?.bind(onToggle, onRestart);
+  }
+
+  /** Reflect the current play/practice mode on the toggle. */
+  setMode(mode: Mode): void {
+    this.controls?.setMode(mode);
+  }
+
+  /**
+   * Hit-test a client (screen) point against the control panel, accounting for
+   * the canvas' object-fit: contain letterboxing. Used so touch taps on the
+   * buttons don't also fire a board gesture.
+   */
+  hitControls(clientX: number, clientY: number): boolean {
+    if (!this.controls) return false;
+    const rect = this.app.canvas.getBoundingClientRect();
+    const scale = Math.min(rect.width / STAGE_W, rect.height / STAGE_H);
+    const offX = rect.left + (rect.width - STAGE_W * scale) / 2;
+    const offY = rect.top + (rect.height - STAGE_H * scale) / 2;
+    const sx = (clientX - offX) / scale;
+    const sy = (clientY - offY) / scale;
+    const b = this.controls.getBounds();
+    return sx >= b.minX && sx <= b.maxX && sy >= b.minY && sy <= b.maxY;
   }
 
   destroy(): void {

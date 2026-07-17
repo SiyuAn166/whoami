@@ -11,9 +11,7 @@ import {
   POP_MIN,
   ROWS,
   SPAWN_COL,
-  SPAWN_ROW,
 } from "./config";
-import { ColorBag } from "./rng";
 import type {
   Cell,
   ChainStep,
@@ -32,10 +30,6 @@ export function emptyGrid(): Grid {
 
 export function cloneGrid(g: Grid): Grid {
   return g.map((row) => row.slice() as Cell[]);
-}
-
-export function inBounds(r: number, c: number): boolean {
-  return r >= 0 && r < ROWS && c >= 0 && c < COLS;
 }
 
 // ---- Pair (piece) geometry ------------------------------------------------
@@ -66,16 +60,6 @@ function free(g: Grid, r: number, c: number): boolean {
 function fits(g: Grid, p: Piece): boolean {
   const [a, b] = pieceCells(p);
   return free(g, a.r, a.c) && free(g, b.r, b.c);
-}
-
-export function spawnPiece(bag: ColorBag): Piece {
-  const [axis, sat] = bag.pair();
-  return { r: SPAWN_ROW, c: SPAWN_COL, axis, sat, orient: 0 };
-}
-
-/** True if the freshly spawned piece cannot be placed => top-out. */
-export function isBlocked(g: Grid, p: Piece): boolean {
-  return !fits(g, p);
 }
 
 /**

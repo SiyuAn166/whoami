@@ -2,7 +2,6 @@
 // No mode-select screen: the board mounts straight into play mode, and the HUD
 // carries a play/pause button that toggles gravity (play <-> practice) live.
 import { useEffect, useRef } from "react";
-import { Hud } from "./components/Hud";
 import { GameOverOverlay, PauseOverlay } from "./components/Overlays";
 import { usePuyoGame } from "./hook/usePuyoGame";
 
@@ -15,10 +14,10 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
     pause,
     resume,
     restart,
-    toggleMode,
     touchMove,
     touchRotate,
     touchStepDown,
+    hitControls,
   } = usePuyoGame("practice");
 
   const stageWrapRef = useRef<HTMLDivElement | null>(null);
@@ -61,6 +60,12 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
 
     const start = (e: TouchEvent) => {
       const t = e.touches[0];
+      // A tap on the in-canvas controls is handled by Pixi; don't let it start
+      // a board gesture (which would otherwise rotate the pair on tap).
+      if (hitControls(t.clientX, t.clientY)) {
+        g.active = false;
+        return;
+      }
       g.active = true;
       g.startX = t.clientX;
       g.startY = t.clientY;
@@ -125,17 +130,11 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
       el.removeEventListener("touchend", end);
       el.removeEventListener("touchcancel", end);
     };
-  }, [touchMove, touchRotate, touchStepDown]);
+  }, [touchMove, touchRotate, touchStepDown, hitControls]);
 
   return (
     <div className="puyo-root">
       <div className="puyo-game">
-        <Hud
-          maxChain={hud.maxChain}
-          mode={hud.mode}
-          onRestart={restart}
-          onToggleMode={toggleMode}
-        />
         <div className="puyo-stage-wrap" ref={stageWrapRef}>
           <div className="puyo-canvas-host" ref={hostRef} />
           {hud.status === "loading" && (
