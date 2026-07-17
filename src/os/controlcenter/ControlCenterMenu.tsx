@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ControlCenterIcon } from "../desktop/menubar/MenuBarIcons";
 import { SpeakerMuteIcon, SpeakerWaveIcon } from "./ControlCenterIcons";
 import { useVolume } from "./useVolume";
+import { useLensFilter } from "./useLensFilter";
 // Side-effect: installs the site-wide WebAudio volume hook once (guarantees
 // it runs even though MenuBar imports this module directly, not the barrel).
 import "./installVolumeHook";
@@ -23,6 +24,11 @@ export function ControlCenterMenu() {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const { volume, setVolume, toggleMute, muted } = useVolume();
+
+  // Build + size the L1 liquid-glass displacement filter for the panel. Runs
+  // once the portal-mounted panel exists (keyed on `open`) so panelRef.current
+  // is non-null; rebuilds on resize. Without this the panel is plain frost.
+  useLensFilter(panelRef, [open]);
 
   // Close on outside pointer-down or Escape while open. The panel lives in a
   // portal, so it is NOT inside rootRef - check both the trigger and the panel.
@@ -60,7 +66,7 @@ export function ControlCenterMenu() {
       {open &&
         createPortal(
           <div
-            className="cc-panel"
+            className="cc-panel cc-panel--lens"
             role="dialog"
             aria-label="Control Center"
             ref={panelRef}
@@ -91,9 +97,14 @@ export function ControlCenterMenu() {
                   style={{ ["--vol" as string]: `${volume}%` }}
                   onChange={(e) => setVolume(Number(e.target.value))}
                 />
-                <span className="cc-icon cc-icon--wave" aria-hidden>
+                <button
+                  type="button"
+                  className="cc-icon-btn cc-icon--wave"
+                  aria-label="Max volume"
+                  onClick={() => setVolume(100)}
+                >
                   <SpeakerWaveIcon />
-                </span>
+                </button>
               </div>
             </section>
           </div>,

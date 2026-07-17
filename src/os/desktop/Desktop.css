@@ -1,43 +1,84 @@
-/*  Desktop backdrop (Sequoia-style abstract wallpaper)  */
+/* ─── Desktop backdrop (colorful grid wallpaper) ─────────────────────
+   Grid lines + diagonal color bands give the desktop real texture so the
+   Control Center liquid-glass lens (#cc-lens) has something to refract, and
+   so the baked-in <DesktopBootstrap/> onboarding sits on a lively surface.
+   Theme-aware; overridden by an inline background-image when the user sets
+   data.meta.wallpaper (see Desktop.tsx / .wallpaper-tint below). */
 .mac-desktop {
   position: relative;
   min-height: 100vh;
-  isolation: isolate;
-  /* establish stacking context for aurora layers */
-  background:
-    radial-gradient(80% 60% at 15% 10%, var(--desktop-a) 0%, transparent 60%),
-    radial-gradient(70% 60% at 85% 20%, var(--desktop-c) 0%, transparent 55%),
-    radial-gradient(90% 70% at 75% 95%, var(--desktop-a) 0%, transparent 60%),
-    radial-gradient(60% 50% at 30% 85%, var(--desktop-c) 0%, transparent 55%),
-    linear-gradient(155deg, var(--desktop-b) 0%, var(--bg) 70%);
+  isolation: isolate; /* establish stacking context for aurora layers */
+
+  background-color: var(--bg);
+  /* layer order (top→bottom): fine grid → coarse grid → diagonal color bands
+     → base gradient. Plain 'normal' compositing (no blend tricks) so the
+     colors and lines are actually visible. */
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-cell)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-cell)
+    ),
+    repeating-linear-gradient(
+      0deg,
+      var(--grid-line-bold) 0 1.5px,
+      transparent 1.5px calc(var(--grid-cell) * 5)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--grid-line-bold) 0 1.5px,
+      transparent 1.5px calc(var(--grid-cell) * 5)
+    ),
+    repeating-linear-gradient(
+      48deg,
+      var(--band-1) 0 100px,
+      var(--band-2) 100px 200px,
+      var(--band-3) 200px 300px,
+      var(--band-4) 300px 400px
+    ),
+    linear-gradient(155deg, var(--desktop-b) 0%, var(--bg) 80%);
   background-attachment: fixed;
 }
 
-/* ---- Aurora glow: two STATIC blurred blob layers, always behind all content ----
-   NOTE (perf): these layers used to run infinite `aurora-drift-*` + `aurora-morph-*`
-   animations. `aurora-morph-*` animated background-position/background-size, which are
-   paint-triggering (not GPU-composited): every frame re-painted a >full-screen layer
-   AND re-ran a 40–50px blur, which in turn forced all 6 backdrop-filter panels
-   (menu bar, dock, widgets) to recompute their blur every frame — pinning the CPU
-   even at idle. The aurora is now static, so at idle nothing repaints.
+/* Wallpaper tokens ---------------------------------------------------- */
+:root[data-theme="dark"] {
+  --grid-cell: 34px;
+  --grid-line: rgba(255, 255, 255, 0.1);
+  --grid-line-bold: rgba(255, 255, 255, 0.16);
+  --band-1: rgba(255, 107, 139, 0.55);
+  --band-2: rgba(255, 199, 110, 0.5);
+  --band-3: rgba(79, 172, 254, 0.55);
+  --band-4: rgba(123, 92, 255, 0.55);
+}
+:root[data-theme="light"] {
+  --grid-cell: 34px;
+  --grid-line: rgba(30, 50, 100, 0.1);
+  --grid-line-bold: rgba(30, 50, 100, 0.16);
+  --band-1: rgba(255, 120, 150, 0.42);
+  --band-2: rgba(255, 205, 120, 0.42);
+  --band-3: rgba(90, 165, 255, 0.42);
+  --band-4: rgba(150, 120, 255, 0.42);
+}
 
-   Want gentle motion back? Re-add ONLY a slow transform drift (transform is
-   GPU-composited), never the background-* morph, e.g.:
-     animation: aurora-drift-a 60s ease-in-out infinite alternate;
-     will-change: transform;
-   (Motion will still keep the backdrop blurs busy while it moves, so keep it slow.)
-*/
+/* ---- Aurora glow: two STATIC blurred blob layers, always behind all content ----
+   NOTE (perf): intentionally static. Do NOT animate background-position/size
+   (paint-triggering + forces every backdrop-filter panel to recompute its blur
+   each frame). For motion, animate ONLY a slow transform drift (GPU-composited).
+   Kept subtle here so the grid/bands stay readable. */
 .mac-desktop::before,
 .mac-desktop::after {
   content: "";
   position: fixed;
   inset: -25%;
-  z-index: -1;
-  /* below menubar / windows / dock / widgets */
+  z-index: -1; /* below menubar / windows / dock / widgets */
   pointer-events: none;
   background-repeat: no-repeat;
   mix-blend-mode: screen;
-  /* additive glow over the dark base */
 }
 .mac-desktop::before {
   background-image:
@@ -52,7 +93,7 @@
     18% 22%,
     78% 30%,
     58% 82%;
-  opacity: 0.5;
+  opacity: 0.3;
   filter: blur(40px) saturate(140%);
   transform: translate3d(-3%, 2%, 0) scale(1.1);
 }
@@ -69,7 +110,7 @@
     80% 68%,
     24% 74%,
     54% 16%;
-  opacity: 0.42;
+  opacity: 0.24;
   filter: blur(50px) saturate(140%);
   transform: translate3d(3%, -2%, 0) scale(1.14);
 }
@@ -80,16 +121,20 @@
   mix-blend-mode: multiply;
 }
 :root[data-theme="light"] .mac-desktop::before {
-  opacity: 0.38;
+  opacity: 0.22;
 }
 :root[data-theme="light"] .mac-desktop::after {
-  opacity: 0.3;
+  opacity: 0.18;
 }
 
-/* If a user photo wallpaper is present, drop the aurora so it stays clean */
+/* If a user photo wallpaper is present, drop the aurora AND the grid so the
+   photo stays clean. */
 .mac-desktop:has(.wallpaper-tint)::before,
 .mac-desktop:has(.wallpaper-tint)::after {
   display: none;
+}
+.mac-desktop:has(.wallpaper-tint) {
+  background-image: none;
 }
 
 /* Dark scrim over a user-supplied wallpaper photo, for window/menu contrast */
