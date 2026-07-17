@@ -71,6 +71,7 @@
   position: relative;
   z-index: 2;
   flex: 1;
+  touch-action: pan-y;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -85,6 +86,12 @@
   --gap: clamp(14px, 4vw, 40px);
   --sel: 0;
   --n: 1;
+  /* dock magnification range, overridden per breakpoint */
+  --scale-min: 0.78;
+  --scale-max: 1.06;
+  --ring-w1: 3px;
+  --ring-w2: 8px;
+  --glow: 46px;
   position: relative;
   display: flex;
   align-items: center;
@@ -96,13 +103,26 @@
      focused cover is always dead-centre — works for any number of games,
      including two. */
   transform: translateX(
-    calc((var(--sel) - (var(--n) - 1) / 2) * (var(--card-w) + var(--gap)) * -1)
+    calc(
+      (var(--sel) - (var(--n) - 1) / 2) * (var(--card-w) + var(--gap)) * -1 +
+        var(--drag, 0px)
+    )
   );
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
   will-change: transform;
 }
+/* while a finger is dragging, follow it 1:1 with no easing; on release the
+   class is removed and the transform transition above snaps to the target */
+.arc-rail.dragging {
+  transition: none;
+}
 .arc-card {
-  --d: 0;
+  /* --p = proximity to centre, 0 (edge) .. 1 (focused); set live from JS.
+     Everything below interpolates on --p, so during a drag the card that is
+     approaching centre grows/brightens while the leaving one shrinks — the
+     macOS-dock magnification feel. At rest --p is 1 for the selected card and
+     0 for the rest, matching the old on/off look. */
+  --p: 0;
   position: relative;
   flex: 0 0 auto;
   width: var(--card-w);
@@ -113,11 +133,29 @@
   overflow: hidden;
   cursor: pointer;
   background: #1b1e26;
+  transform: scale(
+      calc(var(--scale-min) + (var(--scale-max) - var(--scale-min)) * var(--p))
+    )
+    translateY(calc(6px * (1 - var(--p))));
+  opacity: calc(0.5 + 0.5 * var(--p));
+  filter: saturate(calc(0.75 + 0.25 * var(--p)))
+    brightness(calc(0.8 + 0.2 * var(--p)));
+  box-shadow:
+    0 0 0 calc(var(--ring-w1) * var(--p)) rgba(255, 255, 255, var(--p)),
+    0 0 0 calc(var(--ring-w2) * var(--p))
+      color-mix(in srgb, var(--card-accent) calc(var(--p) * 100%), transparent),
+    0 0 calc(var(--glow) * var(--p))
+      color-mix(in srgb, var(--card-accent) calc(var(--p) * 65%), transparent),
+    0 30px 60px rgba(0, 0, 0, 0.6);
   transition:
     transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
     box-shadow 0.28s ease,
     opacity 0.28s ease,
     filter 0.28s ease;
+}
+/* while dragging, cards track the finger 1:1 — no easing lag on the magnify */
+.arc-rail.dragging .arc-card {
+  transition: none;
 }
 .arc-cover {
   width: 100%;
@@ -134,20 +172,6 @@
     rgba(255, 255, 255, 0) 42%
   );
   pointer-events: none;
-}
-.arc-card.off {
-  transform: scale(0.78) translateY(6px);
-  opacity: 0.5;
-  filter: saturate(0.75) brightness(0.8);
-}
-.arc-card.on {
-  transform: scale(1.06);
-  opacity: 1;
-  box-shadow:
-    0 0 0 3px #fff,
-    0 0 0 8px var(--card-accent),
-    0 0 46px color-mix(in srgb, var(--card-accent) 65%, transparent),
-    0 30px 60px rgba(0, 0, 0, 0.6);
 }
 
 /* ---------- marquee ---------- */
@@ -250,17 +274,12 @@
 
 @media (max-width: 640px) {
   /* neighbours peek less so the focused cover dominates the small screen */
-  .arc-card.off {
-    transform: scale(0.7) translateY(4px);
-    opacity: 0.42;
-  }
-  .arc-card.on {
-    transform: scale(1.02);
-    box-shadow:
-      0 0 0 2px #fff,
-      0 0 0 5px var(--card-accent),
-      0 0 30px color-mix(in srgb, var(--card-accent) 60%, transparent),
-      0 18px 36px rgba(0, 0, 0, 0.6);
+  .arc-rail {
+    --scale-min: 0.7;
+    --scale-max: 1.02;
+    --ring-w1: 2px;
+    --ring-w2: 5px;
+    --glow: 30px;
   }
   .arc-ambient {
     width: 720px;
