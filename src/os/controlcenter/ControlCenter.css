@@ -208,34 +208,57 @@
   outline: none;
 }
 
-/* ── liquid-glass lens ──────────────────────────────
-   The base .cc-panel above only frosts (blur) the desktop — it never bends it.
-   This override swaps the backdrop-filter to the runtime SVG displacement
-   filter (#cc-lens, built by useLensFilter) so the desktop behind the panel is
-   refracted/magnified at the rim = the real L1 lens. Blur is kept low on
-   purpose: a heavy blur destroys the detail the lens needs to bend, which is
-   exactly why the old blur(40px) looked like plain frosted glass.
-   Chromium/Edge render this; Firefox ignores url() backdrops and falls back. */
+/* ── liquid-glass lens (macOS "Liquid Glass") ──────────────────────
+   The base .cc-panel above only frosts (blur) the desktop. This override
+   swaps the backdrop-filter to the runtime SVG SDF displacement filter
+   (#cc-lens, built by useLensFilter) so the desktop is refracted in a narrow
+   band along the panel's rounded edge — even on all four sides + corners,
+   flat through the middle. Chromium/Edge render this; Firefox falls back. */
 .cc-panel--lens {
-  /* No blur, no brightness — matches the working test harness exactly. A blur
-     here would soften away the very detail the lens needs to bend. */
-  -webkit-backdrop-filter: url(#cc-lens) saturate(160%) blur(3px);
-  backdrop-filter: url(#cc-lens) saturate(160%) blur(3px);
-  /* Nearly clear white film — the refracted desktop reads straight through.
-     Overrides the base .cc-panel menubar tint that caused the color clash. */
-  background: rgba(255, 255, 255, 0.05);
+  /* light frost + saturate ONLY — a heavy blur destroys the detail the lens
+     needs to bend. Matches the approved preview (scale 60 / band 20 / chroma 1). */
+  -webkit-backdrop-filter: url(#cc-lens) blur(2px) saturate(150%);
+  backdrop-filter: url(#cc-lens) blur(2px) saturate(150%);
+
+  /* faint top-lit glass film — the refracted desktop reads straight through. */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.04)
+  );
+
+  /* no hard border — the inset 1px hairline below is the glass edge, which
+     avoids the bright white halo the old solid border produced. */
+  border: none;
+
+  /* glass body: drop shadow + top edge highlight + soft bottom inner glow +
+     1px inner hairline. This is what gives the pane real thickness. */
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 -8px 20px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.13);
+
+  /* isolate so the ::after sheen (z-index:-1) sits above the backdrop but
+     below the panel's content. */
+  isolation: isolate;
 }
 
-/* Convex rim glow — the inner highlight that sells the glass edge. */
+/* Diagonal specular sheen sweeping off the top-left — the glass reflection. */
 .cc-panel--lens::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow:
-    inset 0 0 14px rgba(255, 255, 255, 0.35),
-    inset 0 -2px 6px rgba(255, 255, 255, 0.18);
+  z-index: -1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0.06) 30%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
 }
 
 /* Firefox (no url() backdrop support): keep a usable frosted panel. */
@@ -244,6 +267,8 @@
     -webkit-backdrop-filter: saturate(180%) blur(40px);
     backdrop-filter: saturate(180%) blur(40px);
     background: color-mix(in srgb, var(--menubar) 38%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border-hi) 45%, transparent);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   }
 
   .cc-panel--lens::after {
