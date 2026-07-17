@@ -91,7 +91,8 @@ export function useTetrisGame(
       combo: g.combo,
       status: g.status,
     });
-  }, []);
+    stageRef.current?.setStats(g.score, g.level, g.lines);
+  }, [stageRef]);
 
   const sound = useCallback(
     (name: Parameters<SoundBank["play"]>[0]) => {
@@ -542,5 +543,13 @@ export function useTetrisGame(
     togglePause,
   ]);
 
-  return { hud, reset, togglePause };
+  return {
+    hud,
+    reset,
+    togglePause,
+    tryMove,
+    tryRotate,
+    softDrop,
+    hardDrop,
+  };
 }

@@ -17,105 +17,6 @@
   user-select: none;
 }
 
-.tetris-hud {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  width: 150px;
-  flex: 0 0 auto;
-  align-self: center;
-}
-
-.tetris-stats {
-  display: flex;
-  flex-direction: column;
-  background: rgba(17, 21, 42, 0.6);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 4px 14px;
-}
-
-.tetris-stats .stat {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  line-height: 1.15;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(74, 84, 136, 0.35);
-}
-
-.tetris-stats .stat:last-child {
-  border-bottom: none;
-}
-
-.tetris-stats .stat span {
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-.tetris-stats .stat b {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---- Actions block (mirrors puyo) ---- */
-.tetris-hud-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tetris-actions {
-  background: rgba(17, 21, 42, 0.6);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-
-.tetris-hud-label {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.tetris-action-row {
-  display: flex;
-  gap: 8px;
-}
-
-.tetris-icon-btn {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: rgba(17, 21, 42, 0.6);
-  color: #fff;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.tetris-icon-btn:hover {
-  background: rgba(31, 38, 74, 0.85);
-  border-color: #6b78b8;
-}
-
-.tetris-icon-restart {
-  font-size: 20px;
-  line-height: 1;
-}
-
 .tetris-stage-wrap {
   position: relative;
   flex: 1 1 auto;
@@ -140,6 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none;
 }
 
 /* object-fit: contain stays as a safety net on the short axis (e.g. tall,
@@ -286,33 +188,4 @@
   border-color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
-}
-
-.tetris-help {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  background: rgba(17, 21, 42, 0.6);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 14px;
-  text-align: left;
-}
-
-.tetris-help .help-label {
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: var(--muted);
-  margin-bottom: 2px;
-}
-
-.tetris-help .help-row {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.4;
-}
-
-.tetris-help .help-row b {
-  color: var(--text);
-  font-weight: 700;
 }
