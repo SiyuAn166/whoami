@@ -160,10 +160,20 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const g = gs.current!;
     if (!g.piece) return;
     const placed = pieceCells(g.piece);
-    // Practice mode never tops out, so a pair resting partly out of the board
-    // (any cell in a hidden row) must NOT be placed — the player has to move it
-    // to a column with room. Play mode places it and tops out on next spawn.
-    if (g.mode === "practice" && placed.some((c) => c.r < HIDDEN_ROWS)) {
+    // Hidden overflow rows (r in [HIDDEN_ROWS-2, HIDDEN_ROWS)) are placeable:
+    // puyos may rest off-screen there like the real game — they never pop
+    // (clearing is board-only, rows >= HIDDEN_ROWS). Refuse to lock a pair only
+    // when a cell sticks out ABOVE those rows (r < HIDDEN_ROWS-2, off the top of
+    // the grid) OR overlaps an already-occupied cell. The overlap check matters
+    // because practice never tops out: once a column fills into the hidden rows
+    // the next pair spawns onto an occupied cell and would re-lock on the same
+    // spot every frame (placeCell then silently drops it) -> "double placement".
+    if (
+      g.mode === "practice" &&
+      placed.some(
+        (c) => c.r < HIDDEN_ROWS - 2 || (c.r >= 0 && g.grid[c.r][c.c] !== 0),
+      )
+    ) {
       return;
     }
     sfx.placed();

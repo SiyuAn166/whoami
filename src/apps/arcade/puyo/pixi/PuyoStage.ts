@@ -4,6 +4,7 @@
 // Framework-free: the React hook drives it via the public methods below.
 import { Application, Container, Graphics, Sprite } from "pixi.js";
 import {
+  CELL_H,
   FRAME,
   HIDDEN_ROWS,
   SPAWN_COL,
@@ -80,12 +81,15 @@ export class PuyoStage {
     const fieldContent = new Container();
     fieldContent.x = FRAME.fieldX;
     fieldContent.y = FRAME.fieldY;
+    // Extend the clip upward by the hidden overflow rows so locked puyos that
+    // rest off-screen (rows < HIDDEN_ROWS) are drawn instead of masked away.
+    const overflowH = HIDDEN_ROWS * CELL_H;
     const mask = new Graphics()
       .rect(
         FRAME.clip.x - FRAME.fieldX,
-        FRAME.clip.y - FRAME.fieldY,
+        FRAME.clip.y - FRAME.fieldY - overflowH,
         FRAME.clip.w,
-        FRAME.clip.h,
+        FRAME.clip.h + overflowH,
       )
       .fill(0xffffff);
     fieldContent.addChild(mask);

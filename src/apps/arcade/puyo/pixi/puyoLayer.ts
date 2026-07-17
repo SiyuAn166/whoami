@@ -3,7 +3,6 @@ import { Container, Sprite } from "pixi.js";
 import {
   COLOR_KEYS,
   COLS,
-  HIDDEN_ROWS,
   ROWS,
   SCALE_X,
   SCALE_Y,
@@ -64,9 +63,12 @@ export class PuyoLayer extends Container {
         s.y = cellY(r);
         s.alpha = 1;
         s.scale.set(SCALE_X, SCALE_Y);
-        if (color === 0 || r < HIDDEN_ROWS) {
-          s.visible = color !== 0 && r >= HIDDEN_ROWS;
-          if (!s.visible) continue;
+        // Draw every non-empty cell, including the hidden overflow rows
+        // (r < HIDDEN_ROWS), so off-screen placed puyos are visible. They still
+        // never pop; connectionMask returns 0 for them (drawn unconnected).
+        if (color === 0) {
+          s.visible = false;
+          continue;
         }
         s.visible = true;
         const mask = connectionMask(g, r, c);

@@ -24,19 +24,19 @@ export interface GameDef {
 
 export const GAMES: GameDef[] = [
   {
-    id: "tetris",
-    name: "TETRIS",
-    tagline: "Drop, line up, clear the stack.",
-    accent: "#45d3ff",
-    cover: tetrisCover,
-    Game: TetrisGame,
-  },
-  {
     id: "puyo",
     name: "PUYO",
     tagline: "Match four, chain the pop.",
     accent: "#ff5cc8",
     cover: puyoCover,
     Game: PuyoGame,
+  },
+  {
+    id: "tetris",
+    name: "TETRIS",
+    tagline: "Drop, line up, clear the stack.",
+    accent: "#45d3ff",
+    cover: tetrisCover,
+    Game: TetrisGame,
   },
 ];
