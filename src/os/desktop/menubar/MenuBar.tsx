@@ -1,12 +1,8 @@
-import "./MenuBar.css";
+import { ControlCenterMenu } from "../../controlcenter/ControlCenterMenu";
 import { MenuClock } from "./MenuBarClock";
-import {
-  AppleIcon,
-  BatteryIcon,
-  ControlCenterIcon,
-  SearchIcon,
-  WifiIcon,
-} from "./MenuBarIcons";
+import { AppleIcon, BatteryIcon, SearchIcon, WifiIcon } from "./MenuBarIcons";
+
+import "./MenuBar.css";
 
 interface MenuBarProps {
   appName: string;
@@ -50,9 +46,7 @@ export function MenuBar({
         <span className="menu-item" aria-hidden>
           <SearchIcon />
         </span>
-        <span className="menu-item" aria-hidden>
-          <ControlCenterIcon />
-        </span>
+        <ControlCenterMenu />
         <span className="menu-item" aria-hidden>
           <MenuClock />
         </span>

@@ -1,0 +1,203 @@
+/* ─── Control Center (menu bar) ──────────────────────────
+   A translucent macOS-style frosted panel anchored under the
+   menu-bar Control Center icon. A single glass surface — the
+   blur behind it does the work, so backgrounds stay minimal. */
+
+.cc-root {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Trigger matches the other .menu-item glyphs but is a real button. */
+.cc-trigger {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cc-trigger:focus,
+.cc-trigger:focus-visible {
+  outline: none;
+}
+
+.cc-trigger--active {
+  background: var(--fg-faint);
+}
+
+/* ── Panel ──
+   Translucent so the heavy blur/saturate actually reads as glass.
+   color-mix keeps the theme tint while letting the backdrop through. */
+.cc-panel {
+  /* Fixed + portaled to <body> so the menu bar's own backdrop-filter is not
+     this panel's backdrop root — that is what lets the glass frost the desktop
+     instead of a flat menu-bar fill. Anchored under the top-right menu area. */
+  position: fixed;
+  top: calc(var(--menubar-h, 28px) + 8px);
+  right: 10px;
+  z-index: 3000;
+  width: 320px;
+  max-width: calc(100vw - 20px);
+  padding: 14px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--menubar) 38%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-hi) 45%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(40px);
+  backdrop-filter: saturate(180%) blur(40px);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 20%, transparent);
+  color: var(--fg);
+  transform-origin: top right;
+  animation: cc-pop 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes cc-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Module ──
+   No background, no border — it lives directly on the single glass
+   surface. Just spacing to seat the sound row inside the panel. */
+.cc-module {
+  padding: 2px;
+}
+
+.cc-sound-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cc-sound-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.cc-chevron {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--fg-dim);
+}
+
+/* ── Slider row ── */
+.cc-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cc-icon,
+.cc-icon-btn {
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.cc-icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.12s;
+}
+
+.cc-icon-btn:focus,
+.cc-icon-btn:focus-visible {
+  outline: none;
+}
+
+.cc-icon-btn:hover {
+  opacity: 0.7;
+}
+
+/* ── The volume slider ── */
+.cc-slider {
+  --vol: 50%;
+  flex: 1 1 auto;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* WebKit track — translucent unfilled portion so it sits on glass */
+.cc-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--fg) 0,
+    var(--fg) var(--vol),
+    color-mix(in srgb, var(--fg) 22%, transparent) var(--vol),
+    color-mix(in srgb, var(--fg) 22%, transparent) 100%
+  );
+}
+
+/* Firefox track + progress */
+.cc-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 22%, transparent);
+}
+.cc-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fg);
+}
+
+/* Thumb — large white knob with a soft shadow (macOS) */
+.cc-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: #fff;
+  border: 0.5px solid rgba(0, 0, 0, 0.16);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s;
+}
+.cc-slider::-webkit-slider-thumb:active {
+  transform: scale(1.08);
+}
+.cc-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 0.5px solid rgba(0, 0, 0, 0.16);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cc-slider:focus,
+.cc-slider:focus-visible {
+  outline: none;
+}
+.cc-slider:focus-visible::-webkit-slider-runnable-track,
+.cc-slider:focus::-webkit-slider-runnable-track {
+  outline: none;
+}
+.cc-slider:focus::-moz-range-track,
+.cc-slider:focus-visible::-moz-range-track {
+  outline: none;
+}
