@@ -10,11 +10,24 @@ import {
 
 interface MenuBarProps {
   appName: string;
+  /** In fullscreen the bar is hidden; it slides back on top-edge hover. */
+  hidden?: boolean;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
-export function MenuBar({ appName }: MenuBarProps) {
+export function MenuBar({
+  appName,
+  hidden,
+  onPointerEnter,
+  onPointerLeave,
+}: MenuBarProps) {
   return (
-    <div className="menu-bar">
+    <div
+      className={`menu-bar${hidden ? " menu-bar--hidden" : ""}`}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+    >
       <div className="flex items-center gap-0.5">
         <span className="menu-item menu-item--apple" aria-hidden>
           <AppleIcon />

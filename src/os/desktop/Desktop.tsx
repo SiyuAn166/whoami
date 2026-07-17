@@ -9,8 +9,8 @@ import { useWindowManager } from "../window/WindowManager";
 import { DesktopClickMenu } from "./clickmenu/DesktopClickMenu";
 import { Dock } from "./dock/Dock";
 import { MenuBar } from "./menubar/MenuBar";
-
 import "./Desktop.css";
+
 /** The main view of the site: menu bar, desktop icons, windows, and dock.
  */
 export function Desktop() {
@@ -44,6 +44,7 @@ export function Desktop() {
       </div>
     );
   }
+
   return (
     <DesktopReady
       data={data}
@@ -53,12 +54,14 @@ export function Desktop() {
     />
   );
 }
+
 interface DesktopReadyProps {
   data: NonNullable<ReturnType<typeof usePortfolioData>["data"]>;
   theme: "dark" | "light";
   toggleTheme: () => void;
   setTheme: (t: "dark" | "light") => void;
 }
+
 /** Rendered only once `data` is guaranteed non-null, so the window manager gets a real context.
  */
 function DesktopReady({
@@ -73,10 +76,15 @@ function DesktopReady({
   );
   // Which widget (if any) is currently being placed on the desktop.
   const [placingId, setPlacingId] = useState<string | null>(null);
+  // When a window is fullscreen, the menu bar auto-hides and slides back down
+  // only while the cursor is at the very top edge (macOS behavior).
+  const [menuRevealed, setMenuRevealed] = useState(false);
   const widgetCtx = { data, theme, setTheme, openApp: wm.openApp };
   const focusedApp = wm.instances.find((w) => w.id === wm.focusedId);
   const menuBarAppName =
     (focusedApp && getApp(focusedApp.appId)?.name) ?? "Finder";
+  const hasFullscreen = wm.instances.some((w) => w.state === "fullscreen");
+
   return (
     <DesktopClickMenu
       className="mac-desktop"
@@ -96,7 +104,20 @@ function DesktopReady({
       onToggleTheme={toggleTheme}
     >
       {data.meta.wallpaper && <div className="wallpaper-tint" aria-hidden />}
-      <MenuBar appName={menuBarAppName} />
+      {/* Thin hotspot at the top edge that reveals the menu bar in fullscreen. */}
+      {hasFullscreen && (
+        <div
+          className="menu-reveal-zone"
+          onPointerEnter={() => setMenuRevealed(true)}
+          aria-hidden
+        />
+      )}
+      <MenuBar
+        appName={menuBarAppName}
+        hidden={hasFullscreen && !menuRevealed}
+        onPointerEnter={() => setMenuRevealed(true)}
+        onPointerLeave={() => setMenuRevealed(false)}
+      />
       {/* {<DesktopIcons openApp={wm.openApp} />} */}
       <WidgetLayer
         data={data}
@@ -111,8 +132,11 @@ function DesktopReady({
         }}
         onCancelPlacing={() => setPlacingId(null)}
       />
-      {wm.render()}
-      <Dock isOpen={wm.isOpen} openApp={wm.openApp} />
+      {wm.render({
+        chromeRevealed: menuRevealed,
+        onRevealChange: setMenuRevealed,
+      })}
+      <Dock hidden={hasFullscreen} isOpen={wm.isOpen} openApp={wm.openApp} />
     </DesktopClickMenu>
   );
 }

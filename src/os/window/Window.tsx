@@ -4,6 +4,7 @@ import {
   clampRect,
   COARSE,
   DOCK_H,
+  fullscreenRect,
   HANDLES,
   maxedRect,
   MENUBAR_H,
@@ -23,11 +24,22 @@ interface WindowProps {
   onClose: () => void;
   onMinimize: () => void;
   onToggleMax: () => void;
+  /** Titlebar double-click: maximize (fill between menu bar and dock),
+   * without hiding the desktop chrome. */
+  onToggleMaximize: () => void;
   onRectChange: (rect: Rect) => void;
+  /** True when the desktop chrome (menu bar) is revealed; in fullscreen
+   * this slides the auto-hidden titlebar back down. */
+  chromeRevealed?: boolean;
+  /** Called on fullscreen titlebar hover so the shared reveal stays open
+   * while the cursor is on the titlebar. */
+  onRevealChange?: (revealed: boolean) => void;
   /** Rendered in the titlebar, next to the traffic lights (e.g. a Finder-style
-   * navigation toolbar). Optional — when present it replaces the centered title. */
+   * navigation toolbar). Optional — when present it replaces the centered title.
+   */
   toolbar?: ReactNode;
-  /** Rendered below the content area, inside the window (e.g. a status bar). Optional. */
+  /** Rendered below the content area, inside the window (e.g. a status bar). Optional.
+   */
   footer?: ReactNode;
   children: ReactNode;
 }
@@ -45,7 +57,10 @@ export function Window({
   onClose,
   onMinimize,
   onToggleMax,
+  onToggleMaximize,
   onRectChange,
+  chromeRevealed,
+  onRevealChange,
   toolbar,
   footer,
   children,
@@ -53,8 +68,12 @@ export function Window({
   const [interacting, setInteracting] = useState(false);
   const { state, rect, minSize, resizable = true } = instance;
   const maximized = state === "maximized";
-  const visible = state === "normal" || state === "maximized";
-  const geo = maximized ? maxedRect() : rect;
+  const fullscreen = state === "fullscreen";
+  // Both maximized and fullscreen pin the window — no drag/resize.
+  const locked = maximized || fullscreen;
+  const visible =
+    state === "normal" || state === "maximized" || state === "fullscreen";
+  const geo = fullscreen ? fullscreenRect() : maximized ? maxedRect() : rect;
 
   // Keep the window within the viewport when the browser is resized.
   useEffect(() => {
@@ -66,7 +85,7 @@ export function Window({
 
   // Drag the window by its title bar.
   const onTitlePointerDown = (e: React.PointerEvent) => {
-    if (maximized || COARSE) return;
+    if (locked || COARSE) return;
     // Never start a drag from an interactive control in the titlebar
     // (traffic lights, toolbar buttons, etc).
     if (
@@ -104,7 +123,7 @@ export function Window({
 
   // Resize the window from an edge/corner handle.
   const startResize = (dir: string) => (e: React.PointerEvent) => {
-    if (maximized || COARSE) return;
+    if (locked || COARSE) return;
     e.stopPropagation();
     e.preventDefault();
     onFocus();
@@ -152,7 +171,11 @@ export function Window({
 
   return (
     <div
-      className={`mac-window${maximized ? " is-maximized" : ""}${state === "minimized" ? " is-minimized" : ""}${state === "closed" ? " is-closed" : ""}`}
+      className={`mac-window${maximized ? " is-maximized" : ""}${
+        fullscreen ? " is-fullscreen" : ""
+      }${fullscreen && chromeRevealed ? " chrome-revealed" : ""}${
+        state === "minimized" ? " is-minimized" : ""
+      }${state === "closed" ? " is-closed" : ""}`}
       inert={!visible}
       aria-hidden={!visible}
       onPointerDownCapture={onFocus}
@@ -177,8 +200,20 @@ export function Window({
       <div
         className="titlebar"
         onPointerDown={onTitlePointerDown}
-        onDoubleClick={onToggleMax}
-        style={{ cursor: maximized || COARSE ? "default" : "grab" }}
+        onDoubleClick={(e) => {
+          // A button is a button — never let a double-click on the traffic
+          // lights or any titlebar control trigger maximize/fullscreen.
+          if (
+            (e.target as HTMLElement).closest(
+              ".traffic-lights, button, a, input, select, textarea",
+            )
+          )
+            return;
+          onToggleMaximize();
+        }}
+        onPointerEnter={() => fullscreen && onRevealChange?.(true)}
+        onPointerLeave={() => fullscreen && onRevealChange?.(false)}
+        style={{ cursor: locked || COARSE ? "default" : "grab" }}
       >
         <div className="traffic-lights">
           <button
@@ -200,10 +235,10 @@ export function Window({
           <button
             className="traffic-light tl-max"
             onClick={onToggleMax}
-            aria-label="Zoom window"
-            title="Zoom"
+            aria-label={fullscreen ? "Exit full screen" : "Enter full screen"}
+            title={fullscreen ? "Exit Full Screen" : "Full Screen"}
           >
-            <ZoomIcon maximized={maximized} />
+            <ZoomIcon maximized={locked} />
           </button>
         </div>
         {toolbar}

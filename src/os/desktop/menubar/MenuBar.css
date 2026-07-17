@@ -1,9 +1,16 @@
-/* ─── macOS menu bar ─────────────────────────────── */
+/* Single source of truth for menu-bar height; the fullscreen titlebar
+   reveal offset (Window.css) reads the same value so they can never drift. */
+:root {
+  --menubar-h: 28px;
+}
+
+/* ─── macOS menu bar ─────────────────────────────────── */
 .menu-bar {
   position: fixed;
   inset: 0 0 auto 0;
-  height: 28px;
-  z-index: 100;
+  height: var(--menubar-h);
+  box-sizing: border-box;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -15,6 +22,22 @@
   backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--border);
   user-select: none;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Fullscreen: slide the bar up out of view; it returns on top-edge hover. */
+.menu-bar--hidden {
+  transform: translateY(-100%);
+}
+
+/* Invisible hotspot along the very top edge that reveals the hidden bar. */
+.menu-reveal-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 999;
 }
 
 .menu-bar .menu-item {

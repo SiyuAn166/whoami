@@ -1,4 +1,4 @@
-/* ─── macOS window ───────────────────────────────── */
+/* ─── macOS window ─────────────────────────────────────────────── */
 .mac-window {
   position: relative;
   z-index: 1;
@@ -17,6 +17,36 @@
 
 .mac-window.is-maximized {
   border-radius: 10px;
+}
+
+/* fullscreen → edge-to-edge, no rounded corners or border */
+.mac-window.is-fullscreen {
+  border-radius: 0;
+  border-color: transparent;
+}
+
+/* fullscreen → titlebar auto-hides (macOS Sequoia). It becomes an overlay
+   pinned to the top of the window and slides up out of view; the body fills
+   the whole window. It slides back down (to just below the revealed menu bar)
+   only while the desktop chrome is revealed. */
+.mac-window.is-fullscreen .titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  transform: translateY(-100%);
+  background: var(--titlebar);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Reveal flush under the menu bar. We tuck 2px UP into the bar (which has a
+   higher z-index, so it cleanly covers the overlap) instead of butting at
+   exactly --menubar-h — this kills any hairline/sub-pixel gap regardless of
+   border width or box-sizing. */
+.mac-window.is-fullscreen.chrome-revealed .titlebar {
+  transform: translateY(calc(var(--menubar-h, 28px) - 2px));
 }
 
 /* minimize → genie down toward the dock */

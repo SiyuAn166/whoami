@@ -1,6 +1,7 @@
-/* ─── Dock (shown when the window is minimized / closed) ─────────────── */
+/* ─── Dock (shown when the window is minimized / closed) ────────────── */
 /* Frosted glass: tinted base + top sheen over a strong saturated blur,
-   plus a highlight edge + elevation shadow so it reads as a glass panel. */
+   plus a highlight edge + elevation shadow so it reads as a glass panel.
+*/
 .dock {
   position: fixed;
   left: 50%;
@@ -26,6 +27,16 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.24),
     inset 0 -1px 0 rgba(0, 0, 0, 0.18);
   animation: fadeIn 0.25s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.25s ease;
+}
+
+/* Fullscreen: slide the dock down off-screen. */
+.dock--hidden {
+  transform: translateX(-50%) translateY(160%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 :root[data-theme="light"] .dock {
@@ -106,9 +117,4 @@
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0) scale(1);
-}
-
-.dock-icon:focus,
-.dock-icon:focus-visible {
-  outline: none;
 }
