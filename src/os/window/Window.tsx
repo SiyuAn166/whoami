@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { CloseIcon, MinimizeIcon, ZoomIcon } from "./Icons";
 import {
   clamp,
   clampRect,
@@ -14,8 +15,8 @@ import {
   type Rect,
   type WindowInstance,
 } from "./types";
-import "./Window.css";
-import { CloseIcon, MinimizeIcon, ZoomIcon } from "./WindowIcons";
+
+import "./style.css";
 
 interface WindowProps {
   instance: WindowInstance;
@@ -238,7 +239,7 @@ export function Window({
             aria-label={fullscreen ? "Exit full screen" : "Enter full screen"}
             title={fullscreen ? "Exit Full Screen" : "Full Screen"}
           >
-            <ZoomIcon maximized={locked} />
+            <ZoomIcon fullscreen={fullscreen} />
           </button>
         </div>
         {toolbar}

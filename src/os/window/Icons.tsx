@@ -27,10 +27,10 @@ export function MinimizeIcon({ size = 8 }) {
 }
 
 /** Zoom icon — the two diagonal corner arrows shown inside the green traffic light on hover */
-export function ZoomIcon({ size = 8, maximized = false }) {
+export function ZoomIcon({ size = 8, fullscreen = false }) {
   return (
     <svg width={size} height={size} viewBox="0 0 10 10" fill="none" aria-hidden>
-      {maximized ? (
+      {fullscreen ? (
         <>
           <polygon points="0,5 5,0 5,5" fill="currentColor" />
           <polygon points="10,5 5,10 5,5" fill="currentColor" />

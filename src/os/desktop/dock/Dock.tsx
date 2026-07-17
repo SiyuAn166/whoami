@@ -11,8 +11,7 @@ interface DockProps {
 }
 
 /** Always-visible dock listing every registered app. Clicking an icon opens
- * the app at "full size" (filling the space between the menu bar and dock).
- */
+ * the app at its default centered size (not maximized). */
 export function Dock({ isOpen, openApp, hidden }: DockProps) {
   return (
     <div className={`dock${hidden ? " dock--hidden" : ""}`}>
@@ -23,7 +22,7 @@ export function Dock({ isOpen, openApp, hidden }: DockProps) {
           label={app.name}
           icon={app.icon}
           running={isOpen(app.id)}
-          onOpen={() => openApp(app.id, { maximized: true })}
+          onOpen={() => openApp(app.id)}
         />
       ))}
     </div>

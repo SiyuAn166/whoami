@@ -75,6 +75,21 @@ function DesktopReady({
   );
   // Which widget (if any) is currently being placed on the desktop.
   const [placingId, setPlacingId] = useState<string | null>(null);
+
+  // ---- Fullscreen chrome hide/reveal ------------------------------------
+  // When any window is fullscreen, the menu bar + dock slide off-screen; the
+  // menu bar (and the fullscreen window's auto-hidden titlebar) slide back in
+  // while the top-edge hotspot / bar is hovered. This orchestration lives here
+  // because only the desktop shell knows about BOTH the windows and the chrome.
+  const anyFullscreen = wm.instances.some((w) => w.state === "fullscreen");
+  const [chromeRevealed, setChromeRevealed] = useState(false);
+  // Clear a stale reveal the instant we leave fullscreen. Done during render
+  // (React's supported "adjust state when a prop changes" pattern) rather than
+  // in an effect, which would trip react-hooks/set-state-in-effect and cause a
+  // cascading render. The guarded condition settles in one extra render.
+  if (!anyFullscreen && chromeRevealed) setChromeRevealed(false);
+  const chromeHidden = anyFullscreen && !chromeRevealed;
+
   const widgetCtx = { data, theme, setTheme, openApp: wm.openApp };
   const focusedApp = wm.instances.find((w) => w.id === wm.focusedId);
   const menuBarAppName =
@@ -100,7 +115,20 @@ function DesktopReady({
       {data.meta.wallpaper && <div className="wallpaper-tint" aria-hidden />}
       {/* Onboarding baked into the desktop — fixed, non-removable, non-movable. */}
       <DesktopBootstrap />
-      <MenuBar appName={menuBarAppName} />
+      <MenuBar
+        appName={menuBarAppName}
+        hidden={chromeHidden}
+        onPointerEnter={() => anyFullscreen && setChromeRevealed(true)}
+        onPointerLeave={() => anyFullscreen && setChromeRevealed(false)}
+      />
+      {/* Top-edge hotspot that reveals the hidden bar while in fullscreen. */}
+      {anyFullscreen && (
+        <div
+          className="menu-reveal-zone"
+          onPointerEnter={() => setChromeRevealed(true)}
+          aria-hidden
+        />
+      )}
       {/* {<DesktopIcons openApp={wm.openApp} />} */}
       <WidgetLayer
         data={data}
@@ -115,8 +143,11 @@ function DesktopReady({
         }}
         onCancelPlacing={() => setPlacingId(null)}
       />
-      {wm.render()}
-      <Dock isOpen={wm.isOpen} openApp={wm.openApp} />
+      {wm.render({
+        chromeRevealed,
+        onRevealChange: setChromeRevealed,
+      })}
+      <Dock isOpen={wm.isOpen} openApp={wm.openApp} hidden={anyFullscreen} />
     </DesktopClickMenu>
   );
 }
