@@ -227,6 +227,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.phaseDur = TIMING.popMs;
       g.chain = step.chain;
       g.maxChain = Math.max(g.maxChain, step.chain);
+      stageRef.current?.setBestChain(g.maxChain);
       stageRef.current?.puyo.syncStatic(step.before);
       stageRef.current?.fx.spawnBurst(step.popped);
       if (step.chain >= 1) {
@@ -525,6 +526,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       stage.setMode(gs.current!.mode);
       stage.puyo.syncStatic(gs.current!.grid);
       stage.setScore(0);
+      stage.setBestChain(gs.current!.maxChain);
       spawnNext();
     })();
 
@@ -643,6 +645,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     stageRef.current?.puyo.syncStatic(g.grid);
     stageRef.current?.setScore(0);
     stageRef.current?.setGarbage(0);
+    stageRef.current?.setBestChain(0);
     stageRef.current?.hideChain();
     spawnNext();
   }, [spawnNext]);

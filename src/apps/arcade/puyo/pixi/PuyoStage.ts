@@ -234,6 +234,11 @@ export class PuyoStage {
     this.controls?.setMode(mode);
   }
 
+  /** Update the Best Chain readout under the control buttons. */
+  setBestChain(n: number): void {
+    this.controls?.setBestChain(n);
+  }
+
   /**
    * Hit-test a client (screen) point against the control panel, accounting for
    * the canvas' object-fit: contain letterboxing. Used so touch taps on the
