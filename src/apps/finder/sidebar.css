@@ -61,3 +61,50 @@
     width: 168px;
   }
 }
+
+/* ─── Mobile: sidebar becomes a slide-in drawer ───────────────────────
+   Overlays the content (position:absolute) instead of pushing it, so the
+   pane keeps full width on a phone. Toggled by the toolbar sidebar button;
+   tap the backdrop (see style.css) to dismiss. */
+@media (max-width: 640px) {
+  .finder-sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    width: 248px;
+    max-width: 82%;
+    overflow-y: auto;
+    padding: 14px 12px;
+    box-shadow: 2px 0 18px rgba(0, 0, 0, 0.28);
+    animation: finder-drawer-in 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /* Bigger, finger-friendly rows */
+  .finder-group-label {
+    font-size: 12px;
+    padding: 6px 12px 8px;
+  }
+  .finder-item {
+    gap: 12px;
+    padding: 11px 12px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+  .finder-item-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@keyframes finder-drawer-in {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

@@ -73,6 +73,15 @@
   display: flex;
   align-items: stretch;
   min-height: 100%;
+  position: relative;
+}
+
+/* Tap-to-close backdrop behind the mobile sidebar drawer.
+   Hidden on desktop; only shown at the mobile breakpoint below. */
+.finder-backdrop {
+  display: none;
+  border: none;
+  padding: 0;
 }
 
 /* Content pane */
@@ -133,5 +142,69 @@
 @media (max-width: 620px) {
   .finder-toolbar-title {
     padding: 0 70px;
+  }
+}
+
+/* ─── Mobile / narrow-window adaptation ───────────────────────────────
+   Fires on phone-width viewports (the OS renders windows near-fullscreen
+   on mobile, so viewport width ≈ Finder width). Turns the push sidebar
+   into a slide-in drawer, enlarges touch targets and declutters the
+   toolbar + path bar. */
+@media (max-width: 640px) {
+  /* Enlarge titlebar toolbar buttons for touch; tighten spacing */
+  .finder-toolbar {
+    margin-left: 8px;
+    gap: 1px;
+  }
+  .finder-tbtn {
+    width: 34px;
+    height: 30px;
+    border-radius: 8px;
+  }
+  .finder-tsep {
+    margin: 0 3px;
+  }
+  /* Folder name already appears in the sidebar selection + path bar,
+     so drop the centered titlebar title to avoid colliding with the
+     traffic lights and toolbar on a narrow row. */
+  .finder-toolbar-title {
+    display: none;
+  }
+
+  /* Content pane: reclaim horizontal space */
+  .finder-pane {
+    padding: 14px 14px;
+  }
+
+  /* Path bar: collapse the leading "Macintosh HD ›" crumbs so only
+     "Portfolio › <Section>" remains, and respect the iOS home-bar inset */
+  .finder-pathbar {
+    padding: 8px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    font-size: 12px;
+  }
+  .finder-crumbs > :nth-child(-n + 3) {
+    display: none;
+  }
+
+  /* Show the tap-to-close backdrop when the drawer is open */
+  .finder-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    background: rgba(0, 0, 0, 0.32);
+    -webkit-backdrop-filter: blur(1px);
+    backdrop-filter: blur(1px);
+    animation: finder-fade-in 0.2s ease;
+  }
+}
+
+@keyframes finder-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

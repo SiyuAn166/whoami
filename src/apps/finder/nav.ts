@@ -17,7 +17,17 @@ interface NavState {
  * store is the clean way to keep the back/forward history, the current folder
  * and the sidebar toggle in sync across all four.
  */
-let state: NavState = { history: ["about"], index: 0, sidebarOpen: true };
+/** Phones start with the sidebar collapsed so the content pane is visible;
+ *  on wider screens it stays open like desktop macOS. */
+const MOBILE_BP = 640;
+const isNarrow = () =>
+  typeof window !== "undefined" && window.innerWidth <= MOBILE_BP;
+
+let state: NavState = {
+  history: ["about"],
+  index: 0,
+  sidebarOpen: !isNarrow(),
+};
 
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -31,7 +41,14 @@ export function navigateTo(section: FinderSection) {
   if (state.history[state.index] === section) return;
   const history = state.history.slice(0, state.index + 1);
   history.push(section);
-  state = { ...state, history, index: history.length - 1 };
+  state = {
+    ...state,
+    history,
+    index: history.length - 1,
+    // On phones the sidebar is a drawer overlaying the content — collapse
+    // it once a destination is chosen so the pane is revealed.
+    sidebarOpen: isNarrow() ? false : state.sidebarOpen,
+  };
   emit();
 }
 
