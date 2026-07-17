@@ -257,6 +257,14 @@
   pointer-events: none;
 }
 
+/* previews are non-interactive: block links/buttons inside the real widget
+   (e.g. contact widget <a href>) from being clickable in the gallery.
+   .wgt sets pointer-events:auto, so override every descendant. */
+.widgetgallery__preview,
+.widgetgallery__preview * {
+  pointer-events: none !important;
+}
+
 .widgetgallery__preview-scale {
   transform: scale(0.62);
   transform-origin: center;

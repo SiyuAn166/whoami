@@ -39,17 +39,17 @@ type PosMap = Record<string, Pos>;
  *  to size the placement ghost before the real widget is mounted.
  */
 const TIER_H: Record<WidgetSize, number> = {
-  small: 190,
+  small: 100,
   medium: 210,
   wide: 150,
   large: 380,
 };
-/** Approx widths per tier — only used to size the placement ghost. */
+/** Approx widths per tier — fallback only until the ghost is measured. */
 const TIER_W: Record<WidgetSize, number> = {
-  small: 200,
-  medium: 320,
+  small: 190,
+  medium: 220,
   wide: 380,
-  large: 360,
+  large: 380,
 };
 
 const snap = (v: number) => Math.round(v / GRID) * GRID;
@@ -282,14 +282,37 @@ export function WidgetLayer(props: WidgetLayerProps) {
   // context) and positioned by DIRECTLY mutating its style in a window
   // pointermove listener — no React state, so it tracks the cursor smoothly.
   const ghostRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
   const lastPtr = useRef<Pos | null>(null);
+
+  const placingDef = placingId ? WIDGETS.find((w) => w.id === placingId) : null;
+
+  // Measure the REAL widget (hidden off-screen copy) so the ghost matches its
+  // exact rendered size — widths are fixed per tier but heights are content-
+  // driven, so a hard-coded estimate never lines up. Falls back to the tier
+  // estimate only for the first frame before measurement resolves.
+  const [measured, setMeasured] = useState<{ w: number; h: number } | null>(
+    null,
+  );
+  useLayoutEffect(() => {
+    if (!placingId) {
+      setMeasured(null);
+      return;
+    }
+    const el = measureRef.current;
+    if (!el) return;
+    const read = () => setMeasured({ w: el.offsetWidth, h: el.offsetHeight });
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [placingId]);
+
   const placeSize = placingId
-    ? (() => {
-        const def = WIDGETS.find((w) => w.id === placingId);
-        return def
-          ? { w: TIER_W[def.size], h: TIER_H[def.size] }
-          : { w: 240, h: 200 };
-      })()
+    ? (measured ??
+      (placingDef
+        ? { w: TIER_W[placingDef.size], h: TIER_H[placingDef.size] }
+        : { w: 240, h: 200 }))
     : null;
 
   useLayoutEffect(() => {
@@ -361,7 +384,7 @@ export function WidgetLayer(props: WidgetLayerProps) {
       window.removeEventListener("contextmenu", onContext, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placingId]);
+  }, [placingId, placeSize?.w, placeSize?.h]);
 
   const onPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>, id: string) => {
@@ -462,8 +485,6 @@ export function WidgetLayer(props: WidgetLayerProps) {
     return () => window.removeEventListener("resize", onResize);
   }, [clamp, anchoredPos]);
 
-  const placingDef = placingId ? WIDGETS.find((w) => w.id === placingId) : null;
-
   return (
     <div className="wgt-layer" ref={layerRef} aria-label="Desktop widgets">
       {visible.map((w) => {
@@ -505,6 +526,21 @@ export function WidgetLayer(props: WidgetLayerProps) {
           </div>
         );
       })}
+
+      {placingId &&
+        placingDef &&
+        createPortal(
+          <div className="wgt-measure" ref={measureRef} aria-hidden="true">
+            <WidgetFrame
+              size={placingDef.size}
+              variant={placingDef.variant}
+              title={placingDef.title}
+            >
+              {placingDef.render(ctx)}
+            </WidgetFrame>
+          </div>,
+          document.body,
+        )}
 
       {placingId &&
         placeSize &&

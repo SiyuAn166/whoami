@@ -59,6 +59,7 @@
   z-index: 2;
   padding: 30px 44px 0;
 }
+
 .arc-brand {
   font-size: 15px;
   font-weight: 900;
@@ -80,9 +81,10 @@
   padding: 0 clamp(8px, 4vw, 24px);
   width: 100%;
 }
+
 .arc-rail {
   /* fluid card + gap sizing; the card is a square that shrinks on phones */
-  --card-w: clamp(150px, 62vw, 380px);
+  --card-w: clamp(150px, 62vw, 200px);
   --gap: clamp(14px, 4vw, 40px);
   --sel: 0;
   --n: 1;
@@ -111,11 +113,13 @@
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
   will-change: transform;
 }
+
 /* while a finger is dragging, follow it 1:1 with no easing; on release the
    class is removed and the transform transition above snaps to the target */
 .arc-rail.dragging {
   transition: none;
 }
+
 .arc-card {
   /* --p = proximity to centre, 0 (edge) .. 1 (focused); set live from JS.
      Everything below interpolates on --p, so during a drag the card that is
@@ -126,7 +130,8 @@
   position: relative;
   flex: 0 0 auto;
   width: var(--card-w);
-  height: var(--card-w); /* 1:1 */
+  height: var(--card-w);
+  /* 1:1 */
   padding: 0;
   border: none;
   border-radius: 22px;
@@ -153,16 +158,19 @@
     opacity 0.28s ease,
     filter 0.28s ease;
 }
+
 /* while dragging, cards track the finger 1:1 — no easing lag on the magnify */
 .arc-rail.dragging .arc-card {
   transition: none;
 }
+
 .arc-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
+
 .arc-gloss {
   position: absolute;
   inset: 0;
@@ -180,6 +188,7 @@
   min-height: clamp(60px, 12vw, 84px);
   padding: 0 12px;
 }
+
 .arc-title {
   margin: 0;
   font-family: "Rajdhani", "Segoe UI", system-ui, sans-serif;
@@ -190,6 +199,7 @@
   color: #fff;
   text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 60%, transparent);
 }
+
 .arc-tag {
   margin: 8px 0 0;
   font-family: "Saira", "Segoe UI", system-ui, sans-serif;
@@ -213,14 +223,17 @@
   letter-spacing: 0.6px;
   color: var(--dim);
 }
+
 .arc-hint-touch {
   display: none;
 }
+
 .arc-hints span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
 }
+
 .arc-hints kbd {
   display: inline-grid;
   place-items: center;
@@ -243,14 +256,17 @@
   z-index: 20;
   animation: arc-boot-zoom 0.46s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
 .arc-card.booting .arc-gloss {
   opacity: 0;
 }
+
 @keyframes arc-boot-zoom {
   0% {
     transform: scale(1.04);
     opacity: 1;
   }
+
   100% {
     transform: scale(2.5);
     opacity: 0;
@@ -264,6 +280,7 @@
   .arc-hint-key {
     display: none !important;
   }
+
   .arc-hint-touch {
     display: inline-flex;
     align-items: center;
@@ -281,10 +298,12 @@
     --ring-w2: 5px;
     --glow: 30px;
   }
+
   .arc-ambient {
     width: 720px;
     height: 720px;
   }
+
   .arc-hints kbd {
     min-width: 20px;
     height: 20px;
@@ -297,6 +316,7 @@
   .arc-meta {
     min-height: 0;
   }
+
   .arc-stage {
     gap: 12px;
   }

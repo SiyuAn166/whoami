@@ -38,6 +38,17 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.26);
 }
 
+/* Hidden off-screen copy of the widget being placed — measured so the ghost
+   matches the real rendered size exactly. Never visible to the user. */
+.wgt-measure {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: -1;
+}
+
 /* ─── Placement mode (Add Widgets → ghost follows cursor → click to drop) ───
    Ghost + hint are portaled to <body>, so these fixed/z-index rules apply in
    the ROOT stacking context (not trapped inside .wgt-layer's z-index:1).
