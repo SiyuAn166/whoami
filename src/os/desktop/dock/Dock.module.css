@@ -1,0 +1,145 @@
+/* ─── Dock (shown when the window is minimized / closed) ────────────── */
+/* All local now — cross-file consumers (DesktopClickMenu.tsx's .closest(),
+   os/desktop/icon/Icon.tsx's dock variant) import this module directly and
+   reference the scoped classes instead of matching a global string. */
+/* Frosted glass: tinted base + top sheen over a strong saturated blur,
+   plus a highlight edge + elevation shadow so it reads as a glass panel.
+*/
+/* fadeIn is defined locally (duplicated from styles/keyframes.css) because
+   this build's CSS-modules transform rewrites `animation: fadeIn` to a
+   hashed name even though it has no matching local @keyframes, silently
+   breaking the reference to the global one. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 20px;
+  background-color: rgba(40, 40, 46, 0.45);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.02)
+  );
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
+  backdrop-filter: blur(16px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+  animation: fadeIn 0.25s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.25s ease;
+}
+
+/* Fullscreen: slide the dock down off-screen. */
+.dock--hidden {
+  transform: translateX(-50%) translateY(160%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+:root[data-theme="light"] .dock {
+  background-color: rgba(255, 255, 255, 0.5);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.2)
+  );
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.dockIcon {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.dockDot {
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--fg-dim);
+}
+
+/* --- Dock icon: name bubble on hover --- */
+.dockTooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px) scale(0.96);
+  transform-origin: bottom center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--titlebar);
+  color: var(--fg);
+  border: 0px solid var(--border-hi);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms;
+  z-index: 100;
+}
+
+.dockTooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--titlebar);
+}
+
+.dockIcon:hover .dockTooltip,
+.dockIcon:focus-visible .dockTooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock,
+  .dockIcon {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -6,6 +6,12 @@ export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/whoami/' : '/',
   plugins: [react()],
 
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+    },
+  },
+
   build: {
     chunkSizeWarningLimit: 700,
     rollupOptions: {

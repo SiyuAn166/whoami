@@ -1,4 +1,4 @@
-import "./CalendarWidget.css";
+import styles from "./CalendarWidget.module.css";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -19,17 +19,17 @@ export function CalendarContent() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
-    <div className="wgt-cal">
-      <div className="wgt-cal-head">
-        <span className="wgt-cal-month">{monthLabel}</span>
-        <span className="wgt-cal-year">{year}</span>
+    <div className={styles.wgtCal}>
+      <div className={styles.wgtCalHead}>
+        <span className={styles.wgtCalMonth}>{monthLabel}</span>
+        <span className={styles.wgtCalYear}>{year}</span>
       </div>
 
-      <div className="wgt-cal-grid">
+      <div className={styles.wgtCalGrid}>
         {WEEKDAYS.map((w, i) => (
           <div
             key={`h${i}`}
-            className={`wgt-cal-dow${i === 0 || i === 6 ? " wgt-cal-weekend" : ""}`}
+            className={`${styles.wgtCalDow}${i === 0 || i === 6 ? " " + styles.wgtCalWeekend : ""}`}
           >
             {w}
           </div>
@@ -43,10 +43,10 @@ export function CalendarContent() {
             <div
               key={i}
               className={
-                "wgt-cal-cell" +
-                (d === null ? " wgt-cal-empty" : "") +
-                (weekend ? " wgt-cal-weekend" : "") +
-                (isToday ? " wgt-cal-today" : "")
+                styles.wgtCalCell +
+                (d === null ? " " + styles.wgtCalEmpty : "") +
+                (weekend ? " " + styles.wgtCalWeekend : "") +
+                (isToday ? " " + styles.wgtCalToday : "")
               }
             >
               {d ?? ""}

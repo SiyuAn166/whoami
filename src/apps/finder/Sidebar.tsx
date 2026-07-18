@@ -5,7 +5,7 @@ import {
   type FinderSection,
 } from "./nav";
 
-import "./sidebar.css";
+import styles from "./Sidebar.module.css";
 
 export type { FinderSection };
 
@@ -107,16 +107,16 @@ const ITEMS: FinderSection[] = ["about", "experience", "projects", "skills"];
 export function FinderSidebar() {
   const { section } = useFinderNav();
   return (
-    <nav className="finder-sidebar">
-      <div className="finder-group-label">Favorites</div>
+    <nav className={styles.finderSidebar}>
+      <div className={styles.finderGroupLabel}>Favorites</div>
       {ITEMS.map((id) => (
         <button
           key={id}
           type="button"
-          className={`finder-item${section === id ? " is-selected" : ""}`}
+          className={`${styles.finderItem}${section === id ? ` ${styles.isSelected}` : ""}`}
           onClick={() => navigateTo(id)}
         >
-          <span className="finder-item-icon" aria-hidden>
+          <span className={styles.finderItemIcon} aria-hidden>
             <ItemIcon id={id} />
           </span>
           {SECTION_LABEL[id]}

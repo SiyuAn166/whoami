@@ -5,6 +5,7 @@ import {
   toggleSidebar,
   useFinderNav,
 } from "./nav";
+import styles from "./Finder.module.css";
 
 /** Toggle-sidebar icon (macOS "sidebar.left") */
 function SidebarIcon() {
@@ -55,20 +56,20 @@ function Chevron({ dir }: { dir: "left" | "right" }) {
 export function FinderToolbar() {
   const { section, canBack, canForward, sidebarOpen } = useFinderNav();
   return (
-    <div className="finder-toolbar">
+    <div className={styles.finderToolbar}>
       <button
         type="button"
-        className={`finder-tbtn${sidebarOpen ? " is-active" : ""}`}
+        className={`${styles.finderTbtn}${sidebarOpen ? ` ${styles.isActive}` : ""}`}
         onClick={toggleSidebar}
         aria-label="Toggle sidebar"
         title="Toggle sidebar"
       >
         <SidebarIcon />
       </button>
-      <span className="finder-tsep" aria-hidden />
+      <span className={styles.finderTsep} aria-hidden />
       <button
         type="button"
-        className="finder-tbtn"
+        className={styles.finderTbtn}
         onClick={goBack}
         disabled={!canBack}
         aria-label="Back"
@@ -78,7 +79,7 @@ export function FinderToolbar() {
       </button>
       <button
         type="button"
-        className="finder-tbtn"
+        className={styles.finderTbtn}
         onClick={goForward}
         disabled={!canForward}
         aria-label="Forward"
@@ -86,7 +87,9 @@ export function FinderToolbar() {
       >
         <Chevron dir="right" />
       </button>
-      <span className="finder-toolbar-title">{SECTION_LABEL[section]}</span>
+      <span className={styles.finderToolbarTitle}>
+        {SECTION_LABEL[section]}
+      </span>
     </div>
   );
 }

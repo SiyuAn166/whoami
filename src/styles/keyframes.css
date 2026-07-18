@@ -41,22 +41,12 @@
   animation: blink 1s steps(1) infinite;
 }
 
-/* ─── Respect reduced-motion: kill blink, reveal, and cursor animation ───
-   Cross-component selector list — kept here rather than split across
-   several different component CSS files, since it's a single global
-   media-query rule that must stay in one cascade position. */
+/* ─── Respect reduced-motion: kill blink and cursor animation ───
+   .mac-window/.dock/.dock-icon/.reveal-content moved into their own
+   .module.css files (each is now a locally-scoped class, so this global
+   plain-CSS file can no longer reference them by a literal string). */
 @media (prefers-reduced-motion: reduce) {
-  .cursor,
-  .term-cursor.active,
-  .reveal-content {
-    animation: none !important;
-  }
-
-  /* No genie/zoom motion for window or dock */
-  .mac-window,
-  .dock,
-  .dock-icon {
-    transition: none !important;
+  .cursor {
     animation: none !important;
   }
 

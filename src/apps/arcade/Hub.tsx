@@ -7,7 +7,7 @@
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GAMES } from "./games";
-import "./style.css";
+import styles from "./Arcade.module.css";
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 // smoothstep — softens the linear proximity ramp into a dock-like curve
@@ -57,9 +57,11 @@ export function Hub({ onClose }: { onClose?: () => void }) {
     didDragRef.current = false;
     // one card + gap in px, read live so it works across breakpoints
     const rail = e.currentTarget.querySelector(
-      ".arc-rail",
+      `.${styles.arcRail}`,
     ) as HTMLElement | null;
-    const card = rail?.querySelector(".arc-card") as HTMLElement | null;
+    const card = rail?.querySelector(
+      `.${styles.arcCard}`,
+    ) as HTMLElement | null;
     const cw = card?.offsetWidth ?? 300;
     const gap = rail ? parseFloat(getComputedStyle(rail).gap || "0") : 0;
     stepRef.current = cw + gap;
@@ -162,19 +164,19 @@ export function Hub({ onClose }: { onClose?: () => void }) {
 
   return (
     <div
-      className="arc-home"
+      className={styles.arcHome}
       style={{ ["--accent" as string]: focused.accent }}
     >
-      <div className="arc-ambient" aria-hidden />
+      <div className={styles.arcAmbient} aria-hidden />
 
       <main
-        className="arc-stage"
+        className={styles.arcStage}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         <div
-          className={`arc-rail ${dragging ? "dragging" : ""}`}
+          className={`${styles.arcRail} ${dragging ? styles.dragging : ""}`}
           style={{
             ["--sel" as string]: sel,
             ["--n" as string]: GAMES.length,
@@ -186,8 +188,8 @@ export function Hub({ onClose }: { onClose?: () => void }) {
             return (
               <button
                 key={g.id}
-                className={`arc-card ${i === sel ? "on" : "off"} ${
-                  booting && i === sel ? "booting" : ""
+                className={`${styles.arcCard} ${i === sel ? "on" : "off"} ${
+                  booting && i === sel ? styles.booting : ""
                 }`}
                 style={{
                   ["--p" as string]: p,
@@ -203,32 +205,32 @@ export function Hub({ onClose }: { onClose?: () => void }) {
                 aria-label={g.name}
               >
                 <img
-                  className="arc-cover"
+                  className={styles.arcCover}
                   src={g.cover}
                   alt={g.name}
                   draggable={false}
                 />
-                <span className="arc-gloss" aria-hidden />
+                <span className={styles.arcGloss} aria-hidden />
               </button>
             );
           })}
         </div>
 
-        <div className="arc-meta">
-          <h1 className="arc-title">{focused.name}</h1>
-          <p className="arc-tag">{focused.tagline}</p>
+        <div className={styles.arcMeta}>
+          <h1 className={styles.arcTitle}>{focused.name}</h1>
+          <p className={styles.arcTag}>{focused.tagline}</p>
         </div>
       </main>
 
-      <footer className="arc-hints">
-        <span className="arc-hint-key">
+      <footer className={styles.arcHints}>
+        <span className={styles.arcHintKey}>
           <kbd>&#8592;</kbd>
           <kbd>&#8594;</kbd> Select
         </span>
-        <span className="arc-hint-key">
+        <span className={styles.arcHintKey}>
           <kbd>&#8629;</kbd> Start
         </span>
-        <span className="arc-hint-key">
+        <span className={styles.arcHintKey}>
           <kbd>Esc</kbd> Exit
         </span>
       </footer>

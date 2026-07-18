@@ -1,6 +1,6 @@
 import type { WidgetRenderContext } from "../types";
 import type { Skill } from "../../../types/portfolio";
-import "./SkillsWidget.css";
+import styles from "./SkillsWidget.module.css";
 
 type Domain = "lang" | "infra" | "dist";
 
@@ -10,6 +10,16 @@ const DOMAIN_META: Record<Domain, { label: string; short: string }> = {
   dist: { label: "Distributed", short: "Dist" },
 };
 const ORDER: Domain[] = ["lang", "infra", "dist"];
+const SEG_CLASS: Record<Domain, string> = {
+  lang: styles.skwSegLang,
+  infra: styles.skwSegInfra,
+  dist: styles.skwSegDist,
+};
+const DOT_CLASS: Record<Domain, string> = {
+  lang: styles.skwDotLang,
+  infra: styles.skwDotInfra,
+  dist: styles.skwDotDist,
+};
 
 /** Domain comes from data (`category`); fall back to name inference. */
 function classify(skill: Skill): Domain {
@@ -42,20 +52,20 @@ export function SkillsContent({ ctx }: { ctx: WidgetRenderContext }) {
 
   return (
     <div
-      className="skw"
+      className={styles.skw}
       role="group"
       aria-label={`${total} skills across three domains`}
     >
-      <div className="skw-head">
-        <span className="skw-total">{total}</span>
-        <span className="skw-total-label">skills</span>
+      <div className={styles.skwHead}>
+        <span className={styles.skwTotal}>{total}</span>
+        <span className={styles.skwTotalLabel}>skills</span>
       </div>
 
-      <div className="skw-bar" aria-hidden>
+      <div className={styles.skwBar} aria-hidden>
         {segments.map((d) => (
           <span
             key={d}
-            className={`skw-seg skw-seg--${d}`}
+            className={`${styles.skwSeg} ${SEG_CLASS[d]}`}
             style={{ flexGrow: counts[d] }}
           >
             {counts[d] >= 2 ? counts[d] : ""}
@@ -63,17 +73,17 @@ export function SkillsContent({ ctx }: { ctx: WidgetRenderContext }) {
         ))}
       </div>
 
-      <ul className="skw-legend">
+      <ul className={styles.skwLegend}>
         {ORDER.map((d) => (
-          <li className="skw-leg" key={d}>
-            <span className={`skw-dot skw-dot--${d}`} aria-hidden />
-            <span className="skw-leg-label">{DOMAIN_META[d].label}</span>
-            <span className="skw-leg-count">{counts[d]}</span>
+          <li className={styles.skwLeg} key={d}>
+            <span className={`${styles.skwDot} ${DOT_CLASS[d]}`} aria-hidden />
+            <span className={styles.skwLegLabel}>{DOMAIN_META[d].label}</span>
+            <span className={styles.skwLegCount}>{counts[d]}</span>
           </li>
         ))}
       </ul>
 
-      <div className="skw-foot">View all in Finder ›</div>
+      <div className={styles.skwFoot}>View all in Finder ›</div>
     </div>
   );
 }

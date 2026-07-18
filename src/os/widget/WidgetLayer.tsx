@@ -2,7 +2,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { AppRenderContext } from "../../apps/types";
-import "./WidgetLayer.css";
+import styles from "./WidgetLayer.module.css";
 import { WidgetFrame } from "./WidgetFrame";
 import { WIDGETS } from "./registry";
 import type { WidgetRenderContext, WidgetSize } from "./types";
@@ -486,7 +486,11 @@ export function WidgetLayer(props: WidgetLayerProps) {
   }, [clamp, anchoredPos]);
 
   return (
-    <div className="wgt-layer" ref={layerRef} aria-label="Desktop widgets">
+    <div
+      className={styles.wgtLayer}
+      ref={layerRef}
+      aria-label="Desktop widgets"
+    >
       {visible.map((w) => {
         const link = w.href?.(ctx);
         const onActivate = link
@@ -500,7 +504,7 @@ export function WidgetLayer(props: WidgetLayerProps) {
           <div
             key={w.id}
             data-wid={w.id}
-            className={`wgt-drag${isDragging ? " dragging" : ""}`}
+            className={`${styles.wgtDrag}${isDragging ? " " + styles.dragging : ""}`}
             style={{ transform: `translate3d(${pos.x}px, ${pos.y}px, 0)` }}
             onPointerDown={(e) => onPointerDown(e, w.id)}
             onPointerMove={onPointerMove}
@@ -530,7 +534,11 @@ export function WidgetLayer(props: WidgetLayerProps) {
       {placingId &&
         placingDef &&
         createPortal(
-          <div className="wgt-measure" ref={measureRef} aria-hidden="true">
+          <div
+            className={styles.wgtMeasure}
+            ref={measureRef}
+            aria-hidden="true"
+          >
             <WidgetFrame
               size={placingDef.size}
               variant={placingDef.variant}
@@ -546,13 +554,15 @@ export function WidgetLayer(props: WidgetLayerProps) {
         placeSize &&
         createPortal(
           <>
-            <div className="wgt-place-hint">Click to place · Esc to cancel</div>
+            <div className={styles.wgtPlaceHint}>
+              Click to place · Esc to cancel
+            </div>
             <div
-              className="wgt-ghost"
+              className={styles.wgtGhost}
               ref={ghostRef}
               style={{ width: placeSize.w, height: placeSize.h }}
             >
-              <span className="wgt-ghost-label">
+              <span className={styles.wgtGhostLabel}>
                 {placingDef?.title ?? placingId}
               </span>
             </div>

@@ -1,5 +1,5 @@
 import type { Project } from "../../../types/portfolio";
-import "./ProjectCard.css";
+import styles from "./ProjectCard.module.css";
 
 interface ProjectCardProps {
   project: Project;
@@ -22,7 +22,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <div
-      className="project-card p-3"
+      className={`${styles.projectCard} p-3`}
       onClick={project.url ? handleClick : undefined}
       style={{ cursor: project.url ? "pointer" : "default" }}
       role={project.url ? "link" : undefined}

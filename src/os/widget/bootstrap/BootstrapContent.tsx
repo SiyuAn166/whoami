@@ -1,4 +1,4 @@
-import "./BootstrapWidget.css";
+import styles from "./BootstrapWidget.module.css";
 
 /**
  * Bootstrap widget — S4 "annotated desktop map".
@@ -7,38 +7,44 @@ import "./BootstrapWidget.css";
  */
 export function BootstrapContent() {
   return (
-    <div className="bsw-root">
-      <header className="bsw-head">
-        <h2 className="bsw-title">
-          Welcome <span className="bsw-wave">👋</span>
+    <div className={styles.bswRoot}>
+      <header className={styles.bswHead}>
+        <h2 className={styles.bswTitle}>
+          Welcome <span className={styles.bswWave}>👋</span>
         </h2>
-        <p className="bsw-sub">A portfolio that works like a Mac.</p>
+        <p className={styles.bswSub}>A portfolio that works like a Mac.</p>
       </header>
 
       <div
-        className="bsw-map"
+        className={styles.bswMap}
         role="img"
         aria-label="A miniature macOS desktop showing the menu bar, a window and the dock"
       >
-        <div className="bsw-menubar">
+        <div className={styles.bswMenubar}>
           <span />
           <span style={{ width: 8 }} />
           <span style={{ width: 10 }} />
         </div>
 
-        <div className="bsw-win">
+        <div className={styles.bswWin}>
           <i />
         </div>
 
-        <div className="bsw-dock">
+        <div className={styles.bswDock}>
           <b />
           <b />
           <b />
         </div>
 
-        <div className="bsw-tag bsw-tag--rc">Right-click → menu</div>
-        <div className="bsw-tag bsw-tag--dock">Dock → open apps</div>
-        <div className="bsw-tag bsw-tag--drag">Drag → move windows</div>
+        <div className={`${styles.bswTag} ${styles.bswTagRc}`}>
+          Right-click → menu
+        </div>
+        <div className={`${styles.bswTag} ${styles.bswTagDock}`}>
+          Dock → open apps
+        </div>
+        <div className={`${styles.bswTag} ${styles.bswTagDrag}`}>
+          Drag → move windows
+        </div>
       </div>
     </div>
   );

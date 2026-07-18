@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { WidgetRenderContext } from "../types";
-import { buildLinks } from "./ContactUtils";
-import "./ContactWidget.css";
+import { buildLinks } from "./contact-utils";
+import styles from "./ContactWidget.module.css";
 
 function Icon({
   kind,
@@ -52,12 +52,12 @@ function Icon({
 export function ContactContent({ ctx }: { ctx: WidgetRenderContext }) {
   const links = buildLinks(ctx);
   return (
-    <div className="wgt-contact">
-      <div className="wgt-contact-title">LET'S CONTACT</div>
-      <div className="wgt-contact-links">
+    <div className={styles.wgtContact}>
+      <div className={styles.wgtContactTitle}>LET'S CONTACT</div>
+      <div className={styles.wgtContactLinks}>
         {links.map((l) => (
           <a
-            className="wgt-contact-link"
+            className={styles.wgtContactLink}
             key={l.label}
             href={l.href}
             target="_blank"
@@ -65,7 +65,7 @@ export function ContactContent({ ctx }: { ctx: WidgetRenderContext }) {
             title={l.label}
             aria-label={l.label}
           >
-            <span className="wgt-contact-icon" aria-hidden>
+            <span className={styles.wgtContactIcon} aria-hidden>
               <Icon kind={l.icon} />
             </span>
           </a>

@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import type { WidgetRenderContext } from "../types";
-import "./ClockWidget.css";
+import styles from "./ClockWidget.module.css";
 
 /** Polar → cartesian on a clock face. angleDeg: 0 = 12 o'clock, clockwise. */
 function hand(cx: number, cy: number, r: number, angleDeg: number) {
@@ -72,7 +72,7 @@ function spinVars(elapsedSec: number, cycleSec: number): CSSProperties {
 const ClockDial = memo(function ClockDial() {
   return (
     <svg
-      className="wgt-clock-layer"
+      className={styles.wgtClockLayer}
       viewBox="0 0 200 200"
       role="img"
       aria-label="Analog clock"
@@ -85,9 +85,9 @@ const ClockDial = memo(function ClockDial() {
         </radialGradient>
       </defs>
 
-      <circle cx={CX} cy={CY} r="94" className="wgt-clock-bezel" />
+      <circle cx={CX} cy={CY} r="94" className={styles.wgtClockBezel} />
       <circle cx={CX} cy={CY} r="90" fill="url(#clkFace)" />
-      <circle cx={CX} cy={CY} r="90" className="wgt-clock-ring" />
+      <circle cx={CX} cy={CY} r="90" className={styles.wgtClockRing} />
 
       {TICKS.map((t) => (
         <line
@@ -96,7 +96,7 @@ const ClockDial = memo(function ClockDial() {
           y1={t.y1}
           x2={t.x2}
           y2={t.y2}
-          className={t.major ? "wgt-clock-tick--major" : "wgt-clock-tick"}
+          className={t.major ? styles.wgtClockTickMajor : styles.wgtClockTick}
         />
       ))}
 
@@ -105,7 +105,7 @@ const ClockDial = memo(function ClockDial() {
           key={n}
           x={x}
           y={y}
-          className="wgt-clock-num"
+          className={styles.wgtClockNum}
           textAnchor="middle"
           dominantBaseline="central"
         >
@@ -121,7 +121,7 @@ const ClockDial = memo(function ClockDial() {
 const ClockCap = memo(function ClockCap() {
   return (
     <svg
-      className="wgt-clock-layer wgt-clock-cap"
+      className={`${styles.wgtClockLayer} wgt-clock-cap`}
       viewBox="0 0 200 200"
       aria-hidden
     >
@@ -132,8 +132,8 @@ const ClockCap = memo(function ClockCap() {
           <stop offset="100%" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <circle cx={CX} cy={CY} r="5.5" className="wgt-clock-hub" />
-      <circle cx={CX} cy={CY} r="2.2" className="wgt-clock-hub-in" />
+      <circle cx={CX} cy={CY} r="5.5" className={styles.wgtClockHub} />
+      <circle cx={CX} cy={CY} r="2.2" className={styles.wgtClockHubIn} />
       <ellipse cx={CX} cy="72" rx="72" ry="46" fill="url(#clkGlass)" />
     </svg>
   );
@@ -150,7 +150,7 @@ function Hand({
 }) {
   return (
     <svg
-      className="wgt-clock-layer wgt-clock-hand"
+      className={`${styles.wgtClockLayer} ${styles.wgtClockHand}`}
       viewBox="0 0 200 200"
       style={vars}
       aria-hidden
@@ -177,10 +177,10 @@ const ClockHands = memo(function ClockHands({ start }: { start: Date }) {
   return (
     <>
       <Hand vars={spin.hour}>
-        <polygon points={HOUR_PTS} className="wgt-clock-hour" />
+        <polygon points={HOUR_PTS} className={styles.wgtClockHour} />
       </Hand>
       <Hand vars={spin.min}>
-        <polygon points={MIN_PTS} className="wgt-clock-min" />
+        <polygon points={MIN_PTS} className={styles.wgtClockMin} />
       </Hand>
       <Hand vars={spin.sec}>
         <line
@@ -188,13 +188,13 @@ const ClockHands = memo(function ClockHands({ start }: { start: Date }) {
           y1={SEC_TAIL.y}
           x2={SEC_TIP.x}
           y2={SEC_TIP.y}
-          className="wgt-clock-sec"
+          className={styles.wgtClockSec}
         />
         <circle
           cx={SEC_TIP.x}
           cy={SEC_TIP.y}
           r="2.4"
-          className="wgt-clock-sec-dot"
+          className={styles.wgtClockSecDot}
         />
       </Hand>
     </>
@@ -231,15 +231,15 @@ export function ClockContent({ ctx }: { ctx: WidgetRenderContext }) {
   });
 
   return (
-    <div className="wgt-clock">
-      <div className="wgt-clock-dial">
+    <div className={styles.wgtClock}>
+      <div className={styles.wgtClockDial}>
         <ClockDial />
         <ClockHands start={startRef.current} />
         <ClockCap />
       </div>
-      <div className="wgt-clock-meta">
-        <div className="wgt-clock-date">{date}</div>
-        <div className="wgt-clock-loc">
+      <div className={styles.wgtClockMeta}>
+        <div className={styles.wgtClockDate}>{date}</div>
+        <div className={styles.wgtClockLoc}>
           <span className="wgt-pin" aria-hidden>
             ◉
           </span>{" "}

@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 import type { PortfolioData } from "../../../types/portfolio";
-import { ExperienceSection } from "../../section/experience/ExperienceSection";
-import { IdentitySection } from "../../section/identity/IdentitySection";
-import { ProjectSection } from "../../section/projects/ProjectSection";
-import { SkillSection } from "../../section/skills/SkillSection";
+import { ExperienceSection } from "../../section/experience";
+import { IdentitySection } from "../../section/identity";
+import { ProjectSection } from "../../section/projects";
+import { SkillSection } from "../../section/skills";
 import type { VDir } from "../vfs";
 import { isDir, listDir, pathString, resolve, treeString } from "../vfs";
 import { ContactCard } from "./ContactCard";
 import { Text } from "./TerminalText";
 import { HELP, HOST, USER } from "./constants";
-import { manPage, renderFile, resolveOpen } from "./fileSystem";
+import { manPage, renderFile, resolveOpen } from "./file-system";
 import { nowString, randomFortune } from "./format";
 
 export interface CmdCtx {

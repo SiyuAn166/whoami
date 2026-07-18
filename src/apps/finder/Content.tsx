@@ -1,29 +1,29 @@
 import type { PortfolioData } from "../../types/portfolio";
-import { AboutMeSection } from "../section/aboutme/AboutMeSection";
-import { ExperienceSection } from "../section/experience/ExperienceSection";
-import { ProjectSection } from "../section/projects/ProjectSection";
-import { CapabilitiesSection } from "../section/skills/SkillSection";
+import { AboutMeSection } from "../section/about-me";
+import { ExperienceSection } from "../section/experience";
+import { ProjectSection } from "../section/projects";
+import { CapabilitiesSection } from "../section/skills";
 import { FinderSidebar } from "./Sidebar";
 import { toggleSidebar, useFinderNav } from "./nav";
 
-import "./style.css";
+import styles from "./Finder.module.css";
 
 export function FinderContent({ data }: { data: PortfolioData }) {
   const { section, sidebarOpen } = useFinderNav();
   return (
-    <div className="finder">
+    <div className={styles.finder}>
       {sidebarOpen && (
         <>
           <FinderSidebar />
           <button
             type="button"
-            className="finder-backdrop"
+            className={styles.finderBackdrop}
             aria-label="Close sidebar"
             onClick={toggleSidebar}
           />
         </>
       )}
-      <div className="finder-pane">
+      <div className={styles.finderPane}>
         {section === "about" && (
           <AboutMeSection
             identity={data.identity}

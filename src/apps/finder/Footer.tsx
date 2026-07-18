@@ -1,5 +1,6 @@
 import type { PortfolioData } from "../../types/portfolio";
 import { SECTION_LABEL, useFinderNav } from "./nav";
+import styles from "./Finder.module.css";
 
 /**
  * Finder path bar — rendered below the content area via the
@@ -15,9 +16,12 @@ export function FinderFooter({ data }: { data: PortfolioData }) {
   };
   const count = counts[section] ?? 0;
   return (
-    <div className="finder-pathbar">
-      <div className="finder-crumbs">
-        <span className="finder-crumb finder-crumb-root" aria-hidden>
+    <div className={styles.finderPathbar}>
+      <div className={styles.finderCrumbs}>
+        <span
+          className={`${styles.finderCrumb} ${styles.finderCrumbRoot}`}
+          aria-hidden
+        >
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
             <rect
               x="1.75"
@@ -30,15 +34,15 @@ export function FinderFooter({ data }: { data: PortfolioData }) {
             />
           </svg>
         </span>
-        <span className="finder-crumb">Macintosh HD</span>
-        <span className="finder-crumb-sep">›</span>
-        <span className="finder-crumb">Portfolio</span>
-        <span className="finder-crumb-sep">›</span>
-        <span className="finder-crumb is-current">
+        <span className={styles.finderCrumb}>Macintosh HD</span>
+        <span className={styles.finderCrumbSep}>›</span>
+        <span className={styles.finderCrumb}>Portfolio</span>
+        <span className={styles.finderCrumbSep}>›</span>
+        <span className={`${styles.finderCrumb} ${styles.isCurrent}`}>
           {SECTION_LABEL[section]}
         </span>
       </div>
-      <span className="finder-count">
+      <span className={styles.finderCount}>
         {count} {count === 1 ? "item" : "items"}
       </span>
     </div>

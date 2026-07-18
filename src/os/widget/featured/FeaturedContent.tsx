@@ -1,28 +1,30 @@
 import type { WidgetRenderContext } from "../types";
-import "./FeaturedProjectWidget.css";
+import styles from "./FeaturedProjectWidget.module.css";
 
 export function FeaturedContent({ ctx }: { ctx: WidgetRenderContext }) {
   const p = ctx.data.projects[0];
   return (
-    <div className="wgt-featured">
-      <div className="wgt-featured-top">
-        <span className="wgt-featured-name">{p.name.replace(/_/g, " ")}</span>
+    <div className={styles.wgtFeatured}>
+      <div className={styles.wgtFeaturedTop}>
+        <span className={styles.wgtFeaturedName}>
+          {p.name.replace(/_/g, " ")}
+        </span>
         <span
-          className="wgt-featured-status"
+          className={styles.wgtFeaturedStatus}
           data-status={p.status.toLowerCase()}
         >
           {p.status}
         </span>
       </div>
-      <p className="wgt-featured-desc">{p.description}</p>
-      <div className="wgt-featured-tags">
+      <p className={styles.wgtFeaturedDesc}>{p.description}</p>
+      <div className={styles.wgtFeaturedTags}>
         {p.tags.slice(0, 3).map((t) => (
-          <span className="wgt-tag" key={t}>
+          <span className={styles.wgtTag} key={t}>
             {t.replace(/_/g, " ")}
           </span>
         ))}
       </div>
-      <div className="wgt-featured-cta">
+      <div className={styles.wgtFeaturedCta}>
         {p.version} · {ctx.data.projects[0].url ? "Open ↗" : "Details"}
       </div>
     </div>

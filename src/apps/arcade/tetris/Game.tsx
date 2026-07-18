@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Overlays } from "./components/Overlays";
-import { useTetrisGame } from "./hook/useTetrisGame";
+import { useTetrisGame } from "./hook/use-tetris-game";
 import { SoundBank } from "./lib/sound";
-import { TetrisStage } from "./pixi/TetrisStage";
-import "./style.css";
+import { TetrisStage } from "./pixi/tetris-stage";
+import styles from "./Tetris.module.css";
 
 export interface GameProps {
   onQuit?: () => void;
@@ -169,9 +169,9 @@ export const Game: React.FC<GameProps> = ({ onQuit }) => {
   }, [booted, tryMove, tryRotate, softDrop, stageRef]);
 
   return (
-    <div className="tetris-root">
-      <div className="tetris-stage-wrap">
-        <div ref={hostRef} className="tetris-canvas-host" />
+    <div className={styles.tetrisRoot}>
+      <div className={styles.tetrisStageWrap}>
+        <div ref={hostRef} className={styles.tetrisCanvasHost} />
         <Overlays
           hud={hud}
           onRestart={() => reset()}

@@ -1,0 +1,74 @@
+/* Single source of truth for menu-bar height; the fullscreen titlebar
+   reveal offset (Window.css) reads the same value so they can never drift. */
+:root {
+  --menubar-h: 28px;
+}
+
+/* ─── macOS menu bar ─────────────────────────────────── */
+.menuBar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--menubar-h);
+  box-sizing: border-box;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  font-size: 12.5px;
+  color: var(--menubar-fg);
+  background: var(--menubar);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Fullscreen: slide the bar up out of view; it returns on top-edge hover. */
+.menu-bar--hidden {
+  transform: translateY(-100%);
+}
+
+/* Invisible hotspot along the very top edge that reveals the hidden bar. */
+.menuRevealZone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 999;
+}
+
+.menuBar .menuItem {
+  padding: 1px 8px;
+  border-radius: 16px;
+  transition: background-color 0.15s;
+}
+
+.menu-item--apple svg {
+  transform: translateY(-1px);
+}
+
+.menuBar .menuItem:hover {
+  background: var(--fg-faint);
+}
+
+/* ─── Appearance toggle (menu bar) ───────────────── */
+.appearance-toggle {
+  background: none;
+  border: none;
+  color: var(--menubar-fg);
+  cursor: pointer;
+  padding: 1px 8px;
+  border-radius: 5px;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.15s;
+}
+
+.appearance-toggle:hover {
+  background: var(--fg-faint);
+}

@@ -1,0 +1,378 @@
+/* src/os/desktop/clickmenu/WidgetGallery.css
+ * "Add Widgets" panel that slides up from above the dock. No <Window> chrome
+ * (no traffic lights). Colours reference the app's existing tokens
+ * (--fg, --bg, --accent, --info).
+ */
+
+/* widgetgalleryScrim/widgetgalleryPanel are local now — DesktopClickMenu.tsx
+   imports this module directly and uses the scoped classes in its
+   .closest() selector instead of matching a global string. */
+
+/* full-desktop scrim: clicking it (the empty desktop) slides the panel out */
+.widgetgalleryScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.001);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.widgetgalleryScrim.isOpen {
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.widgetgalleryPanel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1101;
+  /* medium, centered width instead of full-desktop width */
+  width: min(840px, 94vw);
+  margin-inline: auto;
+  height: min(62vh, 540px);
+  /* leave room for the dock */
+  margin-bottom: 92px;
+  display: flex;
+  flex-direction: column;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
+    sans-serif;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--bg, #1c1c1e) 72%, transparent);
+  backdrop-filter: blur(50px) saturate(180%);
+  -webkit-backdrop-filter: blur(50px) saturate(180%);
+  border: 0.5px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  border-radius: 22px;
+  box-shadow:
+    0 -18px 60px rgba(0, 0, 0, 0.5),
+    inset 0 0.5px 0 color-mix(in srgb, var(--fg) 16%, transparent);
+  /* Option D: slide completely off-screen (panel height + dock margin + shadow
+   * spread) so the upward-cast box-shadow band also clears the viewport,
+   * plus a tail opacity fade so any residual edge is softened out. */
+  transform: translateY(calc(100% + 220px));
+  opacity: 0;
+  transition:
+    transform 0.44s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.34s ease 0.1s;
+  user-select: none;
+}
+
+.widgetgalleryPanel.isOpen {
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform 0.44s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.22s ease;
+}
+
+.widgetgallery__grip {
+  width: 38px;
+  height: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--fg) 28%, transparent);
+  margin: 9px auto 4px;
+  flex: 0 0 auto;
+}
+
+/* ---- top controls: title + category pills + search ---- */
+.widgetgallery__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 6px 24px 12px;
+  flex: 0 0 auto;
+}
+
+.widgetgallery__title {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.widgetgallery__pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.widgetgallery__pill {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 9%, transparent);
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.widgetgallery__pill:hover {
+  background: color-mix(in srgb, var(--fg) 15%, transparent);
+}
+
+.widgetgallery__pill.is-active {
+  background: var(--info, #0a84ff);
+  color: #fff;
+}
+
+.widgetgallery__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 190px;
+  flex: 0 1 240px;
+}
+
+.widgetgallery__mag {
+  position: absolute;
+  left: 9px;
+  font-size: 24px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.widgetgallery__search input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  padding: 6px 10px 6px 26px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  outline: none;
+}
+
+.widgetgallery__search input:focus {
+  border-color: var(--info, #0a84ff);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--info, #0a84ff) 25%, transparent);
+}
+
+/* ---- grid of widget tiles (scrolls) ---- */
+.widgetgallery__grid {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
+  padding: 4px 24px 20px;
+  align-content: start;
+  /* Firefox: thin overlay-style scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.widgetgallery__grid:hover,
+.widgetgallery__grid:focus-within {
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+/* macOS overlay scrollbar (WebKit/Blink): hidden until hover/scroll */
+.widgetgallery__grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.widgetgallery__grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widgetgallery__grid::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.25s ease;
+}
+
+.widgetgallery__grid:hover::-webkit-scrollbar-thumb,
+.widgetgallery__grid:focus-within::-webkit-scrollbar-thumb,
+.widgetgallery__grid:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+.widgetgallery__grid::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .widgetgallery__grid:hover,
+[data-theme="light"] .widgetgallery__grid:focus-within {
+  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
+}
+
+[data-theme="light"] .widgetgallery__grid:hover::-webkit-scrollbar-thumb,
+[data-theme="light"] .widgetgallery__grid:focus-within::-webkit-scrollbar-thumb,
+[data-theme="light"] .widgetgallery__grid:active::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] .widgetgallery__grid::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.42);
+}
+
+.widgetgallery__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.widgetgallery__tile {
+  position: relative;
+  border-radius: 18px;
+  padding: 14px;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.widgetgallery__card:hover .widgetgallery__tile {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  border-color: color-mix(in srgb, var(--accent, #30d158) 55%, transparent);
+}
+
+/* real widget preview, scaled down to fit the tile and non-interactive */
+.widgetgallery__preview {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* previews are non-interactive: block links/buttons inside the real widget
+   (e.g. contact widget <a href>) from being clickable in the gallery.
+   .wgt sets pointer-events:auto, so override every descendant. */
+.widgetgallery__preview,
+.widgetgallery__preview * {
+  pointer-events: none !important;
+}
+
+.widgetgallery__preview-scale {
+  transform: scale(0.62);
+  transform-origin: center;
+}
+
+.widgetgallery__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--accent, #30d158);
+}
+
+.widgetgallery__plus {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--accent, #30d158);
+  opacity: 0;
+  transform: scale(0.7);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.widgetgallery__card:hover .widgetgallery__plus {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.widgetgallery__caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 3px;
+}
+
+.widgetgallery__caption b {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.widgetgallery__caption span {
+  font-size: 11px;
+  opacity: 0.55;
+  text-transform: capitalize;
+}
+
+.widgetgallery__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 0;
+  opacity: 0.55;
+  font-size: 13px;
+}
+
+/* ---- footer: Done ---- */
+.widgetgallery__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 24px 18px;
+  border-top: 0.5px solid color-mix(in srgb, var(--fg) 10%, transparent);
+  flex: 0 0 auto;
+}
+
+.widgetgallery__done {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--info, #0a84ff);
+  padding: 2px 18px;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px
+    color-mix(in srgb, var(--info, #0a84ff) 55%, transparent);
+}
+
+.widgetgallery__done:hover {
+  filter: brightness(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widgetgalleryPanel {
+    transition: none;
+  }
+}

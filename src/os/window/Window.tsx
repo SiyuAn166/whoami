@@ -16,7 +16,7 @@ import {
   type WindowInstance,
 } from "./types";
 
-import "./style.css";
+import styles from "./Window.module.css";
 
 interface WindowProps {
   instance: WindowInstance;
@@ -91,7 +91,7 @@ export function Window({
     // (traffic lights, toolbar buttons, etc).
     if (
       (e.target as HTMLElement).closest(
-        ".traffic-lights, button, a, input, select, textarea",
+        `.${styles.trafficLights}, button, a, input, select, textarea`,
       )
     )
       return;
@@ -172,11 +172,11 @@ export function Window({
 
   return (
     <div
-      className={`mac-window${maximized ? " is-maximized" : ""}${
-        fullscreen ? " is-fullscreen" : ""
-      }${fullscreen && chromeRevealed ? " chrome-revealed" : ""}${
-        state === "minimized" ? " is-minimized" : ""
-      }${state === "closed" ? " is-closed" : ""}`}
+      className={`${styles.macWindow}${maximized ? " " + styles.isMaximized : ""}${
+        fullscreen ? " " + styles.isFullscreen : ""
+      }${fullscreen && chromeRevealed ? " " + styles.chromeRevealed : ""}${
+        state === "minimized" ? " " + styles.isMinimized : ""
+      }${state === "closed" ? " " + styles.isClosed : ""}`}
       inert={!visible}
       aria-hidden={!visible}
       onPointerDownCapture={onFocus}
@@ -199,14 +199,14 @@ export function Window({
       }}
     >
       <div
-        className="titlebar"
+        className={styles.titlebar}
         onPointerDown={onTitlePointerDown}
         onDoubleClick={(e) => {
           // A button is a button — never let a double-click on the traffic
           // lights or any titlebar control trigger maximize/fullscreen.
           if (
             (e.target as HTMLElement).closest(
-              ".traffic-lights, button, a, input, select, textarea",
+              `.${styles.trafficLights}, button, a, input, select, textarea`,
             )
           )
             return;
@@ -216,9 +216,9 @@ export function Window({
         onPointerLeave={() => fullscreen && onRevealChange?.(false)}
         style={{ cursor: locked || COARSE ? "default" : "grab" }}
       >
-        <div className="traffic-lights">
+        <div className={styles.trafficLights}>
           <button
-            className="traffic-light tl-close"
+            className={`${styles.trafficLight} ${styles.tlClose}`}
             onClick={onClose}
             aria-label="Close window"
             title="Close"
@@ -226,7 +226,7 @@ export function Window({
             <CloseIcon />
           </button>
           <button
-            className="traffic-light tl-min"
+            className={`${styles.trafficLight} ${styles.tlMin}`}
             onClick={onMinimize}
             aria-label="Minimize window"
             title="Minimize"
@@ -234,7 +234,7 @@ export function Window({
             <MinimizeIcon />
           </button>
           <button
-            className="traffic-light tl-max"
+            className={`${styles.trafficLight} ${styles.tlMax}`}
             onClick={onToggleMax}
             aria-label={fullscreen ? "Exit full screen" : "Enter full screen"}
             title={fullscreen ? "Exit Full Screen" : "Full Screen"}
@@ -243,10 +243,12 @@ export function Window({
           </button>
         </div>
         {toolbar}
-        {!toolbar && <span className="titlebar-title">{instance.title}</span>}
+        {!toolbar && (
+          <span className={styles.titlebarTitle}>{instance.title}</span>
+        )}
       </div>
       <main
-        className="window-body"
+        className={styles.windowBody}
         style={{
           flex: 1,
           minHeight: 0,

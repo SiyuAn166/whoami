@@ -18,14 +18,14 @@ The arcade `Hub.tsx` only imports:
 - `import { Game } from "./puyo"` — signature `({ onQuit }: { onQuit?: () => void })`
 - `import { Icon } from "./puyo/Icon"` — signature `({ size }: { size?: number })`
 
-`index.ts` also exports `puyoApp` (an `AppDefinition` from `../../types`) for
+`index.tsx` also exports `puyoApp` (an `AppDefinition` from `../../types`) for
 standalone launch, plus re-exports config/engine/types for any pure-logic callers.
 
 `puyoApp` shape (must stay identical): `id:"puyo"`, `name:"Puyo"`, `icon:<Icon/>`,
 `showOnDesktop:false`, `defaultSize:{w:600,h:780}`, and a `render(ctx,onClose)` that
 returns `<Game onQuit={onClose}/>`. Uses `w`/`h` keys (not width/height).
 
-As long as `index.ts` exports `{ Game, puyoApp }` and `Icon.tsx` exports `{ Icon }`,
+As long as `index.tsx` exports `{ Game, puyoApp }` and `Icon.tsx` exports `{ Icon }`,
 deleting the old dir and dropping this one in requires **zero** changes elsewhere.
 
 ---
@@ -45,11 +45,10 @@ Build: `npm run build` (= `tsc -b && vite build`).
 
 ```
 puyo/
-├── index.ts          # barrel: Game / Icon / puyoApp (the contract)
-├── App.tsx           # puyoApp: AppDefinition
+├── index.tsx         # public entrance: Game / Icon / puyoApp (the contract)
 ├── Icon.tsx          # Icon({size}) — aqua water-drop SVG
 ├── Game.tsx          # <Game onQuit>: ModeSelect -> board + HUD + overlays
-├── style.css         # aqua theme, all scoped under .puyo-root
+├── Puyo.css          # aqua theme, all scoped under .puyo-root
 ├── INTEGRATION.md    # install notes (subset of this README)
 ├── README.md         # THIS FILE
 ├── lib/              # pure logic — no Pixi, no React, no DOM
@@ -58,18 +57,18 @@ puyo/
 │   ├── rng.ts        # color sequence generator
 │   └── engine.ts     # Puyo class: rotation+kicks, gravity, flood-fill, chain resolve, scoring
 ├── pixi/             # PixiJS v8 render layer
-│   ├── PuyoStage.ts  # owns Application; init()/destroy()/resize(); wires layers; setGhostEnabled
+│   ├── puyo-stage.ts # owns Application; init()/destroy()/resize(); wires layers; setGhostEnabled
 │   ├── assets.ts     # loads atlases via import.meta.url; frame-name helpers
 │   ├── coords.ts     # cell <-> pixel helpers
-│   ├── fieldFrame.ts # field border (layout.png) + field_lgn.png background + well
-│   ├── puyoLayer.ts  # settled puyos, connection sprites, drop + landing-bounce anim
-│   ├── activeLayer.ts# falling pair + ghost preview (ghost off in practice)
-│   ├── nextWindow.ts # next / next-next preview
-│   ├── chainCounter.ts# chain-count popup ("N 連鎖", chain_font)
-│   ├── scoreDisplay.ts# score readout (8-digit zero-padded, e.g. 00012020)
-│   └── fxLayer.ts    # burst particles
+│   ├── field-frame.ts# field border (layout.png) + field_lgn.png background + well
+│   ├── puyo-layer.ts # settled puyos, connection sprites, drop + landing-bounce anim
+│   ├── active-layer.ts# falling pair + ghost preview (ghost off in practice)
+│   ├── next-window.ts# next / next-next preview
+│   ├── chain-counter.ts# chain-count popup ("N 連鎖", chain_font)
+│   ├── score-display.ts# score readout (8-digit zero-padded, e.g. 00012020)
+│   └── fx-layer.ts   # burst particles
 ├── hook/
-│   └── usePuyoGame.ts# state machine: ticker loop, DAS/ARR input, practice/play, phases
+│   └── use-puyo-game.ts# state machine: ticker loop, DAS/ARR input, practice/play, phases
 ├── components/
 │   ├── ModeSelect.tsx# practice / play entry screen
 │   ├── Hud.tsx       # slim HUD (score/next/chain live in the canvas)
@@ -90,7 +89,7 @@ Layering: `lib/` (pure) → `pixi/` (render) → `hook/` (loop+input+modes) → 
 - **Play**: full gravity, soft drop, lock delay, Puyo Puyo Tsu scoring, ghost ON.
 
 Both modes share the SAME engine; only the gravity/ghost switch differs (set in
-`hook/usePuyoGame.ts` init via `stage.setGhostEnabled(mode === "play")`).
+`hook/use-puyo-game.ts` init via `stage.setGhostEnabled(mode === "play")`).
 
 Board: 6 cols × 13 rows (1 hidden top row), 4 active colors (of 5 available),
 spawn column index 2 (`SPAWN_COL`), death mark (`death_X.png`) drawn there.
@@ -123,7 +122,7 @@ groupBonus, 1, 999)`, all-clear +3600. Lives in `lib/engine.ts` / `lib/config.ts
 - canvas `width:640, height:880`
 - `next: { x:452, y:56 }` — next-window position. x↑ right, y↑ down.
 
-### Landing bounce (the "sticky" feel — puyoLayer.ts)
+### Landing bounce (the "sticky" feel — puyo-layer.ts)
 
 Mechanism (ported from puyosim-gg): puyos fall at CONSTANT speed
 (`dropPerRowMs`/row), then on landing play a texture-frame sequence
@@ -132,7 +131,7 @@ where `_h` = horizontal squash, `_v` = vertical stretch, `_0` = normal. NOT a
 scale tween, NOT an easing curve. Every placed puyo bounces (both of the pair,
 even the one that didn't split-drop — via the `forceBounce` set).
 
-### next-window puyo positions (nextWindow.ts, ~line 28)
+### next-window puyo positions (next-window.ts, ~line 28)
 
 ```
 layouts = [
@@ -143,7 +142,7 @@ layouts = [
 
 Intra-pair half-gap is the `30` at ~line 42 (`cy ± 30*scale`).
 
-### score format (scoreDisplay.ts)
+### score format (score-display.ts)
 
 `padStart(8,"0")` → `00012020` (zero-padded, no commas). Uses stroked bold Text;
 for pixel-exact bitmap font, add `scoreFont.json` + `num_font_d4444.png`.
@@ -195,8 +194,8 @@ curl -L -o chain_font.json "$BASE/chain_font.json"
 ## 7. Fix history (bugs already resolved — don't reintroduce)
 
 1. `label` field name collided with Container's built-in `label:string` in
-   `fxLayer.ts` (→ `chainLabel`) and `scoreDisplay.ts` (→ `scoreLabel`).
-2. Removed vertical column grid lines from `fieldFrame.ts`.
+   `fx-layer.ts` (→ `chainLabel`) and `score-display.ts` (→ `scoreLabel`).
+2. Removed vertical column grid lines from `field-frame.ts`.
 3. Ghost disabled in practice mode; play-mode ghost uses real puyo sprite
    `puyoFrame(color,0)` @ alpha ~0.35 (NOT the `shadow_*` spacer, which showed empty).
 4. Next window repositioned (`STAGE.next` y 28→56); death mark uses atlas

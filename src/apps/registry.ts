@@ -1,6 +1,6 @@
-import { finderApp } from "./finder/App";
-import { previewApp } from "./preview/App";
-import { terminalApp } from "./terminal/App";
+import { finderApp } from "./finder";
+import { previewApp } from "./preview";
+import { terminalApp } from "./terminal";
 import { arcadeApp } from "./arcade";
 import type { AppDefinition } from "./types";
 

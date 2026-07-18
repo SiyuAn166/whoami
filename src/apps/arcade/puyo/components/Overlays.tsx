@@ -2,6 +2,8 @@
 // "Smoked glass" style: near-transparent panel over a heavy blur, faint
 // hairline border, thin wide-tracked title, label/value readout rows split
 // by hairlines, and a solid-white primary pill + outlined ghost quit.
+import styles from "../Puyo.module.css";
+
 export function PauseOverlay({
   onResume,
   onQuit,
@@ -10,13 +12,13 @@ export function PauseOverlay({
   onQuit?: () => void;
 }) {
   return (
-    <div className="puyo-overlay">
-      <div className="puyo-overlay-card">
-        <span className="puyo-accent" />
+    <div className={styles.puyoOverlay}>
+      <div className={styles.puyoOverlayCard}>
+        <span className={styles.puyoAccent} />
         <h2>Paused</h2>
-        <div className="puyo-overlay-actions">
+        <div className={styles.puyoOverlayActions}>
           <button
-            className="puyo-btn primary"
+            className={`${styles.puyoBtn} ${styles.primary}`}
             onClick={(e) => {
               e.currentTarget.blur();
               onResume();
@@ -26,7 +28,7 @@ export function PauseOverlay({
           </button>
           {onQuit && (
             <button
-              className="puyo-btn ghost"
+              className={`${styles.puyoBtn} ${styles.ghost}`}
               onClick={(e) => {
                 e.currentTarget.blur();
                 onQuit();
@@ -53,23 +55,25 @@ export function GameOverOverlay({
   onQuit?: () => void;
 }) {
   return (
-    <div className="puyo-overlay">
-      <div className="puyo-overlay-card">
-        <span className="puyo-accent" />
+    <div className={styles.puyoOverlay}>
+      <div className={styles.puyoOverlayCard}>
+        <span className={styles.puyoAccent} />
         <h2>Game Over</h2>
-        <div className="puyo-hairline" />
-        <div className="puyo-readout">
-          <span className="puyo-readout-label">SCORE</span>
-          <span className="puyo-final-score">{score.toLocaleString()}</span>
+        <div className={styles.puyoHairline} />
+        <div className={styles.puyoReadout}>
+          <span className={styles.puyoReadoutLabel}>SCORE</span>
+          <span className={styles.puyoFinalScore}>
+            {score.toLocaleString()}
+          </span>
         </div>
-        <div className="puyo-hairline" />
-        <div className="puyo-readout">
-          <span className="puyo-readout-label">MAX CHAIN</span>
-          <span className="puyo-final-sub">{maxChain}</span>
+        <div className={styles.puyoHairline} />
+        <div className={styles.puyoReadout}>
+          <span className={styles.puyoReadoutLabel}>MAX CHAIN</span>
+          <span className={styles.puyoFinalSub}>{maxChain}</span>
         </div>
-        <div className="puyo-overlay-actions">
+        <div className={styles.puyoOverlayActions}>
           <button
-            className="puyo-btn primary"
+            className={`${styles.puyoBtn} ${styles.primary}`}
             onClick={(e) => {
               e.currentTarget.blur();
               onRestart();
@@ -79,7 +83,7 @@ export function GameOverOverlay({
           </button>
           {onQuit && (
             <button
-              className="puyo-btn ghost"
+              className={`${styles.puyoBtn} ${styles.ghost}`}
               onClick={(e) => {
                 e.currentTarget.blur();
                 onQuit();

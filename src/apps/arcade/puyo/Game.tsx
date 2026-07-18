@@ -3,9 +3,9 @@
 // carries a play/pause button that toggles gravity (play <-> practice) live.
 import { useEffect, useRef } from "react";
 import { GameOverOverlay, PauseOverlay } from "./components/Overlays";
-import { usePuyoGame } from "./hook/usePuyoGame";
+import { usePuyoGame } from "./hook/use-puyo-game";
 
-import "./style.css";
+import styles from "./Puyo.module.css";
 
 export function Game({ onQuit }: { onQuit?: () => void }) {
   const {
@@ -133,12 +133,12 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
   }, [touchMove, touchRotate, touchStepDown, hitControls]);
 
   return (
-    <div className="puyo-root">
-      <div className="puyo-game">
-        <div className="puyo-stage-wrap" ref={stageWrapRef}>
-          <div className="puyo-canvas-host" ref={hostRef} />
+    <div className={styles.puyoRoot}>
+      <div className={styles.puyoGame}>
+        <div className={styles.puyoStageWrap} ref={stageWrapRef}>
+          <div className={styles.puyoCanvasHost} ref={hostRef} />
           {hud.status === "loading" && (
-            <div className="puyo-loading">Loading…</div>
+            <div className={styles.puyoLoading}>Loading…</div>
           )}
           {hud.status === "paused" && (
             <PauseOverlay onResume={resume} onQuit={onQuit} />

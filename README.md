@@ -245,20 +245,21 @@ src/
 │   ├── keyframes.css            ← Animations
 │   └── misc.css                 ← Utility styles
 ├── hooks/
-│   ├── usePortfolioData.ts      ← Fetch and cache portfolio JSON
-│   ├── useTheme.ts              ← Theme toggle with localStorage
-│   └── useIntersectionObserver.ts ← Scroll-based animations
+│   ├── use-portfolio-data.ts    ← Fetch and cache portfolio JSON
+│   ├── use-theme.ts             ← Theme toggle with localStorage
+│   └── use-intersection-observer.ts ← Scroll-based animations
 ├── App.tsx                      ← Root component
 ├── main.tsx                     ← Entry point
 ├── os/                          ← Operating system UI layer
-│   ├── desktop/                 ← Desktop, menu bar, dock
+│   ├── desktop/                 ← Desktop, menu bar, dock (each own kebab-case dir, index.tsx entrance)
 │   ├── window/                  ← Window management (drag, resize, focus)
-│   └── widget/                  ← System widgets
+│   └── widget/                  ← System widgets (each widget its own dir, index.tsx entrance)
 ├── apps/                        ← Windowed applications
 │   ├── registry.ts              ← App definitions
-│   ├── terminal/                ← Terminal app
-│   ├── finder/                  ← File browser app
-│   └── preview/                 ← Document viewer app
+│   ├── terminal/                ← Terminal app (index.tsx entrance)
+│   ├── finder/                  ← File browser app (index.tsx entrance)
+│   ├── preview/                 ← Document viewer app (index.tsx entrance)
+│   └── arcade/                  ← Arcade hub + games (tetris/, puyo/), index.tsx entrance
 public/
 └── data.json                    ← Portfolio data
 ```

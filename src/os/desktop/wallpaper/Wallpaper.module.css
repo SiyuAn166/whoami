@@ -1,0 +1,553 @@
+/* ─── Wallpapers ───────────────────────────────────────────────────────────
+   All desktop wallpaper CSS lives here. Each wallpaper is a pure-CSS
+   gradient/grid stack selected by a data-wallpaper="…" attribute, now rendered
+   by the <Wallpaper> component (Wallpaper.tsx) both as the live desktop
+   background AND as each gallery preview tile — so a wallpaper and anything
+   baked into it (the greeting on aurora-grid) stay a single, unified picture.
+
+   A user PHOTO wallpaper (data.meta.wallpaper) still wins: Desktop.tsx paints
+   it on the .mac-desktop root + a .wallpaper-tint overlay instead of rendering
+   <Wallpaper>.
+   ------------------------------------------------------------------------- */
+
+/* Shared wallpaper tokens ------------------------------------------------- */
+:root[data-theme="dark"] {
+  --grid-cell: 34px;
+  --grid-line: rgba(255, 255, 255, 0.1);
+  --grid-line-bold: rgba(255, 255, 255, 0.16);
+  --band-1: rgba(255, 107, 139, 0.55);
+  --band-2: rgba(255, 199, 110, 0.5);
+  --band-3: rgba(79, 172, 254, 0.55);
+  --band-4: rgba(123, 92, 255, 0.55);
+}
+
+:root[data-theme="light"] {
+  --grid-cell: 34px;
+  --grid-line: rgba(30, 50, 100, 0.1);
+  --grid-line-bold: rgba(30, 50, 100, 0.16);
+  --band-1: rgba(255, 120, 150, 0.42);
+  --band-2: rgba(255, 205, 120, 0.42);
+  --band-3: rgba(90, 165, 255, 0.42);
+  --band-4: rgba(150, 120, 255, 0.42);
+}
+
+/* ── 1. aurora-grid (default) — colorful grid + diagonal color bands ────── */
+[data-wallpaper="aurora-grid"] {
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-cell)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-cell)
+    ),
+    repeating-linear-gradient(
+      0deg,
+      var(--grid-line-bold) 0 1.5px,
+      transparent 1.5px calc(var(--grid-cell) * 5)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--grid-line-bold) 0 1.5px,
+      transparent 1.5px calc(var(--grid-cell) * 5)
+    ),
+    repeating-linear-gradient(
+      48deg,
+      var(--band-1) 0 100px,
+      var(--band-2) 100px 200px,
+      var(--band-3) 200px 300px,
+      var(--band-4) 300px 400px
+    ),
+    linear-gradient(155deg, var(--desktop-b) 0%, var(--bg) 80%);
+}
+
+/* ── 2. neon-grid — rainbow base + bright white glowing grid lines ──────── */
+[data-wallpaper="neon-grid"] {
+  background-color: #12081f;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.55) 0 1px,
+      transparent 1px 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.55) 0 1px,
+      transparent 1px 40px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.9) 0 1.5px,
+      transparent 1.5px 200px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.9) 0 1.5px,
+      transparent 1.5px 200px
+    ),
+    linear-gradient(
+      125deg,
+      #ff5f8f 0%,
+      #ff9a5f 20%,
+      #ffe15f 40%,
+      #5fffb0 60%,
+      #4f9dff 80%,
+      #a05fff 100%
+    );
+}
+
+/* ── 3. sunset-waves — smooth Sonoma-style vertical sunset ──────────────── */
+[data-wallpaper="sunset-waves"] {
+  background-color: #2a1a4a;
+  background-image:
+    radial-gradient(120% 80% at 50% 120%, #ff9a6b 0%, transparent 60%),
+    radial-gradient(
+      90% 60% at 15% 10%,
+      rgba(255, 140, 200, 0.35) 0%,
+      transparent 55%
+    ),
+    linear-gradient(180deg, #241548 0%, #6b3f8f 35%, #d76b7a 68%, #ffb36b 100%);
+}
+
+/* ── 4. twilight-aurora — indigo dusk with aurora glow ──────────────────── */
+[data-wallpaper="twilight-aurora"] {
+  background-color: #1a1636;
+  background-image:
+    radial-gradient(
+      60% 50% at 20% 18%,
+      rgba(120, 180, 255, 0.5) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      50% 45% at 82% 28%,
+      rgba(180, 120, 255, 0.45) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      70% 60% at 60% 92%,
+      rgba(100, 255, 200, 0.35) 0%,
+      transparent 60%
+    ),
+    linear-gradient(160deg, #14112b 0%, #2d2456 52%, #3a2a6b 100%);
+}
+
+/* ── 5. pastel-mesh — soft flowing pastel mesh ──────────────────────────── */
+[data-wallpaper="pastel-mesh"] {
+  background-color: #eaf3ff;
+  background-image:
+    radial-gradient(45% 45% at 15% 20%, #ffd1e8 0%, transparent 55%),
+    radial-gradient(45% 45% at 85% 15%, #d1e8ff 0%, transparent 55%),
+    radial-gradient(50% 50% at 75% 80%, #d9ffe1 0%, transparent 55%),
+    radial-gradient(45% 45% at 20% 85%, #fff3c4 0%, transparent 55%),
+    linear-gradient(135deg, #fbe9ff 0%, #eaf3ff 100%);
+}
+
+/* ── <Wallpaper> surface ─────────────────────────────────────────────────
+   The painted surface itself. `container-type: inline-size` makes it a query
+   container so the baked-in greeting can size in cqw units and scale identically
+   on the full desktop and in a small gallery tile. */
+.wallpaper {
+  container-type: inline-size;
+  background-attachment: scroll;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Full-screen, fixed, non-interactive background layer, behind all desktop
+   content (windows / menu bar / dock / widgets render above). */
+.wallpaper--desktop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Gallery preview tile — fills its .wp-thumb button, finer grid so it reads as
+   a scaled-down desktop. */
+.wallpaper--thumb {
+  position: absolute;
+  inset: 0;
+  --grid-cell: 9px;
+}
+
+/* ── Greeting baked into the wallpaper (aurora-grid only) ─────────────────
+   Sized in cqw (1% of the wallpaper's width) so it is the SAME picture at any
+   scale: large on the desktop, tiny-but-proportional in a thumbnail. */
+.wallpaper__greeting {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4cqw;
+  padding: 0 4cqw;
+  text-align: center;
+  color: var(--fg, #e6e6e6);
+}
+
+.wallpaper__title {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-size: 5cqw;
+  text-shadow: 0 0.15cqw 2.4cqw rgba(0, 0, 0, 0.4);
+}
+
+.wallpaper__wave {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: wp-wave 2.6s ease-in-out infinite;
+}
+
+@keyframes wp-wave {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  10% {
+    transform: rotate(14deg);
+  }
+
+  20% {
+    transform: rotate(-8deg);
+  }
+
+  30% {
+    transform: rotate(14deg);
+  }
+
+  40% {
+    transform: rotate(-4deg);
+  }
+
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+.wallpaper__sub {
+  margin: 0;
+  font-size: 1.3cqw;
+  color: var(--fg, rgba(235, 235, 245, 0.62));
+  text-shadow: 0 0.1cqw 1cqw rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="light"] .wallpaper__title {
+  text-shadow: 0 0.15cqw 1.6cqw rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme="light"] .wallpaper__sub {
+  text-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallpaper__wave {
+    animation: none;
+  }
+}
+
+/* ── Aurora glow blobs — desktop grid wallpapers only; static, GPU-composited ─ */
+.wallpaper--desktop::before,
+.wallpaper--desktop::after {
+  content: "";
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+}
+
+.wallpaper--desktop::before {
+  background-image:
+    radial-gradient(circle, var(--info) 0%, transparent 58%),
+    radial-gradient(circle, var(--ok) 0%, transparent 56%),
+    radial-gradient(circle, var(--magenta) 0%, transparent 60%);
+  background-size:
+    60% 60%,
+    66% 66%,
+    70% 70%;
+  background-position:
+    18% 22%,
+    78% 30%,
+    58% 82%;
+  opacity: 0.3;
+  filter: blur(40px) saturate(140%);
+  transform: translate3d(-3%, 2%, 0) scale(1.1);
+}
+
+.wallpaper--desktop::after {
+  background-image:
+    radial-gradient(circle, var(--info) 0%, transparent 58%),
+    radial-gradient(circle, var(--ok) 0%, transparent 56%),
+    radial-gradient(circle, var(--magenta) 0%, transparent 60%);
+  background-size:
+    64% 64%,
+    58% 58%,
+    72% 72%;
+  background-position:
+    80% 68%,
+    24% 74%,
+    54% 16%;
+  opacity: 0.24;
+  filter: blur(50px) saturate(140%);
+  transform: translate3d(3%, -2%, 0) scale(1.14);
+}
+
+:root[data-theme="light"] .wallpaper--desktop::before,
+:root[data-theme="light"] .wallpaper--desktop::after {
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme="light"] .wallpaper--desktop::before {
+  opacity: 0.22;
+}
+
+:root[data-theme="light"] .wallpaper--desktop::after {
+  opacity: 0.18;
+}
+
+/* Gradient wallpapers carry their own glow → drop the blob layers */
+.wallpaper--desktop[data-wallpaper="sunset-waves"]::before,
+.wallpaper--desktop[data-wallpaper="sunset-waves"]::after,
+.wallpaper--desktop[data-wallpaper="twilight-aurora"]::before,
+.wallpaper--desktop[data-wallpaper="twilight-aurora"]::after,
+.wallpaper--desktop[data-wallpaper="pastel-mesh"]::before,
+.wallpaper--desktop[data-wallpaper="pastel-mesh"]::after {
+  display: none;
+}
+
+/* ── User PHOTO wallpaper (data.meta.wallpaper) — painted on .mac-desktop root
+   by Desktop.tsx; <Wallpaper> is not rendered in that mode. ──────────────── */
+.wallpaperTint {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.12));
+}
+
+:root[data-theme="light"] .wallpaperTint {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0.08)
+  );
+}
+
+/* ── Wallpaper gallery (right-click → Change Wallpaper…) ─────────────────── */
+.wallpaperGalleryScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: wpg-scrim-in 0.28s ease;
+}
+
+@keyframes wpg-scrim-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.wallpaperGalleryPanel {
+  width: min(720px, 94vw);
+  max-height: min(78vh, 620px);
+  display: flex;
+  flex-direction: column;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
+    sans-serif;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--bg, #1c1c1e) 72%, transparent);
+  backdrop-filter: blur(50px) saturate(180%);
+  -webkit-backdrop-filter: blur(50px) saturate(180%);
+  border: 0.5px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  border-radius: 22px;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.5),
+    inset 0 0.5px 0 color-mix(in srgb, var(--fg) 16%, transparent);
+  user-select: none;
+  animation: wpg-panel-in 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes wpg-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.wallpaper-gallery__title {
+  margin: 0;
+  padding: 20px 24px 12px;
+  font-size: 19px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.wallpaper-gallery__grid {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
+  padding: 4px 24px 20px;
+  align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.wallpaper-gallery__grid:hover,
+.wallpaper-gallery__grid:focus-within {
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+.wallpaper-gallery__grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.wallpaper-gallery__grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wallpaper-gallery__grid::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.25s ease;
+}
+
+.wallpaper-gallery__grid:hover::-webkit-scrollbar-thumb,
+.wallpaper-gallery__grid:focus-within::-webkit-scrollbar-thumb,
+.wallpaper-gallery__grid:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+[data-theme="light"] .wallpaper-gallery__grid:hover,
+[data-theme="light"] .wallpaper-gallery__grid:focus-within {
+  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
+}
+
+[data-theme="light"] .wallpaper-gallery__grid:hover::-webkit-scrollbar-thumb,
+[data-theme="light"]
+  .wallpaper-gallery__grid:focus-within::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.28);
+}
+
+/* one selectable wallpaper = tile (renders <Wallpaper variant="thumb">) + caption */
+.wp-thumb {
+  position: relative;
+  display: block;
+  border-radius: 18px;
+  min-height: 118px;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.wp-thumb:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  border-color: color-mix(in srgb, var(--accent, #30d158) 55%, transparent);
+}
+
+.wp-thumb.is-active {
+  border-color: var(--accent, #30d158);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--accent, #30d158) 55%, transparent);
+}
+
+.wp-thumb__check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: #fff;
+  background: var(--accent, #30d158);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.wp-thumb__name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 14px 10px 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.6), transparent);
+}
+
+.wallpaper-gallery__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 24px 18px;
+  border-top: 0.5px solid color-mix(in srgb, var(--fg) 10%, transparent);
+  flex: 0 0 auto;
+}
+
+.wallpaper-gallery__done {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--info, #0a84ff);
+  padding: 7px 18px;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px
+    color-mix(in srgb, var(--info, #0a84ff) 55%, transparent);
+  transition: filter 0.14s ease;
+}
+
+.wallpaper-gallery__done:hover {
+  filter: brightness(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallpaperGalleryScrim,
+  .wallpaperGalleryPanel {
+    animation: none;
+  }
+}

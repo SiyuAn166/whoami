@@ -1,4 +1,4 @@
-import { Desktop } from "./os/desktop/Desktop";
+import { Desktop } from "./os/desktop";
 
 function App() {
   return <Desktop />;

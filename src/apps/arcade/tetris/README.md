@@ -57,16 +57,15 @@ Level increases every 10 lines cleared, which speeds up gravity per the curve in
 
 ```
 tetris/
-├── App.tsx              # App definition for the arcade hub / standalone launch
+├── index.tsx            # Public entrance: tetrisApp definition + re-exports (Game, Icon, config, engine, cover)
 ├── Game.tsx             # Wires the Pixi stage, sound, HUD, and overlays
 ├── Icon.tsx             # App icon
-├── index.ts             # Public exports (app, Game, config, engine, cover)
-├── style.css            # All scoped .tetris-* styling
+├── Tetris.css           # All scoped .tetris-* styling
 ├── components/
 │   ├── Hud.tsx          # Score / level / lines + Restart button
 │   └── Overlays.tsx     # Pause menu, Game Over panel, control hints
 ├── hook/
-│   └── useTetrisGame.ts # Game loop, input handling, scoring, pause state
+│   └── use-tetris-game.ts # Game loop, input handling, scoring, pause state
 ├── lib/
 │   ├── config.ts        # Constants: dimensions, timing, scoring, colors, sounds
 │   ├── engine.ts        # Pure rules: spawn, move, rotate, lock, clears, T-spin
@@ -74,11 +73,11 @@ tetris/
 │   ├── sound.ts         # SoundBank loader/player
 │   └── types.ts         # Grid, Piece, Status, HudSnapshot, ClearKind
 ├── pixi/
-│   ├── TetrisStage.ts   # Owns the Pixi Application and scene graph
-│   ├── boardLayer.ts    # Settled cells
-│   ├── activeLayer.ts   # Active piece + ghost
-│   ├── sideLayer.ts     # Hold + next queue
-│   ├── fxLayer.ts       # Line-clear sweep, toasts
+│   ├── tetris-stage.ts  # Owns the Pixi Application and scene graph
+│   ├── board-layer.ts   # Settled cells
+│   ├── active-layer.ts  # Active piece + ghost
+│   ├── side-layer.ts    # Hold + next queue
+│   ├── fx-layer.ts      # Line-clear sweep, toasts
 │   ├── tiles.ts         # Baked tile textures
 │   └── coords.ts        # Cell ↔ pixel helpers
 └── assets/
@@ -90,7 +89,7 @@ tetris/
 
 The game is split into three clean layers:
 
-- Pure logic (`lib/`) has no React and no Pixi. `engine.ts` implements the rules and `useTetrisGame.ts` drives them from a single `requestAnimationFrame`-style ticker exposed by the stage.
+- Pure logic (`lib/`) has no React and no Pixi. `engine.ts` implements the rules and `use-tetris-game.ts` drives them from a single `requestAnimationFrame`-style ticker exposed by the stage.
 - Rendering (`pixi/`) is framework-free. `TetrisStage` owns the Pixi `Application` and is driven only through its public methods (`syncBoard`, `setActive`, `setNext`, `flashRows`, `toast`, `onTick`). The canvas is transparent and letterboxed with `object-fit: contain`, so it scales with the window while the `.tetris-root` gradient shows through.
 - UI (`components/`, `Game.tsx`) renders the HUD and overlays from a lightweight `HudSnapshot` and forwards user intents (restart, resume, quit) back down.
 

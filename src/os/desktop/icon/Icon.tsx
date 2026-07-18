@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import dockStyles from "../dock/Dock.module.css";
+import styles from "./DesktopIcons.module.css";
 
 interface IconProps {
   label: string;
@@ -14,28 +16,28 @@ export function Icon({ label, icon, running, onOpen, variant }: IconProps) {
   if (variant === "dock") {
     return (
       <button
-        className="dock-icon"
+        className={dockStyles.dockIcon}
         onClick={onOpen}
         aria-label={`Open ${label}`}
       >
         {/* macOS-style name bubble shown on hover / keyboard focus */}
-        <span className="dock-tooltip" role="tooltip">
+        <span className={dockStyles.dockTooltip} role="tooltip">
           {label}
         </span>
         {icon}
-        {running && <span className="dock-dot" aria-hidden />}
+        {running && <span className={dockStyles.dockDot} aria-hidden />}
       </button>
     );
   }
   return (
     <button
-      className="desktop-icon"
+      className={styles.desktopIcon}
       onDoubleClick={onOpen}
       aria-label={`Open ${label}`}
       title={label}
     >
-      <span className="desktop-icon-asset">{icon}</span>
-      <span className="desktop-icon-label">{label}</span>
+      <span className={styles.desktopIconAsset}>{icon}</span>
+      <span className={styles.desktopIconLabel}>{label}</span>
     </button>
   );
 }

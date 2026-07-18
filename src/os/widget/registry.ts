@@ -1,12 +1,12 @@
 // src/os/widget/registry.ts
-import { bootstrapWidget } from "./bootstrap/BootstrapWidget";
-import { calendarWidget } from "./calendar/CalendarWidget";
-import { clockWidget } from "./clock/ClockWidget";
-import { contactWidget } from "./contact/ContactWidget";
-import { featuredProjectWidget } from "./featured/FeaturedProjectWidget";
-import { skillsWidget } from "./skills/SkillsWidget";
-import { stickyNoteWidget } from "./sticky/StickyNoteWidget";
-import { terminalTipWidget } from "./terminal/TerminalTipWidget";
+import { bootstrapWidget } from "./bootstrap";
+import { calendarWidget } from "./calendar";
+import { clockWidget } from "./clock";
+import { contactWidget } from "./contact";
+import { featuredProjectWidget } from "./featured";
+import { skillsWidget } from "./skills";
+import { stickyNoteWidget } from "./sticky";
+import { terminalTipWidget } from "./terminal";
 import type { WidgetDefinition } from "./types";
 
 /**

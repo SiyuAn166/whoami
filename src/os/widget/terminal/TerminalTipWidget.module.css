@@ -1,0 +1,53 @@
+/* ─── Terminal tip ────────────────────────────────────────────────────────
+   .wgt--terminal is local — WidgetFrame imports this module and looks up
+   the scoped class by variant instead of building a literal string.
+
+   blink is defined locally (duplicated from styles/keyframes.css) because
+   this build's CSS-modules transform rewrites `animation: blink` to a
+   hashed name even though it has no matching local @keyframes, silently
+   breaking the reference to the global one. */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.wgt--terminal {
+  border-color: rgba(45, 200, 74, 0.28);
+  background-color: rgba(12, 14, 12, 0.9);
+  background-image: none;
+  color: var(--accent);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.wgt-term {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+}
+
+.wgt-term-prompt {
+  color: var(--ok);
+  margin-right: 8px;
+}
+
+.wgt-term-out {
+  color: #cfe9cf;
+  padding-left: 18px;
+}
+
+.wgt-term-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 2px;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  animation: blink 1s steps(1) infinite;
+}

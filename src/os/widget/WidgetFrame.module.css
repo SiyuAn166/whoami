@@ -1,0 +1,134 @@
+/* ─── Shared frame: liquid glass ─────────────────────────────────────────
+   .wgt (the base card) is :global — WidgetLayer.module.css targets it with
+   a plain-string compound selector (`.wgt-drag.dragging .wgt`) to freeze the
+   card's transform while dragging, so it can't be hashed. Every other class
+   here (wgt--*, wgt-head, wgt-title, wgt-body) is only ever read from this
+   file, so they're properly local, referenced via `styles.xxx` below.
+
+   fadeIn is defined locally (duplicated from styles/keyframes.css) because
+   this build's CSS-modules transform rewrites `animation: fadeIn` to a
+   hashed name even though it has no matching local @keyframes, silently
+   breaking the reference to the global one. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+:global(.wgt) {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border-radius: 22px;
+  color: var(--fg);
+  text-align: left;
+  font: inherit;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background-color: rgba(40, 40, 46, 0.22);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.01)
+  );
+  -webkit-backdrop-filter: blur(16px) saturate(185%);
+  backdrop-filter: blur(16px) saturate(185%);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.16);
+  animation: fadeIn 0.3s ease both;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+  user-select: none;
+}
+
+:root[data-theme="light"] :global(.wgt) {
+  border-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.01);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.12)
+  );
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.wgtClickable {
+  cursor: pointer;
+}
+
+.wgtClickable:hover {
+  transform: translateY(-2px);
+  border-color: var(--info);
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.wgtClickable:focus-visible {
+  outline: 2px solid var(--info);
+  outline-offset: 2px;
+}
+
+/* Size tiers */
+.wgtSmall {
+  width: 190px;
+  min-height: 100px;
+}
+
+.wgtMedium {
+  width: 220px;
+  min-height: 210px;
+}
+
+.wgtWide {
+  width: 380px;
+  min-height: 150px;
+}
+
+.wgtLarge {
+  width: 380px;
+  min-height: 380px;
+}
+
+/* Header */
+.wgtHead {
+  margin-bottom: 10px;
+}
+
+.wgtTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+
+.wgtBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(.wgt) {
+    animation: none;
+  }
+
+  .wgtClickable:hover {
+    transform: none;
+  }
+}
