@@ -32,6 +32,18 @@ import type { ChainStep, Color, Grid, Mode, Piece } from "../lib/types";
 
 const ALL_CLEAR_BONUS = 3600;
 
+// Fixed logic timestep: step the control loop at a constant 60 Hz so DAS/ARR,
+// gravity and lock delay are frame-perfect regardless of the display refresh
+// rate (60/120/144 Hz all play identically, like console Puyo).
+const FIXED_STEP = 1000 / 60;
+// Cap how many times a move/rotate may reset the lock delay while grounded, so
+// a piece can't be stalled on the floor forever (commercial "lock reset" cap).
+const MAX_LOCK_RESETS = 15;
+// When the pair is soft-dropped (down held) into a landing, lock almost
+// instantly (~2 frames) so the chain check fires the moment it slams down.
+// Natural free-fall landings instead use the tunable TIMING.lockDelay grace.
+const SOFT_DROP_LOCK = FIXED_STEP * 2;
+
 export type Status = "loading" | "control" | "resolve" | "paused" | "gameover";
 
 interface Hud {
@@ -65,8 +77,20 @@ interface GameState {
   softDrop: boolean;
   // horizontal auto-shift
   dir: -1 | 0 | 1;
+  // Physically-held direction keys, last element = active direction.
+  // Deriving g.dir from this each edge (instead of trusting keydown/keyup
+  // edges alone) fixes "holding a direction stops working" when keys overlap
+  // or when the OS key-repeat switches to the most-recently-pressed key.
+  dirStack: (-1 | 1)[];
   dasAccum: number;
   arrAccum: number;
+  // Fixed-timestep accumulator (drains in FIXED_STEP chunks each frame).
+  acc: number;
+  // Lock-delay reset count while grounded (capped by MAX_LOCK_RESETS).
+  lockResets: number;
+  // IRS (initial rotation system): rotation pressed during a resolve, applied
+  // the instant the next pair spawns so fast inputs are never dropped.
+  bufferedRot: number;
   // resolve playback
   steps: ChainStep[];
   stepIndex: number;
@@ -100,6 +124,51 @@ function settledPositions(
     if (dr >= HIDDEN_ROWS) set.add(`${dr},${c}`);
   }
   return set;
+}
+
+// Active horizontal direction = the most-recently-pressed held key (SOCD:
+// last press wins), or 0 when nothing is held.
+function currentDir(stack: (-1 | 1)[]): -1 | 0 | 1 {
+  return stack.length ? stack[stack.length - 1] : 0;
+}
+
+// Recompute g.dir from the held-key stack. When the active direction changes
+// we reset DAS/ARR and do one immediate step (only while under control), so a
+// still-held key resumes the instant the conflicting key is released.
+function applyDir(g: GameState, stage: PuyoStage): void {
+  const want = currentDir(g.dirStack);
+  if (want === g.dir) return;
+  g.dir = want;
+  g.dasAccum = 0;
+  g.arrAccum = 0;
+  if (want !== 0 && g.status === "control" && g.piece) {
+    const before = g.piece.c;
+    g.piece = movePiece(g.grid, g.piece, want);
+    if (g.piece.c !== before) sfx.move();
+    resetLock(g);
+    stage.showActive(g.grid, g.piece);
+  }
+}
+
+function pressDir(g: GameState, stage: PuyoStage, d: -1 | 1): void {
+  if (!g.dirStack.includes(d)) g.dirStack.push(d);
+  applyDir(g, stage);
+}
+
+function releaseDir(g: GameState, stage: PuyoStage, d: -1 | 1): void {
+  const i = g.dirStack.lastIndexOf(d);
+  if (i !== -1) g.dirStack.splice(i, 1);
+  applyDir(g, stage);
+}
+
+// Reset the lock-delay timer after a move/rotate, but only up to a cap while
+// grounded so a grounded piece can't be kept alive indefinitely by wiggling.
+function resetLock(g: GameState): void {
+  if (g.grounded) {
+    if (g.lockResets >= MAX_LOCK_RESETS) return;
+    g.lockResets++;
+  }
+  g.lockAccum = 0;
 }
 
 export function usePuyoGame(initialMode: Mode = "play") {
@@ -148,12 +217,25 @@ export function usePuyoGame(initialMode: Mode = "play") {
     g.queue.push(g.bag.pair());
     const p: Piece = { r: SPAWN_ROW, c: SPAWN_COL, axis, sat, orient: 0 };
     g.piece = p;
+    // IRS: apply any rotation buffered during the previous resolve.
+    if (g.bufferedRot !== 0) {
+      const dir = g.bufferedRot > 0 ? 1 : -1;
+      let n = Math.abs(g.bufferedRot);
+      while (n-- > 0) g.piece = rotatePiece(g.grid, g.piece, dir);
+      g.bufferedRot = 0;
+    }
     stageRef.current?.setNext(g.queue.slice(0, 2));
     g.gravAccum = 0;
     g.lockAccum = 0;
+    g.lockResets = 0;
     g.grounded = false;
+    g.acc = 0;
     g.status = "control";
-    stageRef.current?.showActive(g.grid, p);
+    // IMS / DAS charge: if a direction was held through the previous piece and
+    // DAS is already charged, prime ARR so the new pair auto-shifts toward the
+    // wall on the very next step (no re-delay) — console Puyo's "DAS charge".
+    if (g.dir !== 0 && g.dasAccum >= TIMING.das) g.arrAccum = TIMING.arr;
+    stageRef.current?.showActive(g.grid, g.piece);
     syncHud();
   }, [syncHud]);
 
@@ -265,6 +347,97 @@ export function usePuyoGame(initialMode: Mode = "play") {
     spawnNext();
   }, [spawnNext]);
 
+  // One fixed 60 Hz step of the under-control simulation: DAS charge, ARR
+  // auto-shift, gravity and lock delay. Returns true if it started a resolve
+  // (so the frame driver stops stepping this frame).
+  const stepControl = useCallback(
+    (g: GameState): boolean => {
+      if (g.status !== "control" || !g.piece) return false;
+
+      // DAS charge -> ARR auto-shift, at a fixed cadence (frame-perfect).
+      if (g.dir !== 0) {
+        if (g.dasAccum < TIMING.das) {
+          g.dasAccum = Math.min(g.dasAccum + FIXED_STEP, TIMING.das);
+        }
+        if (g.dasAccum >= TIMING.das) {
+          g.arrAccum += FIXED_STEP;
+          while (g.arrAccum >= TIMING.arr) {
+            const before = g.piece.c;
+            g.piece = movePiece(g.grid, g.piece, g.dir);
+            if (g.piece.c !== before) resetLock(g);
+            g.arrAccum -= TIMING.arr;
+          }
+        }
+      }
+
+      if (g.mode === "play") {
+        const interval = g.softDrop ? TIMING.softDrop : TIMING.gravity;
+        g.gravAccum += FIXED_STEP;
+        while (g.gravAccum >= interval) {
+          const np = stepDown(g.grid, g.piece);
+          if (np) {
+            g.piece = np;
+            g.gravAccum -= interval;
+          } else {
+            g.gravAccum = 0;
+            break;
+          }
+        }
+        // Detect grounding EVERY frame (not only on a gravity tick) so the lock
+        // timer starts the instant the pair can no longer fall. Otherwise it
+        // would wait up to a full gravity interval (~780ms) before even noticing
+        // the landing, which made lockDelay changes look like they did nothing.
+        if (stepDown(g.grid, g.piece) === null) {
+          if (!g.grounded) {
+            g.grounded = true;
+            g.lockAccum = 0;
+          }
+          g.lockAccum += FIXED_STEP;
+          // Holding soft-drop locks the pair almost instantly on landing so the
+          // chain check fires the moment it settles (commercial soft-drop lock).
+          const lockAt = g.softDrop ? SOFT_DROP_LOCK : TIMING.lockDelay;
+          if (g.lockAccum >= lockAt) {
+            beginResolve();
+            return true;
+          }
+        } else {
+          g.grounded = false;
+          g.lockAccum = 0;
+        }
+      } else {
+        // Practice: no auto gravity; the pair floats until soft-dropped, then
+        // auto-locks a short moment after it can no longer fall.
+        if (g.softDrop && stepDown(g.grid, g.piece)) {
+          g.gravAccum += FIXED_STEP;
+          while (g.gravAccum >= TIMING.softDrop) {
+            const np = stepDown(g.grid, g.piece);
+            if (np) {
+              g.piece = np;
+              g.grounded = false;
+              g.lockAccum = 0;
+              g.lockResets = 0;
+            }
+            g.gravAccum -= TIMING.softDrop;
+          }
+        }
+        if (g.piece && stepDown(g.grid, g.piece) === null) {
+          g.grounded = true;
+          g.lockAccum += FIXED_STEP;
+          const lockAt = g.softDrop ? SOFT_DROP_LOCK : TIMING.lockDelay;
+          if (g.lockAccum >= lockAt) {
+            beginResolve();
+            return true;
+          }
+        } else {
+          g.grounded = false;
+          g.lockAccum = 0;
+        }
+      }
+      return false;
+    },
+    [beginResolve],
+  );
+
   // ---- main tick ---------------------------------------------------------
   const tick = useCallback(
     (ms: number) => {
@@ -272,76 +445,46 @@ export function usePuyoGame(initialMode: Mode = "play") {
       const stage = stageRef.current;
       if (!g || !stage) return;
 
-      if (g.status === "control" && g.piece) {
-        // Horizontal auto-shift.
-        if (g.dir !== 0) {
-          g.dasAccum += ms;
-          if (g.dasAccum >= TIMING.das) {
-            g.arrAccum += ms;
-            while (g.arrAccum >= TIMING.arr) {
-              const np = movePiece(g.grid, g.piece, g.dir);
-              g.piece = np;
-              g.arrAccum -= TIMING.arr;
-            }
+      // Fixed-timestep control loop: advance the simulation in constant 60 Hz
+      // slices so DAS/ARR, gravity and lock delay behave identically on any
+      // refresh rate (console-accurate). Rendering still happens once per real
+      // frame below, with sub-cell interpolation for smoothness.
+      if (g.status === "control") {
+        g.acc += ms;
+        // Clamp after a tab-out / long stall so we don't fast-forward wildly.
+        if (g.acc > 200) g.acc = 200;
+        while (g.acc >= FIXED_STEP) {
+          if (stepControl(g)) {
+            g.acc = 0;
+            break;
           }
+          g.acc -= FIXED_STEP;
         }
-
-        if (g.mode === "play") {
-          const interval = g.softDrop ? TIMING.softDrop : TIMING.gravity;
-          g.gravAccum += ms;
-          let moved = false;
-          while (g.gravAccum >= interval) {
-            const np = stepDown(g.grid, g.piece);
-            if (np) {
-              g.piece = np;
-              g.gravAccum -= interval;
-              moved = true;
-              g.grounded = false;
-              g.lockAccum = 0;
-            } else {
-              g.gravAccum = 0;
-              g.grounded = true;
-              break;
-            }
+        if (g.status === "control" && g.piece) {
+          // Sub-cell fall progress -> smooth constant-speed descent in the view
+          // (logic steps whole rows; this is purely visual interpolation).
+          // Gate on whether the pair can ACTUALLY fall one row right now, NOT
+          // the lagging `grounded` flag, so the fraction never overshoots and
+          // then snaps back up a cell -> the "retract upward" glitch.
+          // Only SOFT DROP interpolates sub-cell for a smooth press-and-hold
+          // descent. Natural gravity is intentionally STEPPED: the pair holds
+          // its row and snaps down a whole cell each interval, giving the
+          // classic tick-tick-tick free-fall feel instead of a continuous
+          // 60fps glide. (Practice has no auto gravity, so it only ever falls
+          // via soft drop -> smooth.)
+          let fallFrac = 0;
+          if (g.softDrop && stepDown(g.grid, g.piece) !== null) {
+            fallFrac = Math.min(g.gravAccum / TIMING.softDrop, 1);
           }
-          if (g.grounded) {
-            g.lockAccum += ms;
-            if (g.lockAccum >= TIMING.lockDelay) {
-              beginResolve();
-              return;
-            }
-          }
-          void moved;
-        } else {
-          // Practice: no auto gravity (the pair floats until soft-dropped), but
-          // once it can't fall any further it auto-locks after a short delay,
-          // so placement is detected without pressing Space.
-          if (g.softDrop && stepDown(g.grid, g.piece)) {
-            g.gravAccum += ms;
-            while (g.gravAccum >= TIMING.softDrop) {
-              const np = stepDown(g.grid, g.piece);
-              if (np) {
-                g.piece = np;
-                g.grounded = false;
-                g.lockAccum = 0;
-              }
-              g.gravAccum -= TIMING.softDrop;
-            }
-          }
-          if (g.piece && stepDown(g.grid, g.piece) === null) {
-            g.grounded = true;
-            g.lockAccum += ms;
-            if (g.lockAccum >= TIMING.lockDelay) {
-              beginResolve();
-              return;
-            }
-          } else {
-            g.grounded = false;
-            g.lockAccum = 0;
-          }
+          stage.showActive(g.grid, g.piece, ms, fallFrac);
         }
-        if (g.piece) stage.showActive(g.grid, g.piece);
         return;
+      }
+
+      // Between pieces (during a resolve): keep charging DAS from real time so a
+      // held direction slams the next pair to the wall the instant it spawns.
+      if (g.dir !== 0 && g.dasAccum < TIMING.das) {
+        g.dasAccum = Math.min(g.dasAccum + ms, TIMING.das);
       }
 
       if (g.status === "resolve") {
@@ -400,7 +543,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
         }
       }
     },
-    [beginResolve, finishResolve, startStep],
+    [stepControl, finishResolve, startStep],
   );
 
   // ---- input -------------------------------------------------------------
@@ -410,75 +553,85 @@ export function usePuyoGame(initialMode: Mode = "play") {
       const stage = stageRef.current;
       if (!g || !stage) return;
       sfx.unlock();
-      if (g.status !== "control" || !g.piece) return;
+
+      // Movement/soft-drop keys are tracked in EVERY state (see pressDir): held
+      // state stays correct through a resolve so it resumes on the next pair,
+      // and g.dir is derived from the held set, not fragile keydown/keyup edges.
+      const inControl = g.status === "control" && !!g.piece;
       switch (e.code) {
         case "ArrowLeft":
           e.preventDefault();
-          if (g.dir !== -1) {
-            const before = g.piece.c;
-            g.piece = movePiece(g.grid, g.piece, -1);
-            if (g.piece.c !== before) sfx.move();
-            g.dir = -1;
-            g.dasAccum = 0;
-            g.arrAccum = 0;
-            g.lockAccum = 0;
-          }
-          break;
+          pressDir(g, stage, -1);
+          return;
         case "ArrowRight":
           e.preventDefault();
-          if (g.dir !== 1) {
-            const before = g.piece.c;
-            g.piece = movePiece(g.grid, g.piece, 1);
-            if (g.piece.c !== before) sfx.move();
-            g.dir = 1;
-            g.dasAccum = 0;
-            g.arrAccum = 0;
-            g.lockAccum = 0;
-          }
-          break;
+          pressDir(g, stage, 1);
+          return;
         case "ArrowDown":
           e.preventDefault();
-          if (!g.softDrop) g.gravAccum = 0;
+          // Rescale the gravity clock so sub-cell fall progress is
+          // preserved when switching to soft-drop speed: the piece keeps its
+          // exact position and simply falls faster (no jump, no reset stutter).
+          if (inControl && !g.softDrop && g.mode === "play") {
+            const frac = g.gravAccum / TIMING.gravity;
+            g.gravAccum = frac * TIMING.softDrop;
+          }
           g.softDrop = true;
-          break;
+          return;
         case "KeyZ":
         case "ControlLeft":
           e.preventDefault();
-          g.piece = rotatePiece(g.grid, g.piece, -1);
-          sfx.spin();
-          g.lockAccum = 0;
-          break;
+          if (inControl) {
+            g.piece = rotatePiece(g.grid, g.piece!, -1);
+            sfx.spin();
+            resetLock(g);
+            stage.showActive(g.grid, g.piece);
+          } else {
+            g.bufferedRot = Math.max(-2, g.bufferedRot - 1); // IRS buffer
+          }
+          return;
         case "KeyX":
         case "ArrowUp":
           e.preventDefault();
-          g.piece = rotatePiece(g.grid, g.piece, 1);
-          sfx.spin();
-          g.lockAccum = 0;
-          break;
-        case "Space": {
-          e.preventDefault();
-          g.piece = hardDropPiece(g.grid, g.piece);
-          beginResolve();
+          if (inControl) {
+            g.piece = rotatePiece(g.grid, g.piece!, 1);
+            sfx.spin();
+            resetLock(g);
+            stage.showActive(g.grid, g.piece);
+          } else {
+            g.bufferedRot = Math.min(2, g.bufferedRot + 1); // IRS buffer
+          }
           return;
-        }
+        case "Space":
+          e.preventDefault();
+          if (inControl) {
+            g.piece = hardDropPiece(g.grid, g.piece!);
+            beginResolve();
+          }
+          return;
         default:
           return;
       }
-      stage.showActive(g.grid, g.piece);
     },
     [beginResolve],
   );
 
   const onKeyUp = useCallback((e: KeyboardEvent) => {
     const g = gs.current;
-    if (!g) return;
-    if (e.code === "ArrowDown") g.softDrop = false;
-    if (e.code === "ArrowLeft" && g.dir === -1) {
-      g.dir = 0;
+    const stage = stageRef.current;
+    if (!g || !stage) return;
+    if (e.code === "ArrowDown") {
+      // Convert soft-drop progress back onto the natural-gravity clock so the
+      // piece resumes falling seamlessly on release -> no dead pause before the
+      // next cell, and no visual snap (fall fraction stays continuous).
+      if (g.softDrop && g.mode === "play") {
+        const frac = g.gravAccum / TIMING.softDrop;
+        g.gravAccum = frac * TIMING.gravity;
+      }
+      g.softDrop = false;
     }
-    if (e.code === "ArrowRight" && g.dir === 1) {
-      g.dir = 0;
-    }
+    if (e.code === "ArrowLeft") releaseDir(g, stage, -1);
+    if (e.code === "ArrowRight") releaseDir(g, stage, 1);
   }, []);
 
   // ---- lifecycle ---------------------------------------------------------
@@ -505,8 +658,12 @@ export function usePuyoGame(initialMode: Mode = "play") {
       grounded: false,
       softDrop: false,
       dir: 0,
+      dirStack: [],
       dasAccum: 0,
       arrAccum: 0,
+      acc: 0,
+      lockResets: 0,
+      bufferedRot: 0,
       steps: [],
       stepIndex: 0,
       phase: "pop",
@@ -532,12 +689,28 @@ export function usePuyoGame(initialMode: Mode = "play") {
       spawnNext();
     })();
 
+    // Losing focus (alt-tab, clicking away) can drop keyup events, which used
+    // to leave a direction or soft-drop stuck on. Clear all held-key state on
+    // blur so input never gets wedged.
+    const onBlur = () => {
+      const g = gs.current;
+      if (!g) return;
+      g.dirStack = [];
+      g.dir = 0;
+      g.softDrop = false;
+      g.dasAccum = 0;
+      g.arrAccum = 0;
+      g.bufferedRot = 0;
+    };
+
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
     return () => {
       cancelled = true;
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
       stage.destroy();
       stageRef.current = null;
       gs.current = null;
@@ -552,6 +725,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.status = "paused";
       g.softDrop = false;
       g.dir = 0;
+      g.dirStack = [];
       syncHud();
     }
   }, [syncHud]);
@@ -590,7 +764,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const before = g.piece.c;
     g.piece = movePiece(g.grid, g.piece, dir);
     if (g.piece.c !== before) sfx.move();
-    g.lockAccum = 0;
+    resetLock(g);
     stage.showActive(g.grid, g.piece);
   }, []);
 
@@ -601,7 +775,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     sfx.unlock();
     g.piece = rotatePiece(g.grid, g.piece, dir);
     sfx.spin();
-    g.lockAccum = 0;
+    resetLock(g);
     stage.showActive(g.grid, g.piece);
   }, []);
 
@@ -617,6 +791,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.piece = np;
       g.grounded = false;
       g.lockAccum = 0;
+      g.lockResets = 0;
       stage.showActive(g.grid, g.piece);
     }
   }, []);
@@ -644,6 +819,12 @@ export function usePuyoGame(initialMode: Mode = "play") {
     g.predrop = null;
     g.softDrop = false;
     g.dir = 0;
+    g.dirStack = [];
+    g.bufferedRot = 0;
+    g.dasAccum = 0;
+    g.arrAccum = 0;
+    g.acc = 0;
+    g.lockResets = 0;
     stageRef.current?.puyo.syncStatic(g.grid);
     stageRef.current?.setScore(0);
     stageRef.current?.setGarbage(0);

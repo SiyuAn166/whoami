@@ -87,11 +87,11 @@ export const STAGE = {
 
 // ---- Timings (ms) ---------------------------------------------------------
 export const TIMING = {
-  gravity: 780,
+  gravity: 333,
   softDrop: 45,
-  lockDelay: 480,
-  das: 150,
-  arr: 32,
+  lockDelay: 333,
+  das: 133, // ~8 frames @60fps — Puyo Puyo Champions DAS (delay before repeat).
+  arr: 33, // ~2 frames @60fps — Puyo Puyo Champions ARR (repeat interval).
   popMs: 450,
   dropPerRowMs: 80, // linear fall: ms per row (constant-speed gravity)
   bounceFrameMs: 22, // ms per squash/stretch frame on landing

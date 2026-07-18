@@ -177,8 +177,8 @@ export class PuyoStage {
     this.puyo.syncStatic(g);
   }
 
-  showActive(g: Grid, p: Piece): void {
-    this.active.update(g, p);
+  showActive(g: Grid, p: Piece, dtMs?: number, fallFrac?: number): void {
+    this.active.update(g, p, dtMs, fallFrac);
   }
 
   hideActive(): void {
