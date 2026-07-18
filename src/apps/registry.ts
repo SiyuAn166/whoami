@@ -1,7 +1,8 @@
+import { arcadeApp } from "./arcade";
 import { finderApp } from "./finder";
 import { previewApp } from "./preview";
 import { terminalApp } from "./terminal";
-import { arcadeApp } from "./arcade";
+
 import type { AppDefinition } from "./types";
 
 /** Single source of truth for every app the desktop knows about. */

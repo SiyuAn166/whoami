@@ -1,5 +1,6 @@
-import { COLS, ROWS, SCORE, LINES_PER_LEVEL, type PieceType } from "./config";
-import type { Cell, Grid, Orient, Piece, ClearKind } from "./types";
+import { COLS, LINES_PER_LEVEL, type PieceType, ROWS, SCORE } from "./config";
+
+import type { Cell, ClearKind, Grid, Orient, Piece } from "./types";
 
 // ---- shapes: 4x4 relative cell coords per orientation ----
 // Each entry maps orientation -> array of [dr, dc] offsets from piece origin (r,c).

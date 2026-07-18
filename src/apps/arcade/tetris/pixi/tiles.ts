@@ -1,5 +1,6 @@
 import { Texture } from "pixi.js";
-import { PIECE_COLORS, PIECES, TILE, type PieceType } from "../lib/config";
+
+import { PIECE_COLORS, PIECES, type PieceType, TILE } from "../lib/config";
 
 // ---------------------------------------------------------------------------
 // Locked tetromino tile renderer — a self-contained "framed crystal tile":

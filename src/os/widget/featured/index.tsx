@@ -1,5 +1,6 @@
-import type { WidgetDefinition } from "../types";
 import { FeaturedContent } from "./FeaturedContent";
+
+import type { WidgetDefinition } from "../types";
 
 export const featuredProjectWidget: WidgetDefinition = {
   id: "featured",

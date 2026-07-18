@@ -1,10 +1,12 @@
 // The falling pair plus its landing-shadow (ghost) preview.
 import { Container, Sprite } from "pixi.js";
+
 import { HIDDEN_ROWS, SCALE_X, SCALE_Y } from "../lib/config";
 import { hardDropPiece, pieceCells } from "../lib/engine";
-import type { Color, Grid, Piece } from "../lib/types";
 import { frame, puyoFrame } from "./assets";
 import { cellX, cellY } from "./coords";
+
+import type { Color, Grid, Piece } from "../lib/types";
 
 export class ActiveLayer extends Container {
   private axis = new Sprite();

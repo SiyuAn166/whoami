@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
 import type { Size } from "../os/window/types";
 import type { PortfolioData } from "../types/portfolio";
+import type { ReactNode } from "react";
 
 export type Theme = "dark" | "light";
 

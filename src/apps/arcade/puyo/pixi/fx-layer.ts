@@ -1,10 +1,12 @@
 // Scatter particles thrown out when puyos pop. The chain-count popup is handled
 // separately by ChainCounter, so this layer is purely cosmetic burst debris.
 import { Container, Sprite } from "pixi.js";
+
 import { SCALE_X, SCALE_Y } from "../lib/config";
-import type { Color } from "../lib/types";
 import { frame, puyoFrame } from "./assets";
 import { cellX, cellY } from "./coords";
+
+import type { Color } from "../lib/types";
 
 interface Particle {
   sprite: Sprite;

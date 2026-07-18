@@ -1,6 +1,8 @@
 import { APPS } from "../../../apps/registry";
-import type { OpenOptions } from "../../window/WindowManager";
 import { Icon } from "../icon/Icon";
+
+import type { OpenOptions } from "../../window/WindowManager";
+
 import styles from "./Dock.module.css";
 
 interface DockProps {

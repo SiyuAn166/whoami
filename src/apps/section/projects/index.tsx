@@ -1,5 +1,7 @@
 import { useState } from "react";
+
 import type { Project } from "../../../types/portfolio";
+
 import revealStyles from "../reveal/RevealSection.module.css";
 import styles from "./ProjectSection.module.css";
 

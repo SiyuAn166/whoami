@@ -1,4 +1,5 @@
 import type { WidgetRenderContext } from "../types";
+
 import styles from "./FeaturedProjectWidget.module.css";
 
 export function FeaturedContent({ ctx }: { ctx: WidgetRenderContext }) {

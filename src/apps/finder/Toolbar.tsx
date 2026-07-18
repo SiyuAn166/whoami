@@ -5,6 +5,7 @@ import {
   toggleSidebar,
   useFinderNav,
 } from "./nav";
+
 import styles from "./Finder.module.css";
 
 /** Toggle-sidebar icon (macOS "sidebar.left") */

@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
 import { ControlCenterIcon } from "../desktop/menu-bar/Icons";
-import menuBarStyles from "../desktop/menu-bar/MenuBar.module.css";
-import { SpeakerMuteIcon, SpeakerWaveIcon } from "./ControlCenterIcons";
 import { useLensFilter } from "./hook/use-lens-filter";
 import { useVolume } from "./hook/use-volume";
+import { SpeakerMuteIcon, SpeakerWaveIcon } from "./ControlCenterIcons";
+
+import menuBarStyles from "../desktop/menu-bar/MenuBar.module.css";
+import styles from "./ControlCenter.module.css";
+
 // Side-effect: installs the site-wide WebAudio volume hook once (guarantees
 // it runs even though MenuBar imports this module directly, not the barrel).
-import styles from "./ControlCenter.module.css";
 import "./hook/install-volume-hook";
 
 /**

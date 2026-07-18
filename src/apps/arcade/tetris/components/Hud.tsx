@@ -1,4 +1,5 @@
 import React from "react";
+
 import type { HudSnapshot } from "../lib/types";
 
 interface Props {

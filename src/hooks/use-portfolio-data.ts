@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+
 import { GIST_URL } from "../config";
+
 import type { PortfolioData } from "../types/portfolio";
 
 interface UsePortfolioDataResult {

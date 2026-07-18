@@ -1,34 +1,36 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
+  ARR,
+  DAS,
+  gravityMs,
   LOCK_DELAY,
   MAX_LOCK_RESETS,
-  DAS,
-  ARR,
-  SOFT_DROP_FACTOR,
-  gravityMs,
-  SCORE,
   type PieceType,
+  SCORE,
+  SOFT_DROP_FACTOR,
 } from "../lib/config";
-import type { Grid, Piece, Status, HudSnapshot, ClearKind } from "../lib/types";
 import {
+  baseScore,
+  classify,
+  clearRows,
+  detectTSpin,
   emptyGrid,
-  spawnPiece,
   fits,
+  fullRows,
+  ghostRow,
+  isAllClear,
+  levelForLines,
+  lockPiece,
   move,
   rotate,
-  lockPiece,
-  ghostRow,
-  fullRows,
-  clearRows,
-  isAllClear,
-  detectTSpin,
-  classify,
-  baseScore,
-  levelForLines,
+  spawnPiece,
 } from "../lib/engine";
 import { Bag } from "../lib/rng";
 import { SoundBank } from "../lib/sound";
 import { TetrisStage } from "../pixi/tetris-stage";
+
+import type { ClearKind, Grid, HudSnapshot, Piece, Status } from "../lib/types";
 
 interface GameState {
   grid: Grid;

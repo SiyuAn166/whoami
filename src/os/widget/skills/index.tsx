@@ -1,6 +1,8 @@
 import { navigateTo } from "../../../apps/finder/nav";
-import type { WidgetDefinition } from "../types";
 import { SkillsContent } from "./SkillsContent";
+
+import type { WidgetDefinition } from "../types";
+
 import "./SkillsWidget.module.css";
 
 export const skillsWidget: WidgetDefinition = {

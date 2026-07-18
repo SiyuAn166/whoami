@@ -1,11 +1,14 @@
-import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { AppRenderContext } from "../../apps/types";
-import styles from "./WidgetLayer.module.css";
-import { WidgetFrame } from "./WidgetFrame";
+
 import { WIDGETS } from "./registry";
+import { WidgetFrame } from "./WidgetFrame";
+
+import type { AppRenderContext } from "../../apps/types";
 import type { WidgetRenderContext, WidgetSize } from "./types";
+import type { PointerEvent as ReactPointerEvent } from "react";
+
+import styles from "./WidgetLayer.module.css";
 
 interface WidgetLayerProps extends AppRenderContext {
   openApp: (appId: string) => void;

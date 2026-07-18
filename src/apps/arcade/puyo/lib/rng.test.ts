@@ -1,6 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
+import { ALL_COLORS, NUM_COLORS } from "./config";
 import { ColorBag, mulberry32, POOL_SIZE } from "./rng";
-import { NUM_COLORS, ALL_COLORS } from "./config";
+
 import type { Color } from "./types";
 
 const uniq = (xs: Color[]) => [...new Set(xs)];

@@ -1,5 +1,7 @@
-import type { PortfolioData } from "../../types/portfolio";
 import { SECTION_LABEL, useFinderNav } from "./nav";
+
+import type { PortfolioData } from "../../types/portfolio";
+
 import styles from "./Finder.module.css";
 
 /**

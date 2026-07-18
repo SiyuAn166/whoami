@@ -1,13 +1,15 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { type ReactNode, useCallback, useState } from "react";
+
 import { getApp } from "../../apps/registry";
-import type { AppRenderContext } from "../../apps/types";
-import { Window } from "./Window";
 import {
   defaultRect,
   type Rect,
   type WindowInstance,
   type WindowState,
 } from "./types";
+import { Window } from "./Window";
+
+import type { AppRenderContext } from "../../apps/types";
 
 /** Options accepted when opening an app from a launcher. */
 export interface OpenOptions {

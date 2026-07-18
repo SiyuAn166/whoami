@@ -1,14 +1,15 @@
-import type { ReactNode } from "react";
-import type { PortfolioData } from "../../../types/portfolio";
 import { ExperienceSection } from "../../section/experience";
 import { IdentitySection } from "../../section/identity";
 import { ProjectSection } from "../../section/projects";
 import { SkillSection } from "../../section/skills";
-import type { VDir } from "../vfs";
 import { resolve } from "../vfs";
+import { HELP } from "./constants";
 import { ContactCard } from "./ContactCard";
 import { Text } from "./TerminalText";
-import { HELP } from "./constants";
+
+import type { PortfolioData } from "../../../types/portfolio";
+import type { VDir } from "../vfs";
+import type { ReactNode } from "react";
 
 export function renderFile(
   render: string | undefined,

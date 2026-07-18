@@ -1,4 +1,4 @@
-import { USER, HOST } from "./constants";
+import { HOST, USER } from "./constants";
 
 /** Prompt: green user@host, blue path, dim %. */
 export function Prompt({ path }: { path: string }) {

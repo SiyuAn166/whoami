@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components -- manifest/barrel entrance, not a hot-reloaded page component */
-import type { AppDefinition } from "../../types";
 import { Game } from "./Game";
 import { Icon } from "./Icon";
+
+import type { AppDefinition } from "../../types";
 
 // Public entrance. The Arcade hub only consumes { Game } and { Icon }; puyoApp is
 // exported for standalone launch. Engine + config are re-exported for any

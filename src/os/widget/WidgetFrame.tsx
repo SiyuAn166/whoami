@@ -1,8 +1,9 @@
+import type { WidgetSize, WidgetVariant } from "./types";
 import type { ReactNode } from "react";
+
 import stickyStyles from "./sticky/StickyNoteWidget.module.css";
 import terminalStyles from "./terminal/TerminalTipWidget.module.css";
 import styles from "./WidgetFrame.module.css";
-import type { WidgetSize, WidgetVariant } from "./types";
 
 interface WidgetFrameProps {
   size: WidgetSize;

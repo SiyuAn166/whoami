@@ -1,18 +1,20 @@
 import { Application, Container } from "pixi.js";
+
 import {
   CELL,
   COLS,
   NEXT_COUNT,
-  VISIBLE_ROWS,
   type PieceType,
+  VISIBLE_ROWS,
 } from "../lib/config";
-import type { Grid, Piece } from "../lib/types";
 import { ActiveLayer } from "./active-layer";
 import { BoardLayer } from "./board-layer";
 import { FxLayer } from "./fx-layer";
-import { SideLayer } from "./side-layer";
 import { HudLayer } from "./hud-layer";
+import { SideLayer } from "./side-layer";
 import { bakeTiles, type TileTextures } from "./tiles";
+
+import type { Grid, Piece } from "../lib/types";
 
 // Owns the Pixi Application and the whole scene graph. Framework-free:
 // the React hook drives it purely through these methods.

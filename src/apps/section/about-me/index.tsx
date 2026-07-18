@@ -1,4 +1,5 @@
 import type { Identity, Meta } from "../../../types/portfolio";
+
 import styles from "./AboutMeSection.module.css";
 
 /* ───────────────────────── shared helpers ───────────────────────── */

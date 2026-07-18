@@ -1,4 +1,5 @@
 import type { WidgetRenderContext } from "../types";
+
 import styles from "./TerminalTipWidget.module.css";
 
 export function TerminalContent({ ctx }: { ctx: WidgetRenderContext }) {

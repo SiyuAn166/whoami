@@ -4,6 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import unicorn from 'eslint-plugin-unicorn'
 import tseslint from 'typescript-eslint'
+import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 // unicorn/filename-case needs a working parser to even run (it hooks the
@@ -40,6 +41,31 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      'simple-import-sort/imports': [
+        'error',
+        {
+          groups: [
+            // Tier 1: React ecosystem, routing, state management, and core third-party packages
+            ['^react', '^@?\\w'],
+            // Tier 2: Internal absolute paths (Vite workspace path aliases like @/)
+            ['^@/'],
+            // Tier 3: Local relative paths (parent/sibling files within the project tree)
+            ['^\\.\\.(?!/?$)', '^\\.\\./?$', '^\\./(?=.*/)(?!/?$)', '^\\./'],
+            // Tier 4: TypeScript type definitions (handled via specific identifier)
+            ['^.*\\u0000$'],
+            // Tier 5: Global, Utility, and generic plain CSS/SCSS (loaded first to set the baseline)
+            ['^.*(?<!\\.module)\\.(css|scss)$'],
+            // Tier 6: Component-scoped CSS Modules (placed at the absolute bottom for highest overriding priority)
+            ['^.*\\.module\\.(css|scss)$'],
+          ],
+        },
+      ],
+      'simple-import-sort/exports': 'error',
     },
   },
 

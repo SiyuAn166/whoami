@@ -1,8 +1,10 @@
 // Next-pieces preview. Uses the layout.png "next_border_1p" sprite as the
 // window chrome, and draws the upcoming two pairs as puyo sprites inside it.
 import { Container, Graphics, Sprite } from "pixi.js";
-import type { Color } from "../lib/types";
+
 import { frame, hasLayout, layoutFrame, puyoFrame } from "./assets";
+
+import type { Color } from "../lib/types";
 
 const WIN_W = 153;
 const WIN_H = 304;

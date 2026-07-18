@@ -1,5 +1,7 @@
-import type { WidgetDefinition } from "../types";
 import { ClockContent } from "./ClockContent";
+
+import type { WidgetDefinition } from "../types";
+
 import "./ClockWidget.module.css";
 
 export const clockWidget: WidgetDefinition = {

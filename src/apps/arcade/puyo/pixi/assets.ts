@@ -8,7 +8,9 @@
 // meta.image points at another skin, so we bind its frames to puyo_aqua.png.
 
 import { Assets, Spritesheet, Texture } from "pixi.js";
+
 import { COLOR_KEYS } from "../lib/config";
+
 import type { Color } from "../lib/types";
 
 const aquaUrl = new URL("../assets/puyo_aqua.png", import.meta.url).href;

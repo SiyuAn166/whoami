@@ -1,6 +1,7 @@
-import type { VDir } from "../vfs";
 import { resolve } from "../vfs";
 import { COMMAND_NAMES, PATH_CMDS } from "./constants";
+
+import type { VDir } from "../vfs";
 
 /** fish-style autosuggestion: returns the dim remainder to append to `input`. */
 export function suggest(input: string, fs: VDir, cwd: string[]): string {

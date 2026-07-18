@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { PortfolioData } from "../../../types/portfolio";
+import type { ReactNode } from "react";
 
 export interface Line {
   id: number;

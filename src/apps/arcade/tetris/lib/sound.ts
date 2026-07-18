@@ -1,4 +1,4 @@
-import { SOUNDS, type SoundName } from "./config";
+import { type SoundName, SOUNDS } from "./config";
 
 // Vite-native asset resolution: eagerly resolve every wav in ../assets/sound
 // to a build-safe URL. This works in `vite dev` AND `vite build` (the files

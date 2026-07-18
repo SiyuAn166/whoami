@@ -1,8 +1,9 @@
-import type { AppDefinition } from "../types";
 import { FinderContent } from "./Content";
 import { FinderFooter } from "./Footer";
 import { FinderIcon } from "./Icon";
 import { FinderToolbar } from "./Toolbar";
+
+import type { AppDefinition } from "../types";
 
 import "./Finder.module.css";
 

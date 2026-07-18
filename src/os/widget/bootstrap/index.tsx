@@ -1,5 +1,7 @@
-import type { WidgetDefinition } from "../types";
 import { BootstrapContent } from "./BootstrapContent";
+
+import type { WidgetDefinition } from "../types";
+
 import "./BootstrapWidget.module.css";
 
 export const bootstrapWidget: WidgetDefinition = {

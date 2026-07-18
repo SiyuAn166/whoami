@@ -2,6 +2,7 @@
 // No mode-select screen: the board mounts straight into play mode, and the HUD
 // carries a play/pause button that toggles gravity (play <-> practice) live.
 import { useEffect, useRef } from "react";
+
 import { GameOverOverlay, PauseOverlay } from "./components/Overlays";
 import { usePuyoGame } from "./hook/use-puyo-game";
 

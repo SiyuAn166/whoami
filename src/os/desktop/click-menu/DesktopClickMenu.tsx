@@ -5,17 +5,19 @@
 // panel (slide-up gallery) + the "Change Wallpaper" gallery, and delegates
 // add/remove to the widget domain.
 import {
-  useCallback,
-  useState,
   type CSSProperties,
   type ReactNode,
+  useCallback,
+  useState,
 } from "react";
+
 import { WidgetGallery } from "../../widget/gallery";
 import { CATALOG, getWidget } from "../../widget/registry";
-import type { WidgetRenderContext } from "../../widget/types";
 import { WallpaperGallery } from "../wallpaper/WallpaperGallery";
 import { ClickMenu, type ClickMenuItem } from "./ClickMenu";
 import { AddWidgetsIcon, AppearanceIcon, RemoveIcon } from "./ClickMenuIcons";
+
+import type { WidgetRenderContext } from "../../widget/types";
 
 import widgetGalleryStyles from "../../widget/gallery/WidgetGallery.module.css";
 import windowStyles from "../../window/Window.module.css";

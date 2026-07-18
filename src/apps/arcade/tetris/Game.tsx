@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
+
 import { Overlays } from "./components/Overlays";
 import { useTetrisGame } from "./hook/use-tetris-game";
 import { SoundBank } from "./lib/sound";
 import { TetrisStage } from "./pixi/tetris-stage";
+
 import styles from "./Tetris.module.css";
 
 export interface GameProps {

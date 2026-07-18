@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { AppRenderContext } from "../../apps/types";
+import type { ReactNode } from "react";
 
 /** Widget size tiers — mirror macOS small / medium / large tiles. */
 export type WidgetSize = "small" | "medium" | "wide" | "large";

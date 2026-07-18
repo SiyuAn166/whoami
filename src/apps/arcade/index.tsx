@@ -1,6 +1,7 @@
-import type { AppDefinition } from "../types";
 import { Hub } from "./Hub";
 import { Icon } from "./Icon";
+
+import type { AppDefinition } from "../types";
 
 /** The Arcade — a single desktop app whose console hub launches every
  *  registered game (see games.ts). */

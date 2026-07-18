@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+
 import { CloseIcon, MinimizeIcon, ZoomIcon } from "./Icons";
 import {
   clamp,
@@ -11,8 +12,8 @@ import {
   MENUBAR_H,
   MIN_H,
   MIN_W,
-  vp,
   type Rect,
+  vp,
   type WindowInstance,
 } from "./types";
 

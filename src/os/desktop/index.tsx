@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { getApp } from "../../apps/registry";
 import { usePortfolioData } from "../../hooks/use-portfolio-data";
 import { useTheme } from "../../hooks/use-theme";
@@ -9,11 +10,11 @@ import { useWindowManager } from "../window/WindowManager";
 import { DesktopClickMenu } from "./click-menu/DesktopClickMenu";
 import { Dock } from "./dock";
 import { MenuBar } from "./menu-bar";
-import menuBarStyles from "./menu-bar/MenuBar.module.css";
 import { Wallpaper } from "./wallpaper";
-import wallpaperStyles from "./wallpaper/Wallpaper.module.css";
 
 import styles from "./Desktop.module.css";
+import menuBarStyles from "./menu-bar/MenuBar.module.css";
+import wallpaperStyles from "./wallpaper/Wallpaper.module.css";
 
 /** The main view of the site: menu bar, desktop icons, windows, and dock. */
 export function Desktop() {

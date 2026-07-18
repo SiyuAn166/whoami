@@ -1,5 +1,7 @@
 import React from "react";
+
 import type { HudSnapshot } from "../lib/types";
+
 import styles from "../Tetris.module.css";
 
 interface Props {

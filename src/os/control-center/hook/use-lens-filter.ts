@@ -1,5 +1,6 @@
-import type { RefObject } from "react";
 import { useEffect } from "react";
+
+import type { RefObject } from "react";
 
 // ─── Liquid-glass lens filter (macOS "Liquid Glass", SDF edge refraction) ──
 // Builds a displacement map from a ROUNDED-RECT signed distance field: the

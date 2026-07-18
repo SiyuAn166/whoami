@@ -12,6 +12,7 @@ import {
   ROWS,
   SPAWN_COL,
 } from "./config";
+
 import type {
   Cell,
   ChainStep,

@@ -1,4 +1,5 @@
 import type { WidgetRenderContext } from "../types";
+
 import styles from "./StickyNoteWidget.module.css";
 
 export function NoteContent({ ctx }: { ctx: WidgetRenderContext }) {

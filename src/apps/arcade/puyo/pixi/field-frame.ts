@@ -2,8 +2,9 @@
 // placed at puyosim's exact offsets. If layout.png is missing, a drawn frame is
 // used so the app still renders.
 import { Container, Graphics, Sprite } from "pixi.js";
+
 import { FRAME } from "../lib/config";
-import { layoutFrame, hasLayout, hasFieldBg, fieldBgTexture } from "./assets";
+import { fieldBgTexture, hasFieldBg, hasLayout, layoutFrame } from "./assets";
 
 export class FieldFrame extends Container {
   constructor() {

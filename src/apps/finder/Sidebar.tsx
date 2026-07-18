@@ -1,8 +1,8 @@
 import {
+  type FinderSection,
   navigateTo,
   SECTION_LABEL,
   useFinderNav,
-  type FinderSection,
 } from "./nav";
 
 import styles from "./Sidebar.module.css";

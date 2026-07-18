@@ -1,5 +1,7 @@
-import type { WidgetDefinition } from "../types";
 import { TerminalContent } from "./TerminalContent";
+
+import type { WidgetDefinition } from "../types";
+
 import "./TerminalTipWidget.module.css";
 
 export const terminalTipWidget: WidgetDefinition = {

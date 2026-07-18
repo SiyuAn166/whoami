@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
-import { COLS, CELL, HIDDEN_ROWS } from "../lib/config";
+
+import { CELL, COLS, HIDDEN_ROWS } from "../lib/config";
 import { cellY } from "./coords";
 
 // Line-clear sweep + floating text toasts (tetris / t-spin / b2b / combo).

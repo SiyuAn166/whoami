@@ -2,31 +2,33 @@
 // its ticker, handles keyboard input (DAS/ARR), and exposes HUD state + actions
 // to React. Practice mode = no auto gravity / no lock delay; Play mode = full.
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
-  emptyGrid,
-  lockPiece,
-  move as movePiece,
-  rotate as rotatePiece,
-  stepDown,
-  hardDropPiece,
-  isTopOut,
-  applyGravity,
-  resolveChains,
-  isAllClear,
-  pieceCells,
-} from "../lib/engine";
-import { ColorBag } from "../lib/rng";
-import {
-  TIMING,
+  HIDDEN_ROWS,
+  ROWS,
   SPAWN_COL,
   SPAWN_ROW,
-  ROWS,
-  HIDDEN_ROWS,
   TARGET_POINT,
+  TIMING,
 } from "../lib/config";
-import type { Grid, Piece, Color, ChainStep, Mode } from "../lib/types";
-import { PuyoStage } from "../pixi/puyo-stage";
+import {
+  applyGravity,
+  emptyGrid,
+  hardDropPiece,
+  isAllClear,
+  isTopOut,
+  lockPiece,
+  move as movePiece,
+  pieceCells,
+  resolveChains,
+  rotate as rotatePiece,
+  stepDown,
+} from "../lib/engine";
+import { ColorBag } from "../lib/rng";
 import { sfx } from "../lib/sound";
+import { PuyoStage } from "../pixi/puyo-stage";
+
+import type { ChainStep, Color, Grid, Mode, Piece } from "../lib/types";
 
 const ALL_CLEAR_BONUS = 3600;
 

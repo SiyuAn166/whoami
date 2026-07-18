@@ -3,9 +3,10 @@
 // one entry here — the hub renders every registered game's cover automatically.
 // `cover` is a portrait image (3:5, e.g. 540×900) imported as a URL by Vite.
 // ============================================================================
-import type { ComponentType } from "react";
 import { cover as puyoCover, Game as PuyoGame } from "./puyo";
 import { cover as tetrisCover, Game as TetrisGame } from "./tetris";
+
+import type { ComponentType } from "react";
 
 export interface GameDef {
   /** Stable id, used as the mounted view key. */

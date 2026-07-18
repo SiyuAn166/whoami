@@ -2,6 +2,7 @@
 // puyosim-gg's chain-counter slide-in animation (velocity 10, accel -2). Falls
 // back to a plain bold Text label when the chain font isn't present.
 import { Container, Sprite, Text } from "pixi.js";
+
 import { chainFrame, hasChainFont } from "./assets";
 
 export class ChainCounter extends Container {

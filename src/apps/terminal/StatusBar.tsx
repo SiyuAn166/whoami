@@ -1,4 +1,5 @@
 import type { Meta } from "../../types/portfolio";
+
 import windowStyles from "../../os/window/Window.module.css";
 
 /** Thin status bar pinned to the bottom of the Terminal window. */

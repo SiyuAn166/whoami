@@ -5,9 +5,12 @@
 // component as the live desktop, so the preview is the real thing (greeting
 // included on aurora-grid), just scaled down — no images.
 import { useEffect } from "react";
-import { Wallpaper } from ".";
+
 import { WALLPAPERS } from "./wallpapers.data";
+
 import styles from "./Wallpaper.module.css";
+
+import { Wallpaper } from ".";
 
 interface Props {
   /** currently selected wallpaper id */

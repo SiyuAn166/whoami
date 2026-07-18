@@ -1,5 +1,6 @@
-import type { WidgetRenderContext } from "../types";
 import type { Skill } from "../../../types/portfolio";
+import type { WidgetRenderContext } from "../types";
+
 import styles from "./SkillsWidget.module.css";
 
 type Domain = "lang" | "infra" | "dist";

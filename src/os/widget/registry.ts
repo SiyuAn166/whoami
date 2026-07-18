@@ -7,6 +7,7 @@ import { featuredProjectWidget } from "./featured";
 import { skillsWidget } from "./skills";
 import { stickyNoteWidget } from "./sticky";
 import { terminalTipWidget } from "./terminal";
+
 import type { WidgetDefinition } from "./types";
 
 /**

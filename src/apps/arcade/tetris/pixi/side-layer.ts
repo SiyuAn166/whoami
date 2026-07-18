@@ -1,6 +1,8 @@
 import { Container, Graphics, Sprite, Text } from "pixi.js";
-import { PREVIEW_CELL, type PieceType } from "../lib/config";
+
+import { type PieceType, PREVIEW_CELL } from "../lib/config";
 import { cellsOf, spawnPiece } from "../lib/engine";
+
 import type { TileTextures } from "./tiles";
 
 // A boxed preview (used for HOLD and each NEXT slot).

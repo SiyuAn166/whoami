@@ -1,12 +1,13 @@
 // src/os/desktop/clickmenu/ClickMenu.tsx
 // Generic, presentational macOS-style context menu. No widget knowledge here.
 import {
+  type ReactNode,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
+
 import styles from "./ClickMenu.module.css";
 
 export interface ClickMenuItem {

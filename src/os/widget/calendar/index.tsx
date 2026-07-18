@@ -1,5 +1,7 @@
-import type { WidgetDefinition } from "../types";
 import { CalendarContent } from "./CalendarContent";
+
+import type { WidgetDefinition } from "../types";
+
 import "./CalendarWidget.module.css";
 
 export const calendarWidget: WidgetDefinition = {

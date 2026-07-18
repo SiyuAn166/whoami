@@ -1,5 +1,7 @@
-import type { WidgetDefinition } from "../types";
 import { NoteContent } from "./NoteContent";
+
+import type { WidgetDefinition } from "../types";
+
 import "./StickyNoteWidget.module.css";
 
 export const stickyNoteWidget: WidgetDefinition = {

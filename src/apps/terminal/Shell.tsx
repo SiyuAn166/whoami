@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { MatrixRain } from "./MatrixRain";
-import { Prompt } from "./shell/TerminalText";
+
 import { runCommand } from "./shell/commands";
 import { suggest } from "./shell/completion";
 import { COARSE_POINTER, HINTS, HOST, USER } from "./shell/constants";
 import { nowString } from "./shell/format";
-import type { Line, ShellProps } from "./shell/types";
+import { Prompt } from "./shell/TerminalText";
+import { MatrixRain } from "./MatrixRain";
 import { buildFS, pathString, type VDir } from "./vfs";
+
+import type { Line, ShellProps } from "./shell/types";
 
 import styles from "./Terminal.module.css";
 

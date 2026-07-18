@@ -1,10 +1,11 @@
-import type { PortfolioData } from "../../types/portfolio";
 import { AboutMeSection } from "../section/about-me";
 import { ExperienceSection } from "../section/experience";
 import { ProjectSection } from "../section/projects";
 import { CapabilitiesSection } from "../section/skills";
-import { FinderSidebar } from "./Sidebar";
 import { toggleSidebar, useFinderNav } from "./nav";
+import { FinderSidebar } from "./Sidebar";
+
+import type { PortfolioData } from "../../types/portfolio";
 
 import styles from "./Finder.module.css";
 

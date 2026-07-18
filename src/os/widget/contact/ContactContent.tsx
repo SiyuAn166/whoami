@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
-import type { WidgetRenderContext } from "../types";
 import { buildLinks } from "./contact-utils";
+
+import type { WidgetRenderContext } from "../types";
+import type { ReactNode } from "react";
+
 import styles from "./ContactWidget.module.css";
 
 function Icon({

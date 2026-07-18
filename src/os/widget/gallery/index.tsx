@@ -4,12 +4,15 @@
 // REAL WidgetFrame previews (w.render(ctx)). A blue "Done" button (bottom-right)
 // and clicking the empty desktop (scrim) both slide the panel out.
 import { useEffect, useMemo, useState } from "react";
+
+import { WidgetFrame } from "../WidgetFrame";
+
 import type {
   WidgetDefinition,
   WidgetRenderContext,
   WidgetVariant,
 } from "../types";
-import { WidgetFrame } from "../WidgetFrame";
+
 import styles from "./WidgetGallery.module.css";
 
 const VARIANT_LABEL: Record<WidgetVariant, string> = {

@@ -1,8 +1,10 @@
-import { Container, Sprite, Graphics } from "pixi.js";
-import { COLS, VISIBLE_ROWS, ROWS, CELL, type PieceType } from "../lib/config";
+import { Container, Graphics, Sprite } from "pixi.js";
+
+import { CELL, COLS, type PieceType, ROWS, VISIBLE_ROWS } from "../lib/config";
+import { cellX, cellY } from "./coords";
+
 import type { Grid } from "../lib/types";
 import type { TileTextures } from "./tiles";
-import { cellX, cellY } from "./coords";
 
 // Renders the settled board plus the well background & grid lines.
 export class BoardLayer {

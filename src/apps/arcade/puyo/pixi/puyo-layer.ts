@@ -1,5 +1,6 @@
 // Settled-puyo grid with connection-aware textures + pop / drop animations.
 import { Container, Sprite } from "pixi.js";
+
 import {
   COLOR_KEYS,
   COLS,
@@ -9,9 +10,10 @@ import {
   TIMING,
 } from "../lib/config";
 import { connectionMask } from "../lib/engine";
-import type { Color, Grid } from "../lib/types";
 import { bounceFrame, burstFrame, frame, puyoFrame } from "./assets";
 import { cellX, cellY } from "./coords";
+
+import type { Color, Grid } from "../lib/types";
 
 // puyosim-gg landing "squeeze": drop at constant speed, then on impact play a
 // short texture sequence — h = squished wide, v = stretched tall, 0 = normal.

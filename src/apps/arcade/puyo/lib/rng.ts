@@ -23,7 +23,8 @@
 // The stream never advances from player actions — only from block builds — so
 // the sequence is fully predetermined by the initial seed.
 
-import { NUM_COLORS, ALL_COLORS } from "./config";
+import { ALL_COLORS, NUM_COLORS } from "./config";
+
 import type { Color } from "./types";
 
 export const POOL_SIZE = 256;

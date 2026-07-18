@@ -5,8 +5,10 @@
 // a white flash, a burst-frame scale-up/fade, plus scatter debris particles —
 // mirroring PuyoLayer.renderPops + FxLayer.spawnBurst. Driven by update().
 import { Container, Graphics, Sprite, Text } from "pixi.js";
-import type { Mode } from "../lib/types";
+
 import { burstFrame, frame, puyoFrame } from "./assets";
+
+import type { Mode } from "../lib/types";
 
 const PANEL_W = 153;
 const CAP_W = 116;

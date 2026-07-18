@@ -6,7 +6,9 @@
 // the hub is generic — register a game there and its cover shows up here.
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import { GAMES } from "./games";
+
 import styles from "./Arcade.module.css";
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);

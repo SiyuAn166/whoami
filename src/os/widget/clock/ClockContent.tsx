@@ -6,7 +6,9 @@ import {
   useRef,
   useState,
 } from "react";
+
 import type { WidgetRenderContext } from "../types";
+
 import styles from "./ClockWidget.module.css";
 
 /** Polar → cartesian on a clock face. angleDeg: 0 = 12 o'clock, clockwise. */

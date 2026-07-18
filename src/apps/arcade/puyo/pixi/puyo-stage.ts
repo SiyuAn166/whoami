@@ -3,15 +3,15 @@
 // chain-font counter, the score readout and a decorative garbage tray.
 // Framework-free: the React hook drives it via the public methods below.
 import { Application, Container, Graphics, Sprite } from "pixi.js";
+
 import {
   CELL_H,
   FRAME,
+  garbageToIcons,
   HIDDEN_ROWS,
   SPAWN_COL,
   STAGE,
-  garbageToIcons,
 } from "../lib/config";
-import type { Color, Grid, Mode, Piece } from "../lib/types";
 import { ActiveLayer } from "./active-layer";
 import { frame, hasLayout, layoutFrame, loadAssets } from "./assets";
 import { ChainCounter } from "./chain-counter";
@@ -22,6 +22,8 @@ import { FxLayer } from "./fx-layer";
 import { NextWindow } from "./next-window";
 import { PuyoLayer } from "./puyo-layer";
 import { ScoreDisplay } from "./score-display";
+
+import type { Color, Grid, Mode, Piece } from "../lib/types";
 
 export const STAGE_W = STAGE.width;
 export const STAGE_H = STAGE.height;

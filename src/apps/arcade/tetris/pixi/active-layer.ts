@@ -1,9 +1,11 @@
 import { Container, Sprite } from "pixi.js";
+
 import { CELL, type PieceType } from "../lib/config";
-import type { Piece } from "../lib/types";
 import { cellsOf } from "../lib/engine";
-import type { TileTextures } from "./tiles";
 import { cellX, cellY } from "./coords";
+
+import type { Piece } from "../lib/types";
+import type { TileTextures } from "./tiles";
 
 // Renders the falling piece and its ghost. Rebuilt each time the piece changes.
 export class ActiveLayer {

@@ -1,5 +1,7 @@
-import type { WidgetDefinition } from "../types";
 import { ContactContent } from "./ContactContent";
+
+import type { WidgetDefinition } from "../types";
+
 import "./ContactWidget.module.css";
 
 export const contactWidget: WidgetDefinition = {
