@@ -16,11 +16,12 @@ import "./Desktop.css";
 export function Desktop() {
   const { theme, toggleTheme, setTheme } = useTheme();
   const { data, loading, error } = usePortfolioData();
+
   // The window manager is only meaningful once data has loaded; until then we
   // render a boot/error screen and never construct app windows with null data.
   if (!data) {
     return (
-      <div className="mac-desktop">
+      <div className="mac-desktop" data-wallpaper="aurora-grid">
         <MenuBar appName="Finder" />
         <div className="boot-screen" role="status" aria-live="polite">
           {error ? (
@@ -62,6 +63,9 @@ interface DesktopReadyProps {
   setTheme: (t: "dark" | "light") => void;
 }
 
+const WALLPAPER_KEY = "wallpaper";
+const DEFAULT_WALLPAPER = "aurora-grid";
+
 /** Rendered only once `data` is guaranteed non-null, so the window manager gets a real context. */
 function DesktopReady({
   data,
@@ -73,8 +77,26 @@ function DesktopReady({
   const { activeIds, addWidget, removeWidget } = useActiveWidgets(
     DEFAULT_ACTIVE_WIDGET_IDS,
   );
+
   // Which widget (if any) is currently being placed on the desktop.
   const [placingId, setPlacingId] = useState<string | null>(null);
+
+  // Pure-CSS wallpaper (right-click → Change Wallpaper…), persisted locally.
+  const [wallpaper, setWallpaper] = useState<string>(() => {
+    try {
+      return localStorage.getItem(WALLPAPER_KEY) ?? DEFAULT_WALLPAPER;
+    } catch {
+      return DEFAULT_WALLPAPER;
+    }
+  });
+  const changeWallpaper = (id: string) => {
+    setWallpaper(id);
+    try {
+      localStorage.setItem(WALLPAPER_KEY, id);
+    } catch {
+      /* ignore storage failures */
+    }
+  };
 
   // ---- Fullscreen chrome hide/reveal ------------------------------------
   // When any window is fullscreen, the menu bar + dock slide off-screen; the
@@ -94,9 +116,11 @@ function DesktopReady({
   const focusedApp = wm.instances.find((w) => w.id === wm.focusedId);
   const menuBarAppName =
     (focusedApp && getApp(focusedApp.appId)?.name) ?? "Finder";
+
   return (
     <DesktopClickMenu
       className="mac-desktop"
+      wallpaper={data.meta.wallpaper ? undefined : wallpaper}
       style={
         data.meta.wallpaper
           ? {
@@ -111,6 +135,7 @@ function DesktopReady({
       onAddWidget={(id) => setPlacingId(id)}
       onRemoveWidget={removeWidget}
       onToggleTheme={toggleTheme}
+      onChangeWallpaper={changeWallpaper}
     >
       {data.meta.wallpaper && <div className="wallpaper-tint" aria-hidden />}
       {/* Onboarding baked into the desktop — fixed, non-removable, non-movable. */}

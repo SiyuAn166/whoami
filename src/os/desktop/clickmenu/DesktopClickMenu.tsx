@@ -2,7 +2,8 @@
 // Becomes the `.mac-desktop` container itself (pass className/style through), so
 // the contextmenu handler covers the WHOLE desktop — including empty wallpaper
 // area — not just the widgets. It owns the right-click menu + the "Add Widgets"
-// panel (slide-up gallery), and delegates add/remove to the widget domain.
+// panel (slide-up gallery) + the "Change Wallpaper" gallery, and delegates
+// add/remove to the widget domain.
 import {
   useCallback,
   useState,
@@ -14,11 +15,39 @@ import { CATALOG, getWidget } from "../../widget/registry";
 import type { WidgetRenderContext } from "../../widget/types";
 import { ClickMenu, type ClickMenuItem } from "./ClickMenu";
 import { AddWidgetsIcon, AppearanceIcon, RemoveIcon } from "./ClickMenuIcons";
+import { WallpaperGallery } from "./WallpaperGallery";
+
+// Local icon (kept here so this feature needs no edit to ClickMenuIcons).
+function WallpaperIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect
+        x="3"
+        y="4"
+        width="18"
+        height="14"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <circle cx="8.5" cy="9" r="1.6" fill="currentColor" />
+      <path
+        d="M4 16l4.5-4 3 2.5L15 11l5 5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 interface Props {
   /** applied to the desktop root element (this component RENDERS it) */
   className?: string;
   style?: CSSProperties;
+  /** pure-CSS wallpaper id → rendered as data-wallpaper on the desktop root */
+  wallpaper?: string;
   /** the render context WidgetLayer uses: { data, theme, setTheme, openApp } */
   ctx: WidgetRenderContext;
   /** ids currently on the desktop */
@@ -29,6 +58,8 @@ interface Props {
   onRemoveWidget?: (id: string) => void;
   /** toggle light/dark, for the menu item */
   onToggleTheme?: () => void;
+  /** change the desktop wallpaper (persisted by the caller) */
+  onChangeWallpaper?: (id: string) => void;
   children: ReactNode;
 }
 
@@ -37,15 +68,18 @@ type MenuPos = { x: number; y: number; widgetId: string | null };
 export function DesktopClickMenu({
   className,
   style,
+  wallpaper,
   ctx,
   activeIds,
   onAddWidget,
   onRemoveWidget,
   onToggleTheme,
+  onChangeWallpaper,
   children,
 }: Props) {
   const [menu, setMenu] = useState<MenuPos | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [wallpaperOpen, setWallpaperOpen] = useState(false);
 
   const onContextMenu = useCallback((e: React.MouseEvent) => {
     // Always suppress the browser menu on the desktop…
@@ -54,7 +88,7 @@ export function DesktopClickMenu({
     // …but leave app windows, the menu bar and the dock to their own behaviour.
     if (
       target.closest(
-        ".mac-window, .menu-bar, .dock, .widgetgallery__panel, .widgetgallery__scrim",
+        ".mac-window, .menu-bar, .dock, .widgetgallery__panel, .widgetgallery__scrim, .wallpaper-gallery__panel, .wallpaper-gallery__scrim",
       )
     )
       return;
@@ -67,8 +101,8 @@ export function DesktopClickMenu({
     });
   }, []);
 
-  // left-click on the empty desktop closes the menu (the gallery closes via its
-  // own scrim / Done).
+  // left-click on the empty desktop closes the menu (the galleries close via
+  // their own scrim / Done).
   const onClick = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".mac-window, .menu-bar, .dock"))
       return;
@@ -76,6 +110,7 @@ export function DesktopClickMenu({
   }, []);
 
   const wid = menu?.widgetId ?? null;
+
   const items: ClickMenuItem[] = [];
   if (wid) {
     const name = getWidget(wid)?.title ?? wid;
@@ -92,6 +127,12 @@ export function DesktopClickMenu({
     icon: <AddWidgetsIcon />,
     onSelect: () => setGalleryOpen(true),
   });
+  items.push({
+    label: "Change Wallpaper\u2026",
+    icon: <WallpaperIcon />,
+    onSelect: () => setWallpaperOpen(true),
+    disabled: !onChangeWallpaper,
+  });
   items.push({ label: "---" });
   items.push({
     label: "Toggle Appearance",
@@ -104,6 +145,7 @@ export function DesktopClickMenu({
     <div
       className={className}
       style={style}
+      data-wallpaper={wallpaper}
       onContextMenu={onContextMenu}
       onClick={onClick}
     >
@@ -123,6 +165,13 @@ export function DesktopClickMenu({
           activeIds={activeIds}
           onAdd={onAddWidget}
           onClose={() => setGalleryOpen(false)}
+        />
+      )}
+      {wallpaperOpen && onChangeWallpaper && (
+        <WallpaperGallery
+          current={wallpaper ?? "aurora-grid"}
+          onSelect={onChangeWallpaper}
+          onClose={() => setWallpaperOpen(false)}
         />
       )}
     </div>
