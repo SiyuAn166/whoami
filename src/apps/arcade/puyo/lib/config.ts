@@ -18,8 +18,6 @@ export const ROWS = 14;
  * (grid[HIDDEN_ROWS][SPAWN_COL]), so it can never use this headroom.
  */
 export const HIDDEN_ROWS = 2;
-/** Visible playfield rows. */
-export const VISIBLE_ROWS = ROWS - HIDDEN_ROWS; // 12
 /** Spawn column (0-indexed 3rd column, classic PPT spawn). */
 export const SPAWN_COL = 2;
 /** Axis spawn row: above the death-X (outside the frame), classic PPT spawn. */
@@ -35,7 +33,7 @@ export const COLOR_KEYS = [
   "yellow",
   "purple",
 ] as const;
-/** How many colours are in play. Puyo Tsu standard is 4. */
+/** How many colours are in play (classic Puyo uses 4-5; this build uses 5). */
 export const NUM_COLORS = 5;
 export const ALL_COLORS: Color[] = [1, 2, 3, 4, 5];
 
@@ -47,6 +45,9 @@ export const FRAME_H = 60;
 /** Displayed cell size in px (native). */
 export const CELL_W = 64;
 export const CELL_H = 60;
+// Rendered at native atlas size, so both scale factors are exactly 1 today.
+// Kept as named factors (rather than hard-coding 1) so a future re-skin with a
+// different cell/atlas size scales every sprite consistently in one place.
 export const SCALE_X = CELL_W / FRAME_W; // 1
 export const SCALE_Y = CELL_H / FRAME_H; // 1
 

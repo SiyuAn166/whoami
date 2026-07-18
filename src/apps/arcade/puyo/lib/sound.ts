@@ -1,15 +1,17 @@
 // ============================================================================
-// Puyo 聲系 — 獨立模組，與遊戲邏輯解耦。
-//   - 遊戲只呼語義法: sfx.chain(n) / sfx.placed() / sfx.move() / sfx.spin()
-//   - 聲系自曉檔名、自管解碼、音量、靜音、首次手勢解鎖 AudioContext。
-//   - 不 import 任何遊戲檔; 遊戲亦不需知任何 wav 名。
-// 資產: assets/sound/{1..7,move,placed,spin}.wav  (Vite import.meta.glob)
+// Puyo sound system — standalone module, decoupled from game logic.
+//   - The game only calls semantic methods: sfx.chain(n) / sfx.placed() /
+//     sfx.move() / sfx.spin()
+//   - This module owns the filenames, decoding, volume, mute, and unlocking the
+//     AudioContext on the first user gesture.
+//   - It imports no game files, and the game needs no knowledge of wav names.
+// Assets: assets/sound/{1..7,move,placed,spin}.wav  (Vite import.meta.glob)
 // ============================================================================
 
 type Name =
   "1" | "2" | "3" | "4" | "5" | "6" | "7" | "move" | "placed" | "spin";
 
-// Vite: 打包時把每個 wav 轉成可取之 URL。鍵形如 "../assets/sound/3.wav"。
+// Vite bundles each wav into a fetchable URL. Keys look like "../assets/sound/3.wav".
 const urls = import.meta.glob("../assets/sound/*.wav", {
   eager: true,
   query: "?url",
@@ -21,7 +23,7 @@ function urlOf(name: string): string | undefined {
   return hit?.[1];
 }
 
-/** 連鎖聲上限: 7 以上皆用 7.wav。 */
+/** Max distinct chain sound: chains >= 7 all use 7.wav. */
 const MAX_CHAIN = 7;
 
 class SoundManager {
@@ -33,7 +35,7 @@ class SoundManager {
   private _volume = 0.7;
   private unlocked = false;
 
-  /** 首次使用者手勢時呼 (WebAudio 需手勢方能出聲)。可多次呼,冪等。 */
+  /** Call on the first user gesture (WebAudio needs a gesture to play). Idempotent. */
   unlock(): void {
     if (this.unlocked) return;
     this.ensureCtx();
@@ -59,7 +61,7 @@ class SoundManager {
     if (this.buffers.has(name)) return;
     if (this.loading.has(name)) return this.loading.get(name);
     const url = urlOf(name);
-    if (!url) return; // 缺檔則靜默略過,不擲錯
+    if (!url) return; // missing file: skip silently, do not throw
     const ctx = this.ensureCtx();
     const p = (async () => {
       try {
@@ -68,7 +70,7 @@ class SoundManager {
         const buf = await ctx.decodeAudioData(arr);
         this.buffers.set(name, buf);
       } catch {
-        /* 解碼失敗則靜默 */
+        /* decode failure: stay silent */
       } finally {
         this.loading.delete(name);
       }
@@ -77,7 +79,7 @@ class SoundManager {
     return p;
   }
 
-  /** 預載全部,宜於開局呼 (非必須,play 會惰載)。 */
+  /** Preload everything; nice to call at boot (optional — play lazy-loads). */
   preload(): void {
     (
       ["1", "2", "3", "4", "5", "6", "7", "move", "placed", "spin"] as Name[]
@@ -89,7 +91,7 @@ class SoundManager {
     const ctx = this.ctx;
     const buf = this.buffers.get(name);
     if (!ctx || !buf || !this.gain) {
-      void this.load(name); // 尚未載好: 觸發載入,此次略過
+      void this.load(name); // not loaded yet: kick off loading, skip this play
       return;
     }
     const src = ctx.createBufferSource();
@@ -98,9 +100,9 @@ class SoundManager {
     src.start();
   }
 
-  // ---- 語義介面 (遊戲只用此四法) --------------------------------------
+  // ---- Semantic interface (the game only uses these four) -------------
 
-  /** 連鎖第 n 段 (1 起)。n>7 皆用 7。 */
+  /** Chain step n (1-based). n > 7 all use 7. */
   chain(n: number): void {
     const clamped = Math.max(1, Math.min(MAX_CHAIN, Math.floor(n)));
     this.playName(String(clamped) as Name);
@@ -116,7 +118,7 @@ class SoundManager {
     this.playName("spin");
   }
 
-  // ---- 設定 -----------------------------------------------------------
+  // ---- Settings -------------------------------------------------------
 
   get muted(): boolean {
     return this._muted;
@@ -135,5 +137,5 @@ class SoundManager {
   }
 }
 
-/** 單例。全遊戲共用一聲系。 */
+/** Singleton: the whole game shares one sound system. */
 export const sfx = new SoundManager();

@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  ALL_CLEAR_BONUS,
   HIDDEN_ROWS,
   ROWS,
   SPAWN_COL,
@@ -30,8 +31,6 @@ import { PuyoStage } from "../pixi/puyo-stage";
 
 import type { ChainStep, Color, Grid, Mode, Piece } from "../lib/types";
 
-const ALL_CLEAR_BONUS = 3600;
-
 // Fixed logic timestep: step the control loop at a constant 60 Hz so DAS/ARR,
 // gravity and lock delay are frame-perfect regardless of the display refresh
 // rate (60/120/144 Hz all play identically, like console Puyo).
@@ -43,16 +42,18 @@ const MAX_LOCK_RESETS = 15;
 // instantly (~2 frames) so the chain check fires the moment it slams down.
 // Natural free-fall landings instead use the tunable TIMING.lockDelay grace.
 const SOFT_DROP_LOCK = FIXED_STEP * 2;
+// After a tab-out / long stall, cap how much simulation time we replay in one
+// frame so we don't fast-forward wildly (a few frames of catch-up at most).
+const MAX_CATCHUP_MS = 200;
 
 export type Status = "loading" | "control" | "resolve" | "paused" | "gameover";
 
+// HUD state surfaced to React. Score/next-pair/chain popup are drawn inside the
+// Pixi canvas, so React only needs what the overlays read.
 interface Hud {
   status: Status;
   score: number;
-  chain: number;
   maxChain: number;
-  next: [Color, Color][];
-  mode: Mode;
 }
 
 type Phase = "predrop" | "pop" | "drop" | "pause";
@@ -68,7 +69,6 @@ interface GameState {
   maxChain: number;
   // garbage tally
   chainScore: number;
-  garbageLeftover: number;
   garbageSent: number;
   // gravity / lock
   gravAccum: number;
@@ -126,6 +126,18 @@ function settledPositions(
   return set;
 }
 
+// Time for a batch of puyos to fall `md` rows at constant speed, plus the
+// landing bounce tail. md === 0 -> just the in-place bounce.
+function fallMs(md: number): number {
+  return TIMING.dropPerRowMs * md + TIMING.bounceMs;
+}
+
+// Duration of the pre-drop settle for the whole board (pure: depends only on
+// the grid diff + TIMING, so it lives at module scope and needs no memoizing).
+function dropDuration(stage: PuyoStage | null, from: Grid, to: Grid): number {
+  return fallMs(stage?.puyo.maxDrop(from, to) ?? 0);
+}
+
 // Active horizontal direction = the most-recently-pressed held key (SOCD:
 // last press wins), or 0 when nothing is held.
 function currentDir(stack: (-1 | 1)[]): -1 | 0 | 1 {
@@ -178,10 +190,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
   const [hud, setHud] = useState<Hud>({
     status: "loading",
     score: 0,
-    chain: 0,
     maxChain: 0,
-    next: [],
-    mode: initialMode,
   });
 
   const syncHud = useCallback(() => {
@@ -190,10 +199,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     setHud({
       status: g.status,
       score: g.score,
-      chain: g.chain,
       maxChain: g.maxChain,
-      next: g.queue.slice(0, 2),
-      mode: g.mode,
     });
   }, []);
 
@@ -274,7 +280,6 @@ export function usePuyoGame(initialMode: Mode = "play") {
     g.chain = 0;
     g.chainScore = 0;
     g.garbageSent = 0;
-    g.garbageLeftover = 0;
     stageRef.current?.setGarbage(0);
 
     stageRef.current?.puyo.syncStatic(locked);
@@ -289,17 +294,10 @@ export function usePuyoGame(initialMode: Mode = "play") {
       bounce: settledPositions(locked, settled, placed),
     };
     g.phase = "predrop";
-    g.phaseDur = dropDuration(locked, settled);
+    g.phaseDur = dropDuration(stageRef.current, locked, settled);
     g.status = "resolve";
     syncHud();
   }, [syncHud]);
-
-  const dropDuration = (from: Grid, to: Grid): number => {
-    const md = stageRef.current?.puyo.maxDrop(from, to) ?? 0;
-    // Longest fall (constant speed) + the landing bounce tail. With no fall at
-    // all (md === 0) it's just the in-place bounce.
-    return TIMING.dropPerRowMs * md + TIMING.bounceMs;
-  };
 
   const startStep = useCallback(
     (i: number) => {
@@ -451,8 +449,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       // frame below, with sub-cell interpolation for smoothness.
       if (g.status === "control") {
         g.acc += ms;
-        // Clamp after a tab-out / long stall so we don't fast-forward wildly.
-        if (g.acc > 200) g.acc = 200;
+        if (g.acc > MAX_CATCHUP_MS) g.acc = MAX_CATCHUP_MS;
         while (g.acc >= FIXED_STEP) {
           if (stepControl(g)) {
             g.acc = 0;
@@ -522,7 +519,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
             } else {
               g.phase = "drop";
               g.phaseT = 0;
-              g.phaseDur = TIMING.dropPerRowMs * md + TIMING.bounceMs;
+              g.phaseDur = fallMs(md);
             }
           }
         } else if (g.phase === "drop") {
@@ -651,7 +648,6 @@ export function usePuyoGame(initialMode: Mode = "play") {
       chain: 0,
       maxChain: 0,
       chainScore: 0,
-      garbageLeftover: 0,
       garbageSent: 0,
       gravAccum: 0,
       lockAccum: 0,
@@ -715,6 +711,9 @@ export function usePuyoGame(initialMode: Mode = "play") {
       stageRef.current = null;
       gs.current = null;
     };
+    // Mount-once effect: every handler it uses is stable via refs (gs/stageRef)
+    // or reads live state through gs.current, so an empty dep array is correct
+    // here — re-running would tear down and rebuild the Pixi stage needlessly.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -813,7 +812,6 @@ export function usePuyoGame(initialMode: Mode = "play") {
     g.chain = 0;
     g.maxChain = 0;
     g.chainScore = 0;
-    g.garbageLeftover = 0;
     g.garbageSent = 0;
     g.steps = [];
     g.predrop = null;

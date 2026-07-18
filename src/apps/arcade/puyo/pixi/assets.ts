@@ -80,10 +80,13 @@ export function fieldBgTexture(): Texture | null {
   return fieldBgTex;
 }
 
-/** Puyo-atlas texture by frame name, e.g. "blue_5.png". Falls back to spacer. */
+/** Puyo-atlas texture by frame name, e.g. "blue_5.png". Degrades gracefully
+ *  (spacer, then EMPTY) if the atlas or the requested frame is missing, matching
+ *  layoutFrame/chainFrame. loadAssets() always awaits the puyo atlas before the
+ *  stage draws, so a missing atlas here indicates a load ordering bug, not a
+ *  normal state — it renders nothing rather than throwing mid-frame. */
 export function frame(name: string): Texture {
-  if (!puyoSheet)
-    throw new Error("Atlas not loaded — call loadAssets() first.");
+  if (!puyoSheet) return Texture.EMPTY;
   return (
     puyoSheet.textures[name] ??
     puyoSheet.textures["spacer_0.png"] ??

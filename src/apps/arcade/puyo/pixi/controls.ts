@@ -7,8 +7,10 @@
 import { Container, Graphics, Sprite, Text } from "pixi.js";
 
 import { burstFrame, frame, puyoFrame } from "./assets";
+import { updateParticles } from "./particles";
 
 import type { Mode } from "../lib/types";
+import type { Particle } from "./particles";
 
 const PANEL_W = 153;
 const CAP_W = 116;
@@ -44,14 +46,6 @@ const BEST_VALUE_STYLE = {
 } as const;
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
-
-interface Particle {
-  sprite: Sprite;
-  vx: number;
-  vy: number;
-  life: number;
-  max: number;
-}
 
 export class ControlPanel extends Container {
   private onToggle?: () => void;
@@ -186,24 +180,6 @@ export class ControlPanel extends Container {
     this.modeLabel.text = play ? "Play" : "Practice";
   }
 
-  /** Advance the scatter debris. dt is ticker.deltaTime (~1 at 60fps). */
-  private updateParticles(dt: number): void {
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const p = this.particles[i];
-      p.life += dt;
-      p.sprite.x += p.vx * dt;
-      p.sprite.y += p.vy * dt;
-      p.vy += 0.24 * dt; // gravity
-      p.sprite.alpha = Math.max(0, 1 - p.life / p.max);
-      p.sprite.rotation += 0.15 * dt;
-      if (p.life >= p.max) {
-        this.fx.removeChild(p.sprite);
-        p.sprite.destroy();
-        this.particles.splice(i, 1);
-      }
-    }
-  }
-
   /** Update the Best Chain value (largest chain reached this run). */
   setBestChain(n: number): void {
     this.bestValue.text = n > 0 ? `\u00d7${n}` : "\u2013";
@@ -214,7 +190,7 @@ export class ControlPanel extends Container {
     this.thumbX = lerp(this.thumbX, this.thumbTargetX, Math.min(1, dt * 0.28));
     this.thumb.x = this.thumbX;
 
-    this.updateParticles(dt);
+    updateParticles(this.fx, this.particles, dt);
 
     if (this.restartPop > 0) {
       // Bubble-pop: flash white, then swap to the burst frames while scaling

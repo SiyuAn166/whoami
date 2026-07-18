@@ -1,8 +1,9 @@
-// Chain-count popup using the chain_font.png atlas ("N 連鎖" style), mirroring
+// Chain-count popup using the chain_font.png atlas ("N chain" style), mirroring
 // puyosim-gg's chain-counter slide-in animation (velocity 10, accel -2). Falls
 // back to a plain bold Text label when the chain font isn't present.
 import { Container, Sprite, Text } from "pixi.js";
 
+import { TIMING } from "../lib/config";
 import { chainFrame, hasChainFont } from "./assets";
 
 export class ChainCounter extends Container {
@@ -45,7 +46,7 @@ export class ChainCounter extends Container {
   /** Show an N-chain popup. */
   show(chain: number): void {
     if (chain < 1) return;
-    this.holdMs = 900;
+    this.holdMs = TIMING.chainPopupMs;
     this.inner.x = -30;
     this.velocity = 10;
 

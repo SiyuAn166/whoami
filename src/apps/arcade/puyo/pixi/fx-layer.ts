@@ -5,16 +5,10 @@ import { Container, Sprite } from "pixi.js";
 import { SCALE_X, SCALE_Y } from "../lib/config";
 import { frame, puyoFrame } from "./assets";
 import { cellX, cellY } from "./coords";
+import { updateParticles } from "./particles";
 
 import type { Color } from "../lib/types";
-
-interface Particle {
-  sprite: Sprite;
-  vx: number;
-  vy: number;
-  life: number;
-  max: number;
-}
+import type { Particle } from "./particles";
 
 export class FxLayer extends Container {
   private particles: Particle[] = [];
@@ -44,19 +38,6 @@ export class FxLayer extends Container {
 
   /** Advance particle animation. dt is in frames (~1 at 60fps). */
   update(dt: number): void {
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const p = this.particles[i];
-      p.life += dt;
-      p.sprite.x += p.vx * dt;
-      p.sprite.y += p.vy * dt;
-      p.vy += 0.24 * dt; // gravity
-      p.sprite.alpha = Math.max(0, 1 - p.life / p.max);
-      p.sprite.rotation += 0.15 * dt;
-      if (p.life >= p.max) {
-        this.removeChild(p.sprite);
-        p.sprite.destroy();
-        this.particles.splice(i, 1);
-      }
-    }
+    updateParticles(this, this.particles, dt);
   }
 }
