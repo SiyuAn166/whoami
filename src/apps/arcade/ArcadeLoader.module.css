@@ -118,15 +118,24 @@
   }
 }
 
-/* respect reduced motion: keep it static, no bounce/pulse */
+/*
+ * The loader ALWAYS plays. For users who prefer reduced motion we don't
+ * hide it — we only replace the vertical bounce (positional motion, which
+ * can trigger vestibular discomfort) with a calm in-place opacity pulse.
+ * The fade-in / fade-out overlay transitions are kept.
+ */
 @media (prefers-reduced-motion: reduce) {
-  .loader,
-  .leaving,
-  .dots i,
-  .label {
-    animation: none !important;
-  }
   .dots i {
+    animation: arcldr-softpulse 1.1s infinite ease-in-out !important;
+  }
+}
+
+@keyframes arcldr-softpulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
     opacity: 1;
   }
 }

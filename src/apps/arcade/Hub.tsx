@@ -59,12 +59,11 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   const [view, setView] = useState<string>("hub");
   const [sel, setSel] = useState(0);
 
-  // Boot screen: show the chain-pop loader on mount for ~2s, then fade it
-  // out. Skipped entirely when the user prefers reduced motion.
-  const prefersReduced =
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  const [booting, setBooting] = useState(!prefersReduced);
+  // Boot screen: the Arcade loader ALWAYS plays on mount, on every system
+  // and every setting (no prefers-reduced-motion gating here). Users who
+  // prefer reduced motion still see the loader, but the CSS swaps the
+  // bouncing (positional) animation for a gentle in-place pulse.
+  const [booting, setBooting] = useState(true);
   const [bootLeaving, setBootLeaving] = useState(false);
 
   useEffect(() => {
