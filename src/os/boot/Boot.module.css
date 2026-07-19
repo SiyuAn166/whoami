@@ -1,0 +1,119 @@
+/* Classic Mac–style boot screen: full-screen black + one thin progress bar. */
+
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+/* When the OS is ready, fade the whole overlay out. */
+.leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+/* Reserved icon slot — same footprint as a 58×70 logo so layout is stable
+   whether or not a mark is dropped in. */
+.icon {
+  width: 58px;
+  height: 70px;
+  color: #fff;
+  /* border: 1px dashed rgba(255, 255, 255, .08); */
+}
+
+/* Thin progress bar */
+.bar {
+  width: 170px;
+  height: 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: #f2f2f5;
+}
+
+/* Stepped fill while loading — climbs to 90% and holds (real progress feel:
+   fast start, pauses, jumps). It never hits 100% on its own; completion is
+   driven by the "ready" signal below. */
+.fill {
+  width: 0;
+  animation: bootFill 2.2s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes bootFill {
+  0% {
+    width: 0;
+  }
+
+  16% {
+    width: 22%;
+  }
+
+  30% {
+    width: 30%;
+  }
+
+  /* pause */
+  46% {
+    width: 68%;
+  }
+
+  62% {
+    width: 78%;
+  }
+
+  /* pause */
+  100% {
+    width: 90%;
+  }
+}
+
+/* On ready: snap to 100% quickly, then the overlay fades out. */
+.fillDone {
+  width: 100%;
+  transition: width 0.25s ease-out;
+}
+
+/* Reduced-motion: keep a simple LINEAR fill (progress indicators are fine),
+   just drop the bouncy stepped rhythm. The page itself is never skipped —
+   booting is always true — so this loader shows on every system (incl.
+   Windows with animations disabled). */
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    width: 90%;
+    animation: bootFillLinear 1.4s linear forwards;
+  }
+
+  .fillDone {
+    width: 100%;
+    transition: width 0.2s linear;
+  }
+}
+
+@keyframes bootFillLinear {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 90%;
+  }
+}
