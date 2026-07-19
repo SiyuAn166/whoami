@@ -2,8 +2,8 @@
 export function FinderIcon() {
   return (
     <svg
-      width="90%"
-      height="90%"
+      width="100%"
+      height="100%"
       viewBox="0 0 512 512"
       aria-label="Finder"
       role="img"

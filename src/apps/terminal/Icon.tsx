@@ -1,12 +1,12 @@
 /** Full-bleed Terminal.app-style icon used by the Dock and Desktop. */
 export function TermIcon() {
   return (
-    <svg width="90%" height="90%" viewBox="0 0 48 48" aria-hidden>
+    <svg width="100%" height="100%" viewBox="0 0 48 48" aria-hidden>
       <rect
-        x="0.5"
-        y="0.5"
-        width="47"
-        height="47"
+        x="0"
+        y="0"
+        width="48"
+        height="48"
         rx="11"
         fill="#1d1d1f"
         stroke="rgba(255,255,255,0.14)"

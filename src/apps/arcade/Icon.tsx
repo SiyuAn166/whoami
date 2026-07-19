@@ -1,7 +1,7 @@
-type IconProps = { size?: number };
+type IconProps = { size?: number | string };
 
 /** Arcade app icon — game controller on a cyan→magenta gradient squircle. */
-export function Icon({ size = 44 }: IconProps) {
+export function Icon({ size = "100%" }: IconProps) {
   return (
     <svg
       width={size}
