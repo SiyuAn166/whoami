@@ -63,7 +63,7 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
     <section
       className="kube-exp"
       style={{
-        fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace",
+        fontFamily: "'Consolas', ui-monospace, SFMono-Regular, monospace",
         fontSize: 13,
         overflowX: "auto",
       }}

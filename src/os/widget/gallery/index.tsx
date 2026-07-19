@@ -127,6 +127,7 @@ export function WidgetGallery({
           <div className={styles.widgetgallery__search}>
             <span className={styles.widgetgallery__mag}>{"\u2315"}</span>
             <input
+              id="search-widgets"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search widgets"

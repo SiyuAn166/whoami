@@ -49,10 +49,12 @@
   transform: translateY(calc(var(--menubar-h, 28px) - 2px));
 }
 
-/* minimize → genie down toward the dock */
+/* minimize → genie: the window stretches thin and is sucked down toward the
+   dock tray. Non-uniform scale (narrower X than Y, then collapsed) plus a
+   downward slide reads as the classic macOS genie. */
 .macWindow.is-minimized {
   opacity: 0;
-  transform: translateY(42vh) scale(0.12);
+  transform: translateY(46vh) scaleX(0.16) scaleY(0.06);
   pointer-events: none;
 }
 

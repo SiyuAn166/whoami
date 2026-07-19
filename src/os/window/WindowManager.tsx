@@ -1,4 +1,5 @@
 import { type ReactNode, useCallback, useState } from "react";
+import html2canvas from "html2canvas-pro";
 
 import { getApp } from "../../apps/registry";
 import {
@@ -20,8 +21,14 @@ export interface OpenOptions {
 
 interface UseWindowManagerResult {
   instances: WindowInstance[];
+  /** Windows currently minimized to the dock tray, in the order they live in
+   * the instance list. Rendered as thumbnails on the right side of the dock. */
+  minimized: WindowInstance[];
   openApp: (appId: string, opts?: OpenOptions) => void;
   isOpen: (appId: string) => boolean;
+  /** Un-minimize a window (from a dock thumbnail) and focus it, returning it to
+   * whatever state it was in before being minimized. */
+  restore: (id: string) => void;
   focusedId: string | null;
   render: (opts?: {
     chromeRevealed?: boolean;
@@ -66,7 +73,9 @@ export function useWindowManager(
             // Restore a hidden window, honoring the requested state.
             setInstances((list) =>
               list.map((w) =>
-                w.id === existing.id ? { ...w, state: initialState } : w,
+                w.id === existing.id
+                  ? { ...w, state: initialState, restoreState: undefined }
+                  : w,
               ),
             );
           } else if (opts?.maximized) {
@@ -111,7 +120,66 @@ export function useWindowManager(
     );
 
   const close = (id: string) => updateInstance(id, { state: "closed" });
-  const minimize = (id: string) => updateInstance(id, { state: "minimized" });
+
+  // Minimize to the dock. We first snapshot the live window to a PNG so the
+  // dock tray shows a real thumbnail of its contents (like macOS), THEN flip
+  // it to the minimized state so the genie animation plays on the real window.
+  const minimize = (id: string) => {
+    const commit = (snapshot?: string) =>
+      setInstances((list) =>
+        list.map((w) =>
+          w.id === id
+            ? {
+                ...w,
+                // Keep the previous snapshot if a fresh capture failed.
+                snapshot: snapshot ?? w.snapshot,
+                // Remember where to come back to (don't overwrite if already min).
+                restoreState:
+                  w.state === "minimized" ? w.restoreState : w.state,
+                state: "minimized",
+              }
+            : w,
+        ),
+      );
+
+    const el =
+      typeof document !== "undefined"
+        ? (document.querySelector(
+            `[data-window-id="${id}"]`,
+          ) as HTMLElement | null)
+        : null;
+
+    if (!el) {
+      commit();
+      return;
+    }
+    html2canvas(el, {
+      backgroundColor: null,
+      scale: 0.5,
+      logging: false,
+      useCORS: true,
+    })
+      .then((canvas) => commit(canvas.toDataURL("image/png")))
+      .catch(() => commit());
+  };
+
+  // Un-minimize from the dock tray: return to the remembered state and focus.
+  const restore = useCallback((id: string) => {
+    setInstances((list) => {
+      const z = list.length ? Math.max(...list.map((w) => w.zIndex)) + 1 : 1;
+      return list.map((w) =>
+        w.id === id
+          ? {
+              ...w,
+              state: w.restoreState ?? "normal",
+              restoreState: undefined,
+              zIndex: z,
+            }
+          : w,
+      );
+    });
+    setFocusedId(id);
+  }, []);
 
   // Green traffic light: toggle TRUE fullscreen (hides menu bar + dock).
   // From any state, enter fullscreen; from fullscreen, restore to normal.
@@ -170,5 +238,7 @@ export function useWindowManager(
         );
       });
 
-  return { instances, openApp, isOpen, focusedId, render };
+  const minimized = instances.filter((w) => w.state === "minimized");
+
+  return { instances, minimized, openApp, isOpen, restore, focusedId, render };
 }

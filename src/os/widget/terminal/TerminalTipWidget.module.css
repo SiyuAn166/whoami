@@ -22,7 +22,7 @@
   background-color: rgba(12, 14, 12, 0.9);
   background-image: none;
   color: var(--accent);
-  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-family: "Consolas", ui-monospace, monospace;
 }
 
 .wgt-term {

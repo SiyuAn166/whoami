@@ -17,6 +17,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "html2canvas-pro": "^2.2.4",
     "pixi.js": "^8.19.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

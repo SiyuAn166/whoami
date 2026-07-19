@@ -29,6 +29,12 @@ export interface WindowInstance {
   zIndex: number;
   minSize?: Size;
   resizable?: boolean;
+  /** The state to return to when un-minimized (normal / maximized / fullscreen).
+   * Recorded at minimize time so restoring from the dock tray honors it. */
+  restoreState?: WindowState;
+  /** PNG data-URL snapshot of the window, captured the moment it is
+   * minimized, shown as the dock tray thumbnail (like macOS). */
+  snapshot?: string;
 }
 
 export const MENUBAR_H = 28;

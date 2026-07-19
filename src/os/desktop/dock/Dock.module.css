@@ -50,7 +50,7 @@
 }
 
 /* Fullscreen: slide the dock down off-screen. */
-.dock--hidden {
+.dockHidden {
   transform: translateX(-50%) translateY(160%);
   opacity: 0;
   pointer-events: none;
@@ -146,9 +146,174 @@
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
+/* ─── Minimized-window tray ─────────────────────────────────────────
+   A clear vertical divider separates the app launchers (left) from the
+   thumbnails of minimized windows (right), exactly like macOS. */
+.dockDivider {
+  align-self: center;
+  flex: 0 0 auto;
+  width: 1px;
+  height: 40px;
+  margin: 0 8px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.6) 20%,
+    rgba(255, 255, 255, 0.6) 80%,
+    rgba(255, 255, 255, 0.05)
+  );
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="light"] .dockDivider {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.04),
+    rgba(0, 0, 0, 0.42) 20%,
+    rgba(0, 0, 0, 0.42) 80%,
+    rgba(0, 0, 0, 0.04)
+  );
+  box-shadow: none;
+}
+
+.dockThumb {
+  position: relative;
+  /* Landscape tile that echoes a window's shape, like the macOS dock. */
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 0;
+  transform-origin: bottom center;
+  animation: thumbPop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dockThumb:hover {
+  transform: translateY(-6px) scale(1.08);
+}
+
+/* The snapshot tile: real window PNG cropped to fill, framed like a window. */
+.dockThumbShot {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(30, 30, 34, 0.9);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 3px 9px rgba(0, 0, 0, 0.4);
+}
+
+.dockThumbShot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* Shown when no snapshot was captured: center the app icon instead. */
+.dockThumbFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.dockThumbFallback svg {
+  width: 26px;
+  height: 26px;
+  border-radius: 24%;
+}
+
+/* Small app-icon badge pinned to the bottom-right corner of the tile. */
+.dockThumbBadge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 20px;
+  height: 20px;
+  line-height: 0;
+  border-radius: 24%;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1.5px rgba(20, 20, 24, 0.55),
+    0 2px 5px rgba(0, 0, 0, 0.45);
+}
+
+.dockThumbBadge svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 24%;
+}
+
+@keyframes thumbPop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.4);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Title bubble on hover (mirrors the launcher tooltip). */
+.dockThumbTip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px) scale(0.96);
+  transform-origin: bottom center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--titlebar);
+  color: var(--fg);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms;
+  z-index: 100;
+}
+
+.dockThumbTip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--titlebar);
+}
+
+.dockThumb:hover .dockThumbTip,
+.dockThumb:focus-visible .dockThumbTip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dock,
-  .dockIcon {
+  .dockIcon,
+  .dockThumb {
     transition: none !important;
     animation: none !important;
   }

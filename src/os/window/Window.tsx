@@ -69,6 +69,19 @@ export function Window({
 }: WindowProps) {
   const [interacting, setInteracting] = useState(false);
   const { state, rect, minSize, resizable = true } = instance;
+
+  // When the window becomes non-visible (minimized/closed) it is marked
+  // `inert`. Focus must not remain inside an inert subtree, so move it out
+  // to <body> first — otherwise assistive tech loses the focused control.
+  useEffect(() => {
+    if (state === "minimized" || state === "closed") {
+      const el = document.querySelector<HTMLElement>(
+        `[data-window-id="${instance.id}"]`,
+      );
+      const active = document.activeElement as HTMLElement | null;
+      if (el && active && el.contains(active)) active.blur();
+    }
+  }, [state, instance.id]);
   const maximized = state === "maximized";
   const fullscreen = state === "fullscreen";
   // Both maximized and fullscreen pin the window — no drag/resize.
@@ -175,13 +188,13 @@ export function Window({
 
   return (
     <div
+      data-window-id={instance.id}
       className={`${styles.macWindow}${maximized ? " " + styles.isMaximized : ""}${
         fullscreen ? " " + styles.isFullscreen : ""
       }${fullscreen && chromeRevealed ? " " + styles.chromeRevealed : ""}${
         state === "minimized" ? " " + styles.isMinimized : ""
       }${state === "closed" ? " " + styles.isClosed : ""}`}
       inert={!visible}
-      aria-hidden={!visible}
       onPointerDownCapture={onFocus}
       style={{
         position: "fixed",

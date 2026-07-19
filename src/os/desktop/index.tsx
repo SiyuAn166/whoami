@@ -183,7 +183,13 @@ function DesktopReady({
         chromeRevealed,
         onRevealChange: setChromeRevealed,
       })}
-      <Dock isOpen={wm.isOpen} openApp={wm.openApp} hidden={anyFullscreen} />
+      <Dock
+        isOpen={wm.isOpen}
+        openApp={wm.openApp}
+        hidden={anyFullscreen}
+        minimized={wm.minimized}
+        onRestore={wm.restore}
+      />
     </DesktopClickMenu>
   );
 }

@@ -237,6 +237,7 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
               {input}
             </span>
             <input
+              id="shell-input"
               ref={inputRef}
               value={input}
               onChange={(e) => {

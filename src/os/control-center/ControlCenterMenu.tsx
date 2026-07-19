@@ -92,6 +92,7 @@ export function ControlCenterMenu() {
                   <SpeakerMuteIcon />
                 </button>
                 <input
+                  id="control-center-menu"
                   type="range"
                   className={styles.ccSlider}
                   min={0}
