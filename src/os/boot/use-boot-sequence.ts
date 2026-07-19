@@ -13,11 +13,17 @@ const MIN_MS = 1600; // keep the boot screen up at least this long
 const MAX_MS = 4000; // absolute cap — reveal no later than this
 const FADE_MS = 400; // must match the CSS `transition` on .boot
 
+// Dev escape hatch: set VITE_SKIP_BOOT=true (e.g. in .env.local) to skip the
+// boot screen entirely during `npm run dev`. Never skips in a production build.
+const SKIP_BOOT =
+  import.meta.env.DEV && import.meta.env.VITE_SKIP_BOOT === "true";
+
 export function useBootSequence() {
-  const [booting, setBooting] = useState(true);
+  const [booting, setBooting] = useState(!SKIP_BOOT);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
+    if (SKIP_BOOT) return;
     let done = false;
     const start = performance.now();
 
