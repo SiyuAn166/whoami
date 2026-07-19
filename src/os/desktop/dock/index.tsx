@@ -16,7 +16,10 @@ interface DockProps {
  * the app at its default centered size (not maximized). */
 export function Dock({ isOpen, openApp, hidden }: DockProps) {
   return (
-    <div className={`${styles.dock}${hidden ? " " + styles.dockHidden : ""}`}>
+    <div
+      className={`${styles.dock}${hidden ? " " + styles.dockHidden : ""}`}
+      data-dock
+    >
       {APPS.map((app) => (
         <Icon
           key={app.id}

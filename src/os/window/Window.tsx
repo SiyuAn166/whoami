@@ -5,7 +5,7 @@ import {
   clamp,
   clampRect,
   COARSE,
-  DOCK_H,
+  dockHeight,
   fullscreenRect,
   HANDLES,
   maxedRect,
@@ -101,12 +101,13 @@ export function Window({
       sy = e.clientY,
       r0 = { ...rect };
     setInteracting(true);
+    const dockH = dockHeight();
     const move = (ev: PointerEvent) => {
       const { vw, vh } = vp();
       onRectChange({
         ...r0,
         x: clamp(r0.x + ev.clientX - sx, 0, vw - r0.w),
-        y: clamp(r0.y + ev.clientY - sy, MENUBAR_H, vh - DOCK_H - r0.h),
+        y: clamp(r0.y + ev.clientY - sy, MENUBAR_H, vh - dockH - r0.h),
       });
     };
     const up = () => {
@@ -137,15 +138,16 @@ export function Window({
       T = dir.includes("n"),
       B = dir.includes("s");
     setInteracting(true);
+    const dockH = dockHeight();
     const move = (ev: PointerEvent) => {
       const { vw, vh } = vp();
       const minW = Math.min(minSize?.w ?? MIN_W, vw - 16),
-        minH = Math.min(minSize?.h ?? MIN_H, vh - MENUBAR_H - DOCK_H);
+        minH = Math.min(minSize?.h ?? MIN_H, vh - MENUBAR_H - dockH);
       const dx = ev.clientX - sx,
         dy = ev.clientY - sy;
       let { x, y, w, h } = r0;
       if (R) w = clamp(r0.w + dx, minW, vw - r0.x);
-      if (B) h = clamp(r0.h + dy, minH, vh - DOCK_H - r0.y);
+      if (B) h = clamp(r0.h + dy, minH, vh - dockH - r0.y);
       if (L) {
         const right = r0.x + r0.w;
         x = clamp(r0.x + dx, 0, right - minW);

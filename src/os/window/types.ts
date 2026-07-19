@@ -34,7 +34,7 @@ export interface WindowInstance {
 export const MENUBAR_H = 28;
 export const TOP_GAP = 12;
 export const EDGE = 0; // viewport margin a window can't cross
-export const DOCK_H = 86; // dock height + bottom margin (14px margin + ~70px dock + buffer)
+export const DOCK_H = 86; // fallback dock height used before the dock mounts / can be measured
 export const MIN_W = 440;
 export const MIN_H = 300;
 export const DEFAULT_MAX_W = 1152; // 72rem
@@ -43,6 +43,41 @@ export const clamp = (v: number, lo: number, hi: number) =>
   Math.min(Math.max(v, lo), Math.max(lo, hi));
 
 export const vp = () => ({ vw: window.innerWidth, vh: window.innerHeight });
+
+/** Live-measured vertical space the dock reserves at the bottom of the screen:
+ * the dock element's own height plus whatever gap sits below it. Used instead of
+ * the fixed DOCK_H so maximized windows rest exactly on top of the dock no matter
+ * its icon size / padding. Falls back to DOCK_H if the dock isn't in the DOM yet.
+ * Mark the dock's root element with `data-dock` for this to work.
+ */
+export function dockHeight(): number {
+  if (typeof document === "undefined") return DOCK_H;
+
+  // 1) Explicit hook on the dock root: <div className={styles.dock} data-dock>.
+  //    Measured live, so it tracks icon size / padding / bottom gap automatically.
+  const el = document.querySelector<HTMLElement>("[data-dock]");
+  if (el) {
+    const r = el.getBoundingClientRect();
+    // Reserve everything from the dock's top edge down to the viewport bottom
+    // (dock height + whatever margin sits below it).
+    const reserve = Math.round(window.innerHeight - r.top);
+    // Guard: a dock slid off-screen (fullscreen) or an odd layout would give a
+    // nonsensical value — only trust a sane, positive reserve.
+    if (r.height > 0 && reserve > 0 && reserve < window.innerHeight / 2) {
+      return reserve;
+    }
+  }
+
+  // 2) Optional CSS escape hatch: :root { --dock-h: 86px }.
+  const cssVar = getComputedStyle(document.documentElement).getPropertyValue(
+    "--dock-h",
+  );
+  const parsed = parseInt(cssVar, 10);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+
+  // 3) Nothing found (dock not mounted yet / hidden) → static fallback.
+  return DOCK_H;
+}
 
 export const COARSE =
   typeof window !== "undefined" &&
@@ -54,7 +89,10 @@ export const COARSE =
 export function defaultRect(size?: Size, minSize?: Size, offset = 0): Rect {
   const { vw, vh } = vp();
   const w = Math.min(size?.w ?? DEFAULT_MAX_W, vw - 2 * EDGE);
-  const h = Math.min(size?.h ?? MIN_H, vh - (MENUBAR_H + TOP_GAP) - DOCK_H);
+  const h = Math.min(
+    size?.h ?? MIN_H,
+    vh - (MENUBAR_H + TOP_GAP) - dockHeight(),
+  );
   const baseX = Math.round((vw - w) / 2);
   const baseY = MENUBAR_H + TOP_GAP;
   const shift = offset * 28;
@@ -70,7 +108,7 @@ export function maxedRect(): Rect {
     x: EDGE,
     y: MENUBAR_H,
     w: vw,
-    h: vh - MENUBAR_H - DOCK_H,
+    h: vh - MENUBAR_H - dockHeight(),
   };
 }
 
@@ -90,16 +128,17 @@ export function clampRect(r: Rect, minSize?: Size): Rect {
   const minW = minSize?.w ?? MIN_W;
   const minH = minSize?.h ?? MIN_H;
   const w = clamp(r.w, Math.min(minW, vw), vw);
+  const dockH = dockHeight();
   const h = clamp(
     r.h,
-    Math.min(minH, vh - MENUBAR_H - DOCK_H),
-    vh - MENUBAR_H - DOCK_H,
+    Math.min(minH, vh - MENUBAR_H - dockH),
+    vh - MENUBAR_H - dockH,
   );
   return {
     w,
     h,
     x: clamp(r.x, EDGE, vw - EDGE - w),
-    y: clamp(r.y, MENUBAR_H, vh - DOCK_H - h),
+    y: clamp(r.y, MENUBAR_H, vh - dockH - h),
   };
 }
 
