@@ -214,6 +214,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.piece = null;
       g.status = "gameover";
       stageRef.current?.hideActive();
+      stageRef.current?.pauseLoop();
       syncHud();
       return;
     }
@@ -698,15 +699,25 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.arrAccum = 0;
       g.bufferedRot = 0;
     };
+    const onVisibility = () => {
+      if (document.hidden) stageRef.current?.pauseLoop();
+      else if (
+        gs.current?.status !== "paused" &&
+        gs.current?.status !== "gameover"
+      )
+        stageRef.current?.resumeLoop();
+    };
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", onBlur);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelled = true;
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
+      document.removeEventListener("visibilitychange", onVisibility);
       stage.destroy();
       stageRef.current = null;
       gs.current = null;
@@ -725,6 +736,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.softDrop = false;
       g.dir = 0;
       g.dirStack = [];
+      stageRef.current?.pauseLoop();
       syncHud();
     }
   }, [syncHud]);
@@ -733,6 +745,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const g = gs.current;
     if (g && g.status === "paused") {
       g.status = "control";
+      stageRef.current?.resumeLoop();
       syncHud();
     }
   }, [syncHud]);
@@ -828,6 +841,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
     stageRef.current?.setGarbage(0);
     stageRef.current?.setBestChain(0);
     stageRef.current?.hideChain();
+    stageRef.current?.resumeLoop();
     spawnNext();
   }, [spawnNext]);
 

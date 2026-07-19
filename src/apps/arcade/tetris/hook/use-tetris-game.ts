@@ -133,6 +133,7 @@ export function useTetrisGame(
         g.piece = null;
         g.status = "gameover";
         stageRef.current?.clearActive();
+        stageRef.current?.pauseLoop();
         syncHud();
         return;
       }
@@ -319,15 +320,17 @@ export function useTetrisGame(
     g.dir = 0;
     g.charged = false;
     g.softDrop = false;
+    stageRef.current?.pauseLoop();
     syncHud();
-  }, [syncHud]);
+  }, [stageRef, syncHud]);
 
   const resume = useCallback(() => {
     const g = gs.current;
     if (!g || g.status !== "paused") return;
     g.status = "control";
+    stageRef.current?.resumeLoop();
     syncHud();
-  }, [syncHud]);
+  }, [stageRef, syncHud]);
 
   const togglePause = useCallback(() => {
     const g = gs.current;
@@ -363,6 +366,7 @@ export function useTetrisGame(
       charged: false,
     };
     st?.syncBoard(gs.current.grid);
+    st?.resumeLoop();
     spawn();
     syncHud();
   }, [spawn, stageRef, syncHud]);
@@ -438,6 +442,19 @@ export function useTetrisGame(
     if (!st) return;
     st.onTick((dt) => tickRef.current(dt));
     return () => st.offTick();
+  }, [ready, stageRef]);
+
+  // pause the Pixi loop when the tab is hidden
+  useEffect(() => {
+    if (!ready) return;
+    const onVis = () => {
+      const g = gs.current;
+      if (document.hidden) stageRef.current?.pauseLoop();
+      else if (g && g.status !== "paused" && g.status !== "gameover")
+        stageRef.current?.resumeLoop();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
   }, [ready, stageRef]);
 
   // ---- keyboard ----

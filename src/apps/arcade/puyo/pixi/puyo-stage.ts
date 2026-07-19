@@ -55,6 +55,9 @@ export class PuyoStage {
       autoDensity: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     });
+
+    this.app.ticker.maxFPS = 60;
+
     if (this.destroyed) {
       this.app.destroy(true);
       return;
@@ -171,6 +174,14 @@ export class PuyoStage {
 
   onTick(cb: (dt: number) => void): void {
     this.tickCb = cb;
+  }
+
+  pauseLoop(): void {
+    this.app.ticker.stop();
+  }
+
+  resumeLoop(): void {
+    if (!this.destroyed) this.app.ticker.start();
   }
 
   syncStatic(g: Grid): void {

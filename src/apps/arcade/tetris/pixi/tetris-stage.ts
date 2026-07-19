@@ -53,6 +53,8 @@ export class TetrisStage {
       resolution: Math.min(window.devicePixelRatio || 1, 2),
       autoDensity: true,
     });
+
+    this.app.ticker.maxFPS = 60;
     // Responsive: letterbox the fixed-resolution scene into its host so the
     // canvas scales with the window (mirrors PuyoStage).
     const cv = this.app.canvas;
@@ -173,6 +175,14 @@ export class TetrisStage {
       this.app.ticker.remove(this.tickFn);
       this.tickFn = undefined;
     }
+  }
+
+  pauseLoop(): void {
+    this.app.ticker.stop();
+  }
+
+  resumeLoop(): void {
+    if (this.ready) this.app.ticker.start();
   }
 
   destroy() {
