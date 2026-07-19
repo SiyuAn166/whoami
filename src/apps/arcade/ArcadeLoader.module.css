@@ -1,0 +1,132 @@
+/* ============================================================================
+   ArcadeLoader — bouncing dots boot screen (~2.5s).
+   Scoped to this component; does not touch Arcade.module.css.
+   ============================================================================ */
+
+/* rainbow palette for the five dots */
+.loader {
+  --c1: #ff3d8b;
+  --c2: #7c5cff;
+  --c3: #22d3ee;
+  --c4: #4ade80;
+  --c5: #ffd23f;
+
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+
+  background:
+    radial-gradient(
+      120% 90% at 50% 35%,
+      color-mix(in srgb, var(--acc) 16%, transparent),
+      transparent 70%
+    ),
+    #0a0a10;
+  border-radius: inherit;
+  /* opaque from the first paint — no fade-in, so the hub never shows first */
+}
+
+/* fade out when the parent flips `leaving` */
+.leaving {
+  animation: arcldr-out 0.3s ease forwards;
+}
+
+.dots {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  height: 60px;
+}
+
+.dots i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: block;
+  animation: arcldr-bounce 1s infinite ease-in-out;
+}
+
+.dots i:nth-child(1) {
+  background: var(--c1);
+  animation-delay: 0s;
+  box-shadow: 0 0 12px var(--c1);
+}
+.dots i:nth-child(2) {
+  background: var(--c2);
+  animation-delay: 0.12s;
+  box-shadow: 0 0 12px var(--c2);
+}
+.dots i:nth-child(3) {
+  background: var(--c3);
+  animation-delay: 0.24s;
+  box-shadow: 0 0 12px var(--c3);
+}
+.dots i:nth-child(4) {
+  background: var(--c4);
+  animation-delay: 0.36s;
+  box-shadow: 0 0 12px var(--c4);
+}
+.dots i:nth-child(5) {
+  background: var(--c5);
+  animation-delay: 0.48s;
+  box-shadow: 0 0 12px var(--c5);
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  color: rgba(255, 255, 255, 0.72);
+  animation: arcldr-pulse 1.4s infinite ease-in-out;
+}
+
+@keyframes arcldr-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  30% {
+    transform: translateY(-28px);
+    opacity: 1;
+  }
+}
+
+@keyframes arcldr-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes arcldr-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* respect reduced motion: keep it static, no bounce/pulse */
+@media (prefers-reduced-motion: reduce) {
+  .loader,
+  .leaving,
+  .dots i,
+  .label {
+    animation: none !important;
+  }
+  .dots i {
+    opacity: 1;
+  }
+}

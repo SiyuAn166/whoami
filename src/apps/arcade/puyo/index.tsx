@@ -7,7 +7,7 @@ import type { AppDefinition } from "../../types";
 // Public entrance. The Arcade hub only consumes { Game } and { Icon }; puyoApp is
 // exported for standalone launch. Engine + config are re-exported for any
 // callers that want the pure logic.
-export { default as cover } from "./assets/puyo-cover.png";
+export { default as cover } from "./assets/puyo-cover.webp?inline";
 export { Game } from "./Game";
 export { Icon } from "./Icon";
 export * from "./lib/config";

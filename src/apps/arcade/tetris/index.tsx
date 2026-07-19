@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 
 import type { AppDefinition } from "../../types";
 
-export { default as cover } from "./assets/tetris-cover.png";
+export { default as cover } from "./assets/tetris-cover.webp?inline";
 export { Game } from "./Game";
 export { Icon } from "./Icon";
 export * from "./lib/config";

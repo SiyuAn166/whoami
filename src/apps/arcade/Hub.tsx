@@ -7,21 +7,76 @@
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { ArcadeLoader } from "./ArcadeLoader";
 import { GAMES } from "./games";
 
 import styles from "./Arcade.module.css";
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+
 // smoothstep — softens the linear proximity ramp into a dock-like curve
 const smooth = (t: number) => {
   t = clamp01(t);
   return t * t * (3 - 2 * t);
 };
 
+// Cover with themed placeholder + fade-in. Inlined images are already
+// `complete` when the element mounts (onLoad won't fire), so we check inside a
+// callback ref instead of an effect to avoid a cascading setState-in-effect.
+function ArcCover({
+  src,
+  alt,
+  accent,
+}: {
+  src: string;
+  alt: string;
+  accent: string;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const setImgRef = useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete) setLoaded(true);
+  }, []);
+  return (
+    <img
+      ref={setImgRef}
+      className={styles.arcCover}
+      src={src}
+      alt={alt}
+      draggable={false}
+      decoding="async"
+      onLoad={() => setLoaded(true)}
+      style={{
+        opacity: loaded ? 1 : 0,
+        // no transition once already loaded → inlined covers show instantly
+        transition: loaded ? "none" : "opacity .25s ease",
+        backgroundColor: accent,
+      }}
+    />
+  );
+}
+
 export function Hub({ onClose }: { onClose?: () => void }) {
   const [view, setView] = useState<string>("hub");
   const [sel, setSel] = useState(0);
-  const [booting, setBooting] = useState(false);
+
+  // Boot screen: show the chain-pop loader on mount for ~2s, then fade it
+  // out. Skipped entirely when the user prefers reduced motion.
+  const prefersReduced =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const [booting, setBooting] = useState(!prefersReduced);
+  const [bootLeaving, setBootLeaving] = useState(false);
+
+  useEffect(() => {
+    if (!booting) return;
+    // fade the overlay at 2.2s, unmount at 2.5s → total boot ~2.5s
+    const t1 = window.setTimeout(() => setBootLeaving(true), 2200);
+    const t2 = window.setTimeout(() => setBooting(false), 2500);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [booting]);
 
   // Live drag state: while a finger is down we translate the rail by dragPx so
   // the carousel follows the finger, and every card's scale/glow interpolates
@@ -35,11 +90,7 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   const [dragging, setDragging] = useState(false);
 
   const launch = useCallback((id: string) => {
-    setBooting(true);
-    window.setTimeout(() => {
-      setView(id);
-      setBooting(false);
-    }, 460);
+    setView(id);
   }, []);
 
   // Touch: horizontal swipe moves selection. During the drag the rail tracks
@@ -52,7 +103,6 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   const didDragRef = useRef(false); // a real horizontal drag happened this touch
 
   const onTouchStart = (e: React.TouchEvent) => {
-    if (booting) return;
     const t = e.touches[0];
     touchStart.current = { x: t.clientX, y: t.clientY };
     axisRef.current = "none";
@@ -70,11 +120,10 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart.current || booting) return;
+    if (!touchStart.current) return;
     const t = e.touches[0];
     const dx = t.clientX - touchStart.current.x;
     const dy = t.clientY - touchStart.current.y;
-
     // lock the gesture axis once movement is decisive
     if (axisRef.current === "none") {
       if (Math.abs(dx) > 8 || Math.abs(dy) > 8)
@@ -83,7 +132,6 @@ export function Hub({ onClose }: { onClose?: () => void }) {
     if (axisRef.current !== "x") return; // let vertical scroll pass through
     // NOTE: no preventDefault here — `.arc-stage { touch-action: pan-y }` already
     // reserves horizontal gestures for us, so React's passive listener is fine.
-
     if (Math.abs(dx) > 6) didDragRef.current = true;
     const step = stepRef.current || 1;
     // clamp: never drag more than one card away, so a cover can't slide
@@ -102,7 +150,7 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   };
 
   const onTouchEnd = () => {
-    if (!touchStart.current || booting) {
+    if (!touchStart.current) {
       touchStart.current = null;
       return;
     }
@@ -114,7 +162,6 @@ export function Hub({ onClose }: { onClose?: () => void }) {
     const delta = moved !== 0 ? moved : threshold;
     if (delta !== 0)
       setSel((s) => Math.max(0, Math.min(GAMES.length - 1, s + delta)));
-
     // reset drag → the rail's transform transition snaps to the target
     setDragging(false);
     setDragPx(0);
@@ -126,7 +173,6 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   useEffect(() => {
     if (view !== "hub") return;
     const onKey = (e: KeyboardEvent) => {
-      if (booting) return;
       switch (e.key) {
         case "ArrowRight":
           e.preventDefault();
@@ -148,7 +194,7 @@ export function Hub({ onClose }: { onClose?: () => void }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [view, sel, booting, launch, onClose]);
+  }, [view, sel, launch, onClose]);
 
   const active = GAMES.find((g) => g.id === view);
   if (active) {
@@ -157,7 +203,6 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   }
 
   const focused = GAMES[sel];
-
   // Continuous magnification: the fractional centre index shifts with the drag,
   // so each card's proximity (and thus its scale/glow, driven by --p in CSS)
   // interpolates live as the finger moves — the macOS-dock feel. dragUnits is
@@ -167,12 +212,22 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   return (
     <div
       className={styles.arcHome}
-      style={{ ["--accent" as string]: focused.accent }}
+      // animation:none overrides the CSS mount entrance (arcadeBoot) so the
+      // hub appears instantly, without editing Arcade.module.css. position
+      // relative anchors the boot overlay to the hub.
+      style={{
+        ["--accent" as string]: focused.accent,
+        animation: "none",
+        position: "relative",
+      }}
     >
+      {booting && (
+        <ArcadeLoader accent={focused.accent} leaving={bootLeaving} />
+      )}
       <div className={styles.arcAmbient} aria-hidden />
-
       <main
         className={styles.arcStage}
+        style={{ animation: "none" }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -190,14 +245,12 @@ export function Hub({ onClose }: { onClose?: () => void }) {
             return (
               <button
                 key={g.id}
-                className={`${styles.arcCard} ${i === sel ? "on" : "off"} ${
-                  booting && i === sel ? styles.booting : ""
-                }`}
+                className={`${styles.arcCard} ${i === sel ? "on" : "off"}`}
                 style={{
                   ["--p" as string]: p,
                   ["--card-accent" as string]: g.accent,
                 }}
-                onMouseEnter={() => !booting && setSel(i)}
+                onMouseEnter={() => setSel(i)}
                 onClick={() => {
                   // a drag just happened → ignore the synthetic click
                   if (didDragRef.current) return;
@@ -206,24 +259,17 @@ export function Hub({ onClose }: { onClose?: () => void }) {
                 }}
                 aria-label={g.name}
               >
-                <img
-                  className={styles.arcCover}
-                  src={g.cover}
-                  alt={g.name}
-                  draggable={false}
-                />
+                <ArcCover src={g.cover} alt={g.name} accent={g.accent} />
                 <span className={styles.arcGloss} aria-hidden />
               </button>
             );
           })}
         </div>
-
         <div className={styles.arcMeta}>
           <h1 className={styles.arcTitle}>{focused.name}</h1>
           <p className={styles.arcTag}>{focused.tagline}</p>
         </div>
       </main>
-
       <footer className={styles.arcHints}>
         <span className={styles.arcHintKey}>
           <kbd>&#8592;</kbd>
