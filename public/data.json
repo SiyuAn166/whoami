@@ -242,12 +242,12 @@
       "category": "dist"
     },
     {
-      "name": "gRPC",
+      "name": "RPZ",
       "level": 82,
       "category": "dist"
     },
     {
-      "name": "RPZ",
+      "name": "gRPC",
       "level": 82,
       "category": "dist"
     },

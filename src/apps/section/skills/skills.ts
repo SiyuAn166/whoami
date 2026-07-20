@@ -18,10 +18,12 @@ import {
   Postgresql,
   Prometheus,
   Python,
+  Rabbitmq,
   TailwindIcon,
   TerraformIcon,
   TypescriptIcon,
   Vite,
+  Vitest,
 } from "@dev.icons/react";
 
 import type { Skill } from "../../../types/portfolio";
@@ -151,10 +153,12 @@ const ICONS: Record<string, IconComp> = {
   gcp: GoogleCloud,
   grafana: Grafana,
   kafka: Kafka,
+  rabbitmq: Rabbitmq,
   cloudflare: CloudflareIcon,
   react: _React,
   tailwindcss: TailwindIcon,
-  vitejs: Vite,
+  vite: Vite,
+  vitest: Vitest,
   aws: Aws,
   prometheus: Prometheus,
   grpc: Grpc,
