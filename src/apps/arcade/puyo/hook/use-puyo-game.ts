@@ -675,7 +675,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       if (!hostRef.current) return;
       await stage.init(hostRef.current);
       sfx.preload();
-      stage.setGhostEnabled(initialMode === "play");
+      stage.setGhostEnabled(true); // ghost + clear-preview on in both play and practice
       if (cancelled) return;
       stage.onTick(tick);
       stage.bindControls(toggleMode, restart);
@@ -755,7 +755,6 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const g = gs.current;
     if (!g) return;
     g.mode = g.mode === "play" ? "practice" : "play";
-    stageRef.current?.setGhostEnabled(g.mode === "play");
     stageRef.current?.setMode(g.mode);
     // Reset fall/lock accumulators so the switch takes effect cleanly.
     g.gravAccum = 0;
