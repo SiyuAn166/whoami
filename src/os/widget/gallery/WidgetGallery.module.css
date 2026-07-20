@@ -35,8 +35,6 @@
   width: min(840px, 94vw);
   margin-inline: auto;
   height: min(62vh, 540px);
-  /* leave room for the dock */
-  margin-bottom: 92px;
   display: flex;
   flex-direction: column;
   font-family:
