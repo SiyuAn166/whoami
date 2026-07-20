@@ -49,6 +49,10 @@
     opacity 0.25s ease;
 }
 
+.dock :focus {
+  outline: none;
+}
+
 /* Fullscreen: slide the dock down off-screen. */
 .dockHidden {
   transform: translateX(-50%) translateY(160%);
