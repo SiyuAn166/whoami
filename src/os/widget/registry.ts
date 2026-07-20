@@ -7,6 +7,7 @@ import { featuredProjectWidget } from "./featured";
 import { skillsWidget } from "./skills";
 import { stickyNoteWidget } from "./sticky";
 import { terminalTipWidget } from "./terminal";
+import { weatherWidget } from "./weather";
 
 import type { WidgetDefinition } from "./types";
 
@@ -18,6 +19,7 @@ import type { WidgetDefinition } from "./types";
 export const CATALOG: WidgetDefinition[] = [
   bootstrapWidget,
   clockWidget,
+  weatherWidget,
   skillsWidget,
   featuredProjectWidget,
   contactWidget,
@@ -32,6 +34,7 @@ export const WIDGETS = CATALOG;
 /** Widgets placed on the desktop on first load */
 export const DEFAULT_ACTIVE_WIDGET_IDS: string[] = [
   // bootstrapWidget.id,
+  weatherWidget.id,
   contactWidget.id,
   // clockWidget.id,
   // skillsWidget.id,
