@@ -102,6 +102,7 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   const didDragRef = useRef(false); // a real horizontal drag happened this touch
 
   const onTouchStart = (e: React.TouchEvent) => {
+    if (booting) return; // ignore swipes while the boot loader is up
     const t = e.touches[0];
     touchStart.current = { x: t.clientX, y: t.clientY };
     axisRef.current = "none";
@@ -170,7 +171,9 @@ export function Hub({ onClose }: { onClose?: () => void }) {
   };
 
   useEffect(() => {
-    if (view !== "hub") return;
+    // While the boot loader is showing, ignore all hub input so keys can't
+    // move the selection / launch a game / close during those ~2.5s.
+    if (view !== "hub" || booting) return;
     const onKey = (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowRight":
@@ -193,7 +196,7 @@ export function Hub({ onClose }: { onClose?: () => void }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [view, sel, launch, onClose]);
+  }, [view, sel, launch, onClose, booting]);
 
   const active = GAMES.find((g) => g.id === view);
   if (active) {

@@ -143,8 +143,7 @@
   border-top-color: var(--titlebar);
 }
 
-.dockIcon:hover .dockTooltip,
-.dockIcon:focus-visible .dockTooltip {
+.dockIcon:hover .dockTooltip {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0) scale(1);
@@ -307,8 +306,7 @@
   border-top-color: var(--titlebar);
 }
 
-.dockThumb:hover .dockThumbTip,
-.dockThumb:focus-visible .dockThumbTip {
+.dockThumb:hover .dockThumbTip {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0) scale(1);
