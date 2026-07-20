@@ -71,7 +71,6 @@
   color: #fff;
   /* flat per-company solid color */
   background: hsl(var(--h) 62% 52%);
-  user-select: none;
 }
 
 /* ══════════════ LIST — Notes/Mail hairline rows ══════════════ */

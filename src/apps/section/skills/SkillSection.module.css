@@ -9,7 +9,6 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
-  user-select: none;
 }
 
 /* group heading — uppercase, letterspaced, with a small category dot */

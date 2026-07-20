@@ -12,6 +12,7 @@
   gap: 2px;
   margin-left: 12px;
   height: 100%;
+  user-select: none;
 }
 
 .finder-tbtn {
@@ -89,6 +90,7 @@
   flex: 1;
   min-width: 0;
   padding: 20px 22px;
+  user-select: none;
 }
 
 /* Bottom breadcrumb path bar (rendered as the window footer) */
@@ -156,14 +158,17 @@
     margin-left: 8px;
     gap: 1px;
   }
+
   .finder-tbtn {
     width: 34px;
     height: 30px;
     border-radius: 8px;
   }
+
   .finder-tsep {
     margin: 0 3px;
   }
+
   /* Folder name already appears in the sidebar selection + path bar,
      so drop the centered titlebar title to avoid colliding with the
      traffic lights and toolbar on a narrow row. */
@@ -183,6 +188,7 @@
     padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     font-size: 12px;
   }
+
   .finder-crumbs > :nth-child(-n + 3) {
     display: none;
   }
@@ -204,6 +210,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
