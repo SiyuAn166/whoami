@@ -9,7 +9,7 @@ export const weatherWidget: WidgetDefinition = {
   size: "large",
   variant: "glass",
   order: 12,
-  defaultPos: { x: 18, y: 300 },
+  defaultPos: { x: 18, y: 60 },
   defaultAnchor: "left",
   render: () => <WeatherContent />,
 };
