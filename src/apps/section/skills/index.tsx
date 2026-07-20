@@ -1,5 +1,25 @@
+import { createElement } from "react";
+import {
+  Cloudflare,
+  Docker,
+  Go,
+  GoogleCloud,
+  Grafana,
+  Java,
+  Kafka,
+  Kubernetes,
+  Linux,
+  PostgreSQL,
+  Python,
+  React as ReactIcon,
+  TailwindCSS,
+  Terraform,
+  TypeScript,
+  ViteJS,
+} from "developer-icons";
+
 import type { Skill } from "../../../types/portfolio";
-import type { CSSProperties } from "react";
+import type { ComponentType, CSSProperties } from "react";
 
 import styles from "./SkillSection.module.css";
 
@@ -122,37 +142,43 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
   );
 }
 
-/* ═════════════════════════ FINDER — grouped tags ═════════════════════════
-   A near-monochrome, macOS-native presentation: skills are grouped by domain
-   into rounded "tag" pills (Finder tags / System Settings token style).
-   Colour is used only as a small semantic accent — a category dot on each pill
-   and beside each group heading — never as a large block, matching macOS's
-   monochrome-base + restrained-accent language.
-
-   Grouping is data-driven from `skill.category`; a name-based inference is the
-   fallback so older data keeps working. No progress bars, no gauges.
+/* ═════════════════════════ FINDER — icon grid ═════════════════════════
+   Launchpad-style grid: real full-colour brand logos placed bare (no tile
+   box), with a small coloured monogram square only for skills that have no
+   logo (concepts / trademark-removed brands). No progress bars, no numbers.
+   Grouping is data-driven from `skill.category`, with name-based fallback.
    ========================================================================== */
 
-type Domain = "lang" | "infra" | "dist";
+type Domain = "lang" | "infra" | "dist" | "frontend";
 
 const DOMAINS: { id: Domain; label: string; color: string }[] = [
-  { id: "lang", label: "Languages", color: "var(--sk-lang)" },
-  { id: "infra", label: "Cloud Infrastructure", color: "var(--sk-infra)" },
+  { id: "lang", label: "Languages", color: "var(--sk-lang, var(--info))" },
+  {
+    id: "infra",
+    label: "Cloud Infrastructure",
+    color: "var(--sk-infra, var(--ok))",
+  },
   {
     id: "dist",
     label: "Distributed Systems & Networking",
-    color: "var(--sk-dist)",
+    color: "var(--sk-dist, var(--magenta))",
+  },
+  {
+    id: "frontend",
+    label: "Frontend",
+    color: "var(--sk-frontend, var(--warn))",
   },
 ];
 
 function classify(skill: Skill): Domain {
   // 1) explicit data field wins (single source of truth in data.json)
-  if (skill.category) return skill.category;
+  if (skill.category) return skill.category as Domain;
 
   // 2) fallback inference for legacy / missing data
   const n = skill.name.toLowerCase();
+  if (/(react|vue|svelte|tailwind|vite|css|next)/.test(n)) return "frontend";
   if (
-    /(^go$|golang|java|python|type|script|\bsql\b|rust|kotlin|swift|\bc\b)/.test(
+    /(^go$|golang|java|python|type|script|\bsql\b|postgres|rust|kotlin|swift)/.test(
       n,
     )
   )
@@ -164,6 +190,69 @@ function classify(skill: Skill): Domain {
   )
     return "infra";
   return "dist";
+}
+
+/* Skill name (normalised) → real full-colour logo component.
+   Anything not listed here falls back to a coloured monogram square.
+   Only these are imported, so the bundle stays tiny (tree-shaken). */
+type IconComp = ComponentType<{ size?: number; className?: string }>;
+
+const ICONS: Record<string, IconComp> = {
+  go: Go,
+  java: Java,
+  python: Python,
+  typescript: TypeScript,
+  postgresql: PostgreSQL,
+  kubernetes: Kubernetes,
+  docker: Docker,
+  linux: Linux,
+  terraform: Terraform,
+  gcp: GoogleCloud,
+  grafana: Grafana,
+  kafka: Kafka,
+  cloudflare: Cloudflare,
+  react: ReactIcon,
+  tailwindcss: TailwindCSS,
+  vitejs: ViteJS,
+};
+
+function resolveIcon(name: string): IconComp | null {
+  const key = name.toLowerCase().replace(/[_\s]+/g, "");
+  return ICONS[key] ?? null;
+}
+
+/* Stable hue from the skill name — used to colour the monogram fallback. */
+function hueOf(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+  return h;
+}
+
+function monogram(name: string): string {
+  const clean = name.replace(/[^a-zA-Z0-9]/g, "");
+  return clean.slice(0, 2).toUpperCase() || "?";
+}
+
+function SkillTile({ skill }: { skill: Skill }) {
+  const label = skill.name.replace(/_/g, " ");
+  const Icon = resolveIcon(skill.name);
+  return (
+    <div className={styles.skTile} title={label}>
+      {Icon ? (
+        <div className={styles.skIc}>
+          {createElement(Icon, { size: 44, className: styles.skImg })}
+        </div>
+      ) : (
+        <div
+          className={styles.skIcMono}
+          style={{ "--sk-h": hueOf(skill.name) } as CSSProperties}
+        >
+          <span className={styles.skMono}>{monogram(skill.name)}</span>
+        </div>
+      )}
+      <span className={styles.skName}>{label}</span>
+    </div>
+  );
 }
 
 function FinderSkills({ skills }: { skills: Skill[] }) {
@@ -181,26 +270,13 @@ function FinderSkills({ skills }: { skills: Skill[] }) {
             {g.label}
             <span className={styles.skCount}>{g.items.length}</span>
           </div>
-          <div className={styles.skTags}>
-            {g.items.map((s) => {
-              const label = s.name.replace(/_/g, " ");
-              return (
-                <span className={styles.skTag} key={s.name} title={label}>
-                  <span
-                    className={styles.skTagDot}
-                    style={{ background: g.color }}
-                    aria-hidden
-                  />
-                  <span className={styles.skTagName}>{label}</span>
-                </span>
-              );
-            })}
+          <div className={styles.skGrid}>
+            {g.items.map((s) => (
+              <SkillTile key={s.name} skill={s} />
+            ))}
           </div>
         </div>
       ))}
     </section>
   );
 }
-
-/* Back-compat alias for any existing imports. */
-export const CapabilitiesSection = SkillSection;

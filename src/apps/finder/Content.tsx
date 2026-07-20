@@ -1,7 +1,7 @@
 import { AboutMeSection } from "../section/about-me";
 import { ExperienceSection } from "../section/experience";
 import { ProjectSection } from "../section/projects";
-import { CapabilitiesSection } from "../section/skills";
+import { SkillSection } from "../section/skills";
 import { toggleSidebar, useFinderNav } from "./nav";
 import { FinderSidebar } from "./Sidebar";
 
@@ -39,7 +39,7 @@ export function FinderContent({ data }: { data: PortfolioData }) {
           <ProjectSection projects={data.projects} variant="finder" />
         )}
         {section === "skills" && (
-          <CapabilitiesSection skills={data.skills} variant="finder" />
+          <SkillSection skills={data.skills} variant="finder" />
         )}
       </div>
     </div>

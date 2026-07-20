@@ -83,7 +83,7 @@ export interface Skill {
   level: number;
   /** Domain grouping for the Finder tag view. Falls back to name-based
    *  inference in SkillSection when omitted. */
-  category?: "lang" | "infra" | "dist";
+  category?: "lang" | "infra" | "dist" | "frontend";
 }
 
 export interface CommandStrings {

@@ -182,7 +182,7 @@
       "category": "lang"
     },
     {
-      "name": "SQL",
+      "name": "PostgreSQL",
       "level": 80,
       "category": "lang"
     },
@@ -270,6 +270,21 @@
       "name": "Akamai",
       "level": 78,
       "category": "dist"
+    },
+    {
+      "name": "React",
+      "level": "77",
+      "category": "frontend"
+    },
+    {
+      "name": "TailwindCSS",
+      "level": "77",
+      "category": "frontend"
+    },
+    {
+      "name": "ViteJS",
+      "level": "77",
+      "category": "frontend"
     }
   ]
 }
