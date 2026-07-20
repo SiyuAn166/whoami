@@ -70,7 +70,7 @@ export class TetrisStage {
     this.active = new ActiveLayer(this.tiles);
     this.side = new SideLayer(this.tiles, NEXT_COUNT);
     this.fx = new FxLayer();
-    this.hud = new HudLayer();
+    this.hud = new HudLayer(this.tiles);
 
     // layout
     this.side.holdRoot.x = 0;
@@ -95,8 +95,8 @@ export class TetrisStage {
       this.side.nextRoot,
     );
     this.app.stage.addChild(this.world);
-    // Drive HUD button hover/press/spin easing on its own ticker callback,
-    // independent of the game tick the hook installs via onTick().
+    // Drive the HUD restart button's rotate-and-return easing on its own
+    // ticker callback, independent of the game tick installed via onTick().
     this.app.ticker.add(() => this.hud.update());
     this.ready = true;
   }

@@ -1,15 +1,31 @@
-import { Container, Graphics, Text } from "pixi.js";
+import { Container, Graphics, Sprite, Text } from "pixi.js";
+
+import type { TileTextures } from "./tiles";
 
 // In-canvas HUD: the SCORE / LEVEL / LINES readout panel plus a restart
 // button, drawn in Pixi so they scale with the board (mirrors the puyo
-// project). Sits in the left column beneath the HOLD box. The restart glyph
-// eases on hover / press and spins once when clicked; drive it with update()
-// from the stage ticker.
+// project). Sits in the left column beneath the HOLD box. The restart button
+// is a small S-tetromino (built from the same baked tiles as the board); on
+// click it does a single clockwise quarter-turn and eases back to rest. Drive
+// the easing with update() from the stage ticker.
 
 const COL_W = 124; // left column width (== holdW in TetrisStage)
 const PAD = 12;
 const ROW_H = 46;
 const STATS = ["SCORE", "LEVEL", "LINES"] as const;
+
+// S-mino button geometry
+const MINI = 14; // px per mini-cell
+const S_CELLS: [number, number][] = [
+  // . ■ ■
+  // ■ ■ .
+  [0, 1],
+  [0, 2],
+  [1, 0],
+  [1, 1],
+];
+const S_COLS = 3;
+const S_ROWS = 2;
 
 const LABEL_STYLE = {
   fill: 0x9fb0e0,
@@ -32,23 +48,20 @@ export class HudLayer {
   private values: Record<(typeof STATS)[number], Text> = {} as never;
 
   private restart = new Container();
-  private restartBg = new Graphics();
-  private restartGlyph: Text;
-
   private onRestart?: () => void;
 
-  // restart button geometry in hud-local coords (for touch hit-testing)
-  readonly btnSize = 44;
+  // restart button hit-box in hud-local coords (top-left origin)
   private btnCX = 0;
   private btnCY = 0;
+  private readonly btnW = S_COLS * MINI;
+  private readonly btnH = S_ROWS * MINI;
 
-  // restart animation state
-  private rScale = 1;
-  private rTarget = 1;
-  private rSpin = 0;
-  private press = false;
+  // restart animation state: rotate CW to a quarter-turn peak, then ease to 0
+  private rRot = 0; // current rotation (radians, +CW)
+  private rTarget = 0; // rotation we're easing toward
+  private spinning = false;
 
-  constructor() {
+  constructor(tiles: TileTextures) {
     // ---- Stats panel ----
     const panelH = PAD + STATS.length * ROW_H;
     const bg = new Graphics();
@@ -77,44 +90,41 @@ export class HudLayer {
       this.values[name] = value;
     });
 
-    // ---- Restart button (rounded square + ↺ glyph) ----
-    const BTN = this.btnSize;
+    // ---- Restart button (S-mino built from the board's baked tiles) ----
+    // Cells are placed relative to the piece centre so the container rotates
+    // about its own middle.
+    const cx = (S_COLS * MINI) / 2;
+    const cy = (S_ROWS * MINI) / 2;
+    for (const [r, c] of S_CELLS) {
+      const sp = new Sprite(tiles.solid.S);
+      sp.width = MINI;
+      sp.height = MINI;
+      sp.x = c * MINI - cx;
+      sp.y = r * MINI - cy;
+      this.restart.addChild(sp);
+    }
+
+    // centre the button below the stats panel
     this.restart.x = COL_W / 2;
-    this.restart.y = panelH + 16 + BTN / 2;
+    this.restart.y = panelH + 20 + cy;
     this.btnCX = this.restart.x;
     this.btnCY = this.restart.y;
+
     this.restart.eventMode = "static";
     this.restart.cursor = "pointer";
-
-    this.restartBg
-      .roundRect(-BTN / 2, -BTN / 2, BTN, BTN, 12)
-      .fill({ color: 0x11152a, alpha: 0.6 })
-      .stroke({ color: 0x4a5488, width: 1 });
-    this.restart.addChild(this.restartBg);
-
-    this.restartGlyph = new Text({
-      text: "\u21ba", // ↺
-      style: { fill: 0xffffff, fontSize: 24, fontFamily: "monospace" },
-    });
-    this.restartGlyph.anchor.set(0.5);
-    this.restart.addChild(this.restartGlyph);
-
-    this.restart.on("pointerover", () => this.setState(true, this.press));
-    this.restart.on("pointerout", () => this.setState(false, false));
-    this.restart.on("pointerdown", () => this.setState(true, true));
-    this.restart.on("pointerup", () => this.setState(true, false));
-    this.restart.on("pointerupoutside", () => this.setState(false, false));
     this.restart.on("pointertap", () => {
       this.onRestart?.();
-      this.rSpin = Math.PI * 2; // one full turn on click
+      this.kickSpin();
     });
 
     this.root.addChild(this.restart);
   }
 
-  private setState(hover: boolean, press: boolean) {
-    this.press = press;
-    this.rTarget = press ? 0.9 : hover ? 1.08 : 1;
+  // begin one clockwise quarter-turn from rest
+  private kickSpin() {
+    this.rRot = 0;
+    this.rTarget = Math.PI / 2; // +90° = clockwise in Pixi's y-down space
+    this.spinning = true;
   }
 
   setStats(score: number, level: number, lines: number) {
@@ -129,20 +139,25 @@ export class HudLayer {
 
   // Restart button bounds in hud-local coords {x,y,w,h} (top-left origin).
   restartBounds() {
-    const s = this.btnSize;
-    return { x: this.btnCX - s / 2, y: this.btnCY - s / 2, w: s, h: s };
+    return {
+      x: this.btnCX - this.btnW / 2,
+      y: this.btnCY - this.btnH / 2,
+      w: this.btnW,
+      h: this.btnH,
+    };
   }
 
   // Called every frame from the stage ticker.
   update() {
-    this.rScale = lerp(this.rScale, this.rTarget, 0.25);
-    this.restart.scale.set(this.rScale);
-    if (this.rSpin > 0.001) {
-      this.rSpin = lerp(this.rSpin, 0, 0.18);
-      this.restartGlyph.rotation = -this.rSpin;
-    } else {
-      this.rSpin = 0;
-      this.restartGlyph.rotation = 0;
+    if (!this.spinning) return;
+    this.rRot = lerp(this.rRot, this.rTarget, 0.25);
+    // reached the quarter-turn peak -> ease back toward rest
+    if (this.rTarget > 0 && this.rTarget - this.rRot < 0.05) this.rTarget = 0;
+    // settled back at rest -> stop animating
+    if (this.rTarget === 0 && this.rRot < 0.01) {
+      this.rRot = 0;
+      this.spinning = false;
     }
+    this.restart.rotation = this.rRot;
   }
 }

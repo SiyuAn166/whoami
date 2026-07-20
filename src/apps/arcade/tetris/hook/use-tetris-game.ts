@@ -197,7 +197,7 @@ export function useTetrisGame(
 
     // sounds + toast
     if (n === 4) sound("tetris");
-    else if (kind.startsWith("tspin")) sound(n >= 2 ? "tspin3" : "tspin2");
+    else if (kind.startsWith("tspin")) sound(n >= 3 ? "tspin3" : "tspin2");
     else if (n > 0) sound("lineClear");
     else sound("drop");
     const msg = TOAST[kind];
