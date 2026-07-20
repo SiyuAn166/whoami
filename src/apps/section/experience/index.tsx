@@ -5,8 +5,7 @@ import type { ExperienceEntry } from "../../../types/portfolio";
 import revealStyles from "../reveal/RevealSection.module.css";
 import styles from "./ExperienceSection.module.css";
 
-/* ───────────────────────── shared helpers ───────────────────────── */
-
+/* ────────────────────── shared helpers ────────────────────── */
 const NS = "siyu";
 
 function slugify(name: string): string {
@@ -53,14 +52,13 @@ function fmtPeriod(d: string): string {
   return d.replace(/\s*->\s*/g, " — ").replace(/present/gi, "Present");
 }
 
-/* ───────────────────────── public entry point ───────────────────────── */
-
+/* ────────────────────── public entry point ────────────────────── */
 export type ExperienceVariant = "finder" | "terminal";
 
 /**
  * Experience, rendered for whichever window it lives in.
  *  - variant="terminal" → `kubectl get roles -n siyu` + `kubectl describe` (default)
- *  - variant="finder"   → macOS Finder column (Miller) view
+ *  - variant="finder"   → macOS Notes/Mail-style list + push-in detail view
  */
 export function ExperienceSection({
   entries,
@@ -76,8 +74,7 @@ export function ExperienceSection({
   );
 }
 
-/* ═════════════════════════ TERMINAL — kubectl ═════════════════════════ */
-
+/* ══════════════════════ TERMINAL — kubectl ══════════════════════ */
 const KCOL = {
   status: { width: "12ch", flexShrink: 0 } as React.CSSProperties,
   role: {
@@ -97,7 +94,6 @@ function TerminalExperience({ entries }: { entries: ExperienceEntry[] }) {
     width: `${nameCh}ch`,
     flexShrink: 0,
   };
-
   return (
     <section
       className="kube-exp"
@@ -118,9 +114,7 @@ function TerminalExperience({ entries }: { entries: ExperienceEntry[] }) {
         <span style={{ color: "var(--prompt-path)" }}>~</span>{" "}
         <span style={{ color: "var(--fg)" }}>kubectl get roles -n {NS}</span>
       </div>
-
       <div style={{ minWidth: "min-content" }}>
-        {/* header row */}
         <div
           className="flex"
           style={{
@@ -141,7 +135,6 @@ function TerminalExperience({ entries }: { entries: ExperienceEntry[] }) {
           <PodRow key={e.name} entry={e} nameStyle={nameStyle} />
         ))}
       </div>
-
       <div style={{ color: "var(--fg-dim)", marginTop: 10 }}>
         {entries.length} roles · ▸ click a row to{" "}
         <span style={{ color: "var(--info)" }}>kubectl describe</span>
@@ -164,7 +157,6 @@ function PodRow({
   const statusColor = running ? "var(--ok)" : "var(--fg-dim)";
   const age = ageOf(entry.dateRange ?? entry.timestamp);
   const toggle = () => setOpen((o) => !o);
-
   return (
     <div>
       <div
@@ -249,7 +241,6 @@ function Describe({
     ["Age", age],
     ["Labels", running ? "current=true,tier=senior" : `current=false`],
   ];
-
   return (
     <div
       className={revealStyles.revealContent}
@@ -318,7 +309,7 @@ function Describe({
   );
 }
 
-/* ═════════════════════════ FINDER — grouped cards ═════════════════════════ */
+/* ══════════════════════ FINDER — Notes/Mail list + detail ══════════════════════ */
 
 /** Two-letter monogram from a screaming-snake name.
  *  "INFOBLOX" -> "IN", "SFU_BIG_DATA_HUB" -> "SB". */
@@ -332,24 +323,20 @@ function monogram(name: string): string {
   return (a + b).toUpperCase();
 }
 
-/** Semantic tone for the monogram tile + badge:
+/** Deterministic hue (0-359) from a name, so each company gets its own
+ *  identity color for the app-icon monogram tile. */
+function hueOf(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return h % 360;
+}
+
+/** Semantic tone for the monogram tile + status accent:
  *  current role → live (green), has publication → pub (purple), else archived. */
 function toneOf(e: ExperienceEntry): "live" | "pub" | "arch" {
   if (e.current) return "live";
   if (e.researchUrl) return "pub";
   return "arch";
-}
-
-function FinderExperience({ entries }: { entries: ExperienceEntry[] }) {
-  return (
-    <section className={styles.expRoot}>
-      <div className={styles.expGl}>
-        {entries.map((e) => (
-          <ExperienceCard key={e.name} entry={e} />
-        ))}
-      </div>
-    </section>
-  );
 }
 
 const TONE_CLASS = {
@@ -358,77 +345,174 @@ const TONE_CLASS = {
   arch: styles.expTArch,
 };
 
-function ExperienceCard({ entry }: { entry: ExperienceEntry }) {
+function FinderExperience({ entries }: { entries: ExperienceEntry[] }) {
+  const [selected, setSelected] = useState<number | null>(null);
+
+  if (selected !== null && entries[selected]) {
+    return (
+      <ExperienceDetail
+        entry={entries[selected]}
+        onBack={() => setSelected(null)}
+      />
+    );
+  }
+
+  return (
+    <section className={styles.expRoot}>
+      <ul className={styles.expList}>
+        {entries.map((e, i) => (
+          <ExperienceRow key={e.name} entry={e} onOpen={() => setSelected(i)} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ExperienceRow({
+  entry,
+  onOpen,
+}: {
+  entry: ExperienceEntry;
+  onOpen: () => void;
+}) {
+  const tone = toneOf(entry);
+  const title = entry.title ?? humanize(entry.name);
+  const company = entry.company ?? humanize(entry.name);
+  const period = fmtPeriod(entry.dateRange ?? entry.timestamp);
+  const hls = entry.highlights ?? [];
+  const summary = hls.slice(0, 2).join(" · ");
+  const hlCount = hls.length;
+  return (
+    <li className={`${styles.expRow} ${TONE_CLASS[tone]}`}>
+      <button type="button" className={styles.expRowBtn} onClick={onOpen}>
+        <span
+          className={styles.expIc}
+          style={{ ["--exp-h" as string]: hueOf(entry.name) }}
+          aria-hidden
+        >
+          {monogram(entry.name)}
+        </span>
+        <span className={styles.expRowMain}>
+          <span className={styles.expRowTop}>
+            <span className={styles.expRowTitle}>{title}</span>
+            <span className={styles.expRowCo}>{company}</span>
+            {entry.current && (
+              <span className={`${styles.expPill} ${styles.live}`}>
+                ● Active
+              </span>
+            )}
+          </span>
+          {summary && <span className={styles.expRowSub}>{summary}</span>}
+          {hlCount > 0 && (
+            <span className={styles.expRowTag}>
+              {hlCount} highlight{hlCount > 1 ? "s" : ""}
+            </span>
+          )}
+        </span>
+        <span className={styles.expRowMeta}>
+          <span className={styles.expRowDate}>{period}</span>
+        </span>
+        <span className={styles.expChev} aria-hidden>
+          ›
+        </span>
+      </button>
+    </li>
+  );
+}
+
+function ExperienceDetail({
+  entry,
+  onBack,
+}: {
+  entry: ExperienceEntry;
+  onBack: () => void;
+}) {
   const tone = toneOf(entry);
   const title = entry.title ?? humanize(entry.name);
   const company = entry.company ?? humanize(entry.name);
   const period = fmtPeriod(entry.dateRange ?? entry.timestamp);
   const dur = ageOf(entry.dateRange ?? entry.timestamp);
-
+  const pill =
+    tone === "live"
+      ? { cls: styles.live, label: "● Active" }
+      : tone === "pub"
+        ? { cls: styles.pub, label: "Publication" }
+        : { cls: styles.past, label: "Past" };
   return (
-    <article className={`${styles.expCard} ${TONE_CLASS[tone]}`}>
-      <header className={styles.expChead}>
-        <div className={styles.expIc} aria-hidden>
+    <section
+      className={`${styles.expRoot} ${styles.expDetail} ${TONE_CLASS[tone]}`}
+    >
+      <button type="button" className={styles.expBack} onClick={onBack}>
+        <span className={styles.expBackChev} aria-hidden>
+          ‹
+        </span>
+        Experience
+      </button>
+
+      <header className={styles.expHero}>
+        <span
+          className={`${styles.expIc} ${styles.expHeroIc}`}
+          style={{ ["--exp-h" as string]: hueOf(entry.name) }}
+          aria-hidden
+        >
           {monogram(entry.name)}
-        </div>
-        <div className={styles.expCmeta}>
-          <div className={styles.expCtitle}>
-            <span className="exp-cname">{title}</span>
-            {tone === "live" && (
-              <span className={`${styles.expPill} ${styles.live}`}>
-                ● Active
-              </span>
-            )}
-            {tone === "pub" && (
-              <span className={`${styles.expPill} ${styles.pub}`}>
-                Publication
-              </span>
-            )}
+        </span>
+        <div className={styles.expHeroMeta}>
+          <div className={styles.expHeroTitleRow}>
+            <h2 className={styles.expHeroTitle}>{title}</h2>
+            <span className={`${styles.expPill} ${pill.cls}`}>
+              {pill.label}
+            </span>
           </div>
-          <div className={styles.expCco}>{company}</div>
-        </div>
-        <div className={styles.expCper}>
-          <span>{period}</span>
-          <span className={styles.expCdur}>{dur}</span>
+          <div className={styles.expHeroCo}>{company}</div>
+          <div className={styles.expHeroSub}>
+            <span>{period}</span>
+            <span className={styles.expHeroDot} aria-hidden>
+              ·
+            </span>
+            <span>{dur}</span>
+          </div>
         </div>
       </header>
 
-      {(entry.highlights?.length || entry.url || entry.researchUrl) && (
-        <div className={styles.expCbody}>
-          {entry.highlights?.map((h, i) => (
-            <div key={i} className={styles.expHl}>
-              <span className={styles.expHlB} aria-hidden>
-                ›
-              </span>
-              <span>{h}</span>
-            </div>
-          ))}
-          {(entry.url || entry.researchUrl) && (
-            <div className={styles.expActions}>
-              {entry.url && (
-                <a
-                  className={styles.expOpen}
-                  href={entry.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Open ↗
-                </a>
-              )}
-              {entry.researchUrl && (
-                <a
-                  className={`${styles.expOpen} ${styles.ghost}`}
-                  href={entry.researchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Publication ↗
-                </a>
-              )}
-            </div>
+      {entry.highlights?.length ? (
+        <div className={styles.expBlock}>
+          <div className={styles.expSectLabel}>Highlights</div>
+          <ul className={styles.expHlList}>
+            {entry.highlights.map((h, i) => (
+              <li key={i} className={styles.expHl}>
+                <span className={styles.expHlB} aria-hidden />
+                <span>{h}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {(entry.url || entry.researchUrl) && (
+        <div className={styles.expActions}>
+          {entry.url && (
+            <a
+              className={styles.expOpen}
+              href={entry.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open ↗
+            </a>
+          )}
+          {entry.researchUrl && (
+            <a
+              className={`${styles.expOpen} ${styles.ghost}`}
+              href={entry.researchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Publication ↗
+            </a>
           )}
         </div>
       )}
-    </article>
+    </section>
   );
 }

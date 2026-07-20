@@ -1,20 +1,20 @@
 /* ============================================================
-   Experience — Finder "grouped cards" view (variant="finder").
-   macOS System-Settings style: rounded inset cards, hairline
-   dividers, monogram tile + status pill as the only accents.
-   Consistent with the Projects redesign.
-
+   Experience — Finder view (variant="finder").
+   macOS Notes/Mail-style hairline list  →  push-in detail view.
+   List: one row per role (monogram + title/company/one-liner +
+   date + status dot). Click a row → detail with a "‹ Experience"
+   back button, hero header, and full Highlights.
    Terminal (kubectl) view reuses .kube-row from ../../../styles/misc.css
    plus inline styles in the component, so it needs no CSS here.
+   Uses the shared theme tokens so it recolors automatically.
    ============================================================ */
-
 .exp-root {
   --exp-hairline: rgba(255, 255, 255, 0.1);
   --exp-surface: var(--bg-elev, rgba(255, 255, 255, 0.04));
+  --exp-hover: rgba(255, 255, 255, 0.05);
   --exp-fg: var(--fg, #e6e6e6);
   --exp-dim: var(--fg-dim, rgba(235, 235, 245, 0.6));
   --exp-faint: rgba(235, 235, 245, 0.4);
-
   font-family:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
@@ -24,108 +24,302 @@
 [data-theme="light"] .exp-root {
   --exp-hairline: rgba(0, 0, 0, 0.1);
   --exp-surface: rgba(0, 0, 0, 0.025);
+  --exp-hover: rgba(0, 0, 0, 0.04);
   --exp-fg: #1d1d1f;
   --exp-dim: rgba(60, 60, 67, 0.62);
   --exp-faint: rgba(60, 60, 67, 0.4);
 }
 
-/* ── semantic tone: only small accents (tile + pill) ── */
+/* ── semantic tone: drives tile gradient + status accent ── */
 .exp-t-live {
   --exp-ac: #30d158;
 }
+
 .exp-t-pub {
   --exp-ac: #bf5af2;
 }
+
 .exp-t-arch {
   --exp-ac: #0a84ff;
 }
+
 [data-theme="light"] .exp-t-live {
   --exp-ac: #34c759;
 }
+
 [data-theme="light"] .exp-t-pub {
   --exp-ac: #af52de;
 }
+
 [data-theme="light"] .exp-t-arch {
   --exp-ac: #007aff;
 }
 
-/* ── card list ── */
-.exp-gl {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.exp-card {
-  background: var(--exp-surface);
-  border: 0.5px solid var(--exp-hairline);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.exp-chead {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 15px;
-}
-
+/* ── monogram tile (shared by list row + detail hero) ── */
 .exp-ic {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  --h: var(--exp-h, 210);
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  /* squircle-ish app-icon corner */
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   color: #fff;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--exp-ac) 86%, #fff),
-    var(--exp-ac)
-  );
+  /* flat per-company solid color */
+  background: hsl(var(--h) 62% 52%);
+  user-select: none;
 }
 
-.exp-cmeta {
+/* ══════════════ LIST — Notes/Mail hairline rows ══════════════ */
+.exp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 0.5px solid var(--exp-hairline);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--exp-surface);
+}
+
+.exp-row + .exp-row .exp-row-btn {
+  border-top: 0.5px solid var(--exp-hairline);
+}
+
+.exp-row {
+  list-style: none;
+}
+
+.exp-row-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 18px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.13s ease;
+}
+
+.exp-row-btn:hover {
+  background: var(--exp-hover);
+}
+
+.exp-row-main {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 1px;
 }
 
-.exp-ctitle {
+.exp-row-top {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   flex-wrap: wrap;
-  font-size: 14px;
+}
+
+.exp-row-title {
+  font-size: 16px;
   font-weight: 600;
   color: var(--exp-fg);
 }
 
-.exp-cco {
-  font-size: 12.5px;
+.exp-row-co {
+  font-size: 13.5px;
   color: var(--exp-dim);
-  margin-top: 1px;
 }
 
-.exp-cper {
+.exp-row-sub {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--exp-dim);
+  overflow: hidden;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.exp-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--exp-dim);
+  white-space: nowrap;
+}
+
+.exp-row-date {
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-chev {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--exp-faint);
+  transition:
+    transform 0.13s ease,
+    color 0.13s ease;
+}
+
+.exp-row-btn:hover .exp-chev {
+  color: var(--exp-dim);
+  transform: translateX(2px);
+}
+
+/* ══════════════ DETAIL — push-in view ══════════════ */
+.exp-detail {
+  animation: exp-detail-in 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes exp-detail-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.exp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 0 16px -6px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--info, #0a84ff);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+
+.exp-back:hover {
+  background: var(--exp-hover);
+}
+
+.exp-back-chev {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.exp-hero {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 16px;
+  border-bottom: 0.5px solid var(--exp-hairline);
+}
+
+.exp-hero .exp-ic {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  font-size: 21px;
+  letter-spacing: 0.03em;
+}
+
+.exp-hero-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.exp-hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.exp-hero-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--exp-fg);
+}
+
+.exp-hero-co {
+  margin-top: 3px;
+  font-size: 14px;
+  color: var(--exp-dim);
+}
+
+.exp-hero-sub {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--exp-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-hero-dot {
+  opacity: 0.6;
+}
+
+.exp-block {
+  padding-top: 16px;
+}
+
+.exp-sect-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--exp-dim);
+  margin-bottom: 10px;
+}
+
+.exp-hl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  font-size: 11.5px;
-  color: var(--exp-dim);
-  text-align: right;
-  white-space: nowrap;
+  gap: 10px;
+}
+
+.exp-hl {
+  display: flex;
+  gap: 11px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--exp-fg);
+}
+
+.exp-hl-b {
+  margin-top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--exp-ac);
   flex-shrink: 0;
 }
 
-.exp-cdur {
-  color: var(--exp-faint);
-}
-
-/* ── status pill ── */
+/* ── status pill (list + detail) ── */
 .exp-pill {
   font-size: 10.5px;
   padding: 1px 8px;
@@ -133,48 +327,31 @@
   border: 0.5px solid var(--exp-hairline);
   color: var(--exp-dim);
   font-weight: 500;
+  white-space: nowrap;
 }
 
-.exp-pill.live {
-  color: var(--exp-ac);
-  border-color: color-mix(in srgb, var(--exp-ac) 50%, transparent);
-}
-
+.exp-pill.live,
 .exp-pill.pub {
   color: var(--exp-ac);
   border-color: color-mix(in srgb, var(--exp-ac) 50%, transparent);
+  background: color-mix(in srgb, var(--exp-ac) 12%, transparent);
 }
 
-/* ── body: highlights + actions ── */
-.exp-cbody {
-  border-top: 0.5px solid var(--exp-hairline);
-  padding: 11px 15px 13px;
+.exp-pill.past {
+  color: var(--exp-dim);
 }
 
-.exp-hl {
-  display: flex;
-  gap: 8px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--exp-fg);
-  padding: 3px 0;
-}
-
-.exp-hl-b {
-  color: var(--exp-faint);
-  flex-shrink: 0;
-}
-
+/* ── action buttons (detail) ── */
 .exp-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 22px;
 }
 
 .exp-open {
   font-size: 12.5px;
-  padding: 5px 13px;
+  padding: 6px 15px;
   border-radius: 7px;
   text-decoration: none;
   color: #fff;
@@ -190,4 +367,18 @@
 .exp-open.ghost {
   color: var(--info, #0a84ff);
   background: transparent;
+}
+
+/* ── list row: highlight-count chip (fills the row, hints depth) ── */
+.exp-row-tag {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: var(--exp-ac);
+  background: color-mix(in srgb, var(--exp-ac) 12%, transparent);
+  border: 0.5px solid color-mix(in srgb, var(--exp-ac) 38%, transparent);
 }

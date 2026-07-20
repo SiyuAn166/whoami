@@ -5,7 +5,7 @@ import type { Project } from "../../../types/portfolio";
 import revealStyles from "../reveal/RevealSection.module.css";
 import styles from "./ProjectSection.module.css";
 
-/* ───────────────────────── shared ───────────────────────── */
+/* ────────────────────────────────── shared ────────────────────────────────── */
 
 const NS = "siyu";
 
@@ -41,7 +41,7 @@ export function ProjectSection({
   );
 }
 
-/* ═════════════════════════ TERMINAL — kubectl ═════════════════════════ */
+/* ══════════════════════════ TERMINAL — kubectl ══════════════════════════ */
 
 const PCOL = {
   status: { width: "12ch", flexShrink: 0 } as React.CSSProperties,
@@ -63,7 +63,6 @@ function TerminalProjects({ projects }: { projects: Project[] }) {
     width: `${nameCh}ch`,
     flexShrink: 0,
   };
-
   return (
     <section
       className="kube-exp"
@@ -84,7 +83,6 @@ function TerminalProjects({ projects }: { projects: Project[] }) {
         <span style={{ color: "var(--prompt-path)" }}>~</span>{" "}
         <span style={{ color: "var(--fg)" }}>kubectl get projects -n {NS}</span>
       </div>
-
       <div style={{ minWidth: "min-content" }}>
         <div
           className="flex"
@@ -106,7 +104,6 @@ function TerminalProjects({ projects }: { projects: Project[] }) {
           <ProjRow key={p.name} project={p} nameStyle={nameStyle} />
         ))}
       </div>
-
       <div style={{ color: "var(--fg-dim)", marginTop: 10 }}>
         {projects.length} projects · ▸ click a row to{" "}
         <span style={{ color: "var(--info)" }}>kubectl describe</span>
@@ -126,7 +123,6 @@ function ProjRow({
   const name = slugify(project.name);
   const color = statusColor(project.status);
   const toggle = () => setOpen((o) => !o);
-
   return (
     <div>
       <div
@@ -262,7 +258,7 @@ function ProjDescribe({
   );
 }
 
-/* ═════════════════════════ FINDER — stacked list ═════════════════════════ */
+/* ══════════════════════════ FINDER — gallery view ══════════════════════════ */
 
 function clean(s: string): string {
   return s.replace(/_/g, " ");
@@ -289,89 +285,111 @@ function statusClass(status: string): string {
   return STATUS_CLASS[key] ?? "";
 }
 
-function ChevronIcon() {
-  return (
-    <svg
-      className={styles.pjChev}
-      width="7"
-      height="12"
-      viewBox="0 0 7 12"
-      fill="none"
-      aria-hidden
-    >
-      <path
-        d="M1 1l5 5-5 5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+/** deterministic hue (0–359) from a project name → distinct colourful cover */
+function hueOf(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) {
+    h = (h * 31 + name.charCodeAt(i)) % 360;
+  }
+  return h;
+}
+function coverVars(name: string): React.CSSProperties {
+  const h = hueOf(name);
+  return {
+    // consumed by .pj-cover / .pj-thumb-cover gradients
+    ["--pj-h1" as string]: `${h}`,
+    ["--pj-h2" as string]: `${(h + 42) % 360}`,
+  };
 }
 
 function FinderProjects({ projects }: { projects: Project[] }) {
+  const [sel, setSel] = useState(0);
+  const active = projects[sel];
+  if (!active) return null;
+
   return (
     <section className={styles.pjRoot}>
-      <ul className={styles.pjStack}>
-        {projects.map((p) => {
-          const row = (
-            <>
-              <div className={`${styles.pjIco} ${statusClass(p.status)}`}>
-                {monogram(p.name)}
-              </div>
-              <div className={styles.pjMid}>
-                <div className={styles.pjName}>
-                  {clean(p.name)}
-                  <span className={styles.pjVer}>{p.version}</span>
-                  <span className={`${styles.pjPill} ${statusClass(p.status)}`}>
-                    {p.status}
-                  </span>
-                </div>
-                <div className={styles.pjDesc}>{p.description}</div>
-                {p.tags?.length ? (
-                  <div className={styles.pjTags}>
-                    {p.tags.map((t) => (
-                      <span className={styles.pjTag} key={t}>
-                        {clean(t)}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-                {p.license && (
-                  <div className={styles.pjFoot}>
-                    <span className={styles.pjLic}>{clean(p.license)}</span>
-                  </div>
-                )}
-              </div>
-              {p.url ? (
-                <ChevronIcon />
-              ) : (
-                <span className={styles.pjChevSpacer} />
-              )}
-            </>
-          );
-          return (
-            <li key={p.name} className={styles.pjRow}>
-              {p.url ? (
-                <a
-                  className={styles.pjLink}
-                  href={p.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Open ${clean(p.name)}`}
+      {/* ── hero ── */}
+      <article className={styles.pjHero} key={active.name}>
+        <div
+          className={`${styles.pjCover} ${statusClass(active.status)}`}
+          style={coverVars(active.name)}
+        >
+          <span className={styles.pjCoverMono}>{monogram(active.name)}</span>
+          <span className={`${styles.pjPill} ${statusClass(active.status)}`}>
+            {active.status}
+          </span>
+        </div>
+
+        <div className={styles.pjHeroBody}>
+          <div className={styles.pjHeroHead}>
+            <h2 className={styles.pjHeroName}>{clean(active.name)}</h2>
+            <span className={styles.pjVer}>{active.version}</span>
+          </div>
+
+          <p className={styles.pjHeroDesc}>{active.description}</p>
+
+          {active.tags?.length ? (
+            <div className={styles.pjTags}>
+              {active.tags.map((t) => (
+                <span className={styles.pjTag} key={t}>
+                  {clean(t)}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          <div className={styles.pjActions}>
+            {active.url ? (
+              <a
+                className={styles.pjOpen}
+                href={active.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open Repository ↗
+              </a>
+            ) : (
+              <span className={styles.pjNolink}>Private / unavailable</span>
+            )}
+            {active.license && (
+              <span className={styles.pjLic}>{clean(active.license)}</span>
+            )}
+          </div>
+        </div>
+      </article>
+
+      {/* ── filmstrip ── */}
+      <div className={styles.pjStripWrap}>
+        <div className={styles.pjStripLabel}>{projects.length} projects</div>
+        <ul className={styles.pjStrip}>
+          {projects.map((p, i) => (
+            <li key={p.name}>
+              <button
+                type="button"
+                className={`${styles.pjThumb} ${
+                  i === sel ? styles.pjThumbActive : ""
+                }`}
+                aria-pressed={i === sel}
+                aria-label={clean(p.name)}
+                onClick={() => setSel(i)}
+              >
+                <span
+                  className={`${styles.pjThumbCover} ${statusClass(p.status)}`}
+                  style={coverVars(p.name)}
                 >
-                  {row}
-                </a>
-              ) : (
-                <div className={`${styles.pjLink} ${styles.pjLinkStatic}`}>
-                  {row}
-                </div>
-              )}
+                  {monogram(p.name)}
+                </span>
+                <span className={styles.pjThumbName}>{clean(p.name)}</span>
+                <span
+                  className={`${styles.pjThumbDot} ${statusClass(p.status)}`}
+                  aria-hidden
+                />
+              </button>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
