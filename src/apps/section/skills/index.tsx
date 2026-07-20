@@ -1,53 +1,23 @@
 import { createElement } from "react";
+
 import {
-  Cloudflare,
-  Docker,
-  Go,
-  GoogleCloud,
-  Grafana,
-  Java,
-  Kafka,
-  Kubernetes,
-  Linux,
-  PostgreSQL,
-  Python,
-  React as ReactIcon,
-  TailwindCSS,
-  Terraform,
-  TypeScript,
-  ViteJS,
-} from "developer-icons";
+  bar,
+  classify,
+  DOMAINS,
+  getStatus,
+  hueOf,
+  monogram,
+  NS,
+  resolveIcon,
+  SCOL,
+  slugify,
+  STATUS_COLORS,
+} from "./skills";
 
 import type { Skill } from "../../../types/portfolio";
-import type { ComponentType, CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 import styles from "./SkillSection.module.css";
-
-/* ───────────────────────── shared ───────────────────────── */
-const NS = "siyu";
-
-function getStatus(level: number): string {
-  if (level >= 90) return "expert";
-  if (level >= 80) return "advanced";
-  if (level >= 70) return "proficient";
-  if (level >= 60) return "working";
-  return "learning";
-}
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  expert: "var(--ok)",
-  advanced: "var(--info)",
-  proficient: "var(--magenta)",
-  working: "var(--warn)",
-  learning: "var(--fg-dim)",
-};
 
 interface SkillSectionProps {
   skills: Skill[];
@@ -66,16 +36,6 @@ export function SkillSection({
 }
 
 /* ═════════════════════════ TERMINAL — kubectl ═════════════════════════ */
-const SCOL = {
-  status: { width: "13ch", flexShrink: 0 } as CSSProperties,
-  proficiency: { flex: 1, minWidth: "20ch" } as CSSProperties,
-};
-
-function bar(level: number): string {
-  const filled = Math.max(0, Math.min(10, Math.round(level / 10)));
-  return "█".repeat(filled) + "░".repeat(10 - filled);
-}
-
 function TerminalSkills({ skills }: { skills: Skill[] }) {
   const nameCh = Math.max(8, ...skills.map((s) => slugify(s.name).length)) + 2;
   const nameStyle: CSSProperties = { width: `${nameCh}ch`, flexShrink: 0 };
@@ -146,92 +106,8 @@ function TerminalSkills({ skills }: { skills: Skill[] }) {
    Launchpad-style grid: real full-colour brand logos placed bare (no tile
    box), with a small coloured monogram square only for skills that have no
    logo (concepts / trademark-removed brands). No progress bars, no numbers.
-   Grouping is data-driven from `skill.category`, with name-based fallback.
+   Data + taxonomy + icon resolution live in ./skills.
    ========================================================================== */
-
-type Domain = "lang" | "infra" | "dist" | "frontend";
-
-const DOMAINS: { id: Domain; label: string; color: string }[] = [
-  { id: "lang", label: "Languages", color: "var(--sk-lang, var(--info))" },
-  {
-    id: "infra",
-    label: "Cloud Infrastructure",
-    color: "var(--sk-infra, var(--ok))",
-  },
-  {
-    id: "dist",
-    label: "Distributed Systems & Networking",
-    color: "var(--sk-dist, var(--magenta))",
-  },
-  {
-    id: "frontend",
-    label: "Frontend",
-    color: "var(--sk-frontend, var(--warn))",
-  },
-];
-
-function classify(skill: Skill): Domain {
-  // 1) explicit data field wins (single source of truth in data.json)
-  if (skill.category) return skill.category as Domain;
-
-  // 2) fallback inference for legacy / missing data
-  const n = skill.name.toLowerCase();
-  if (/(react|vue|svelte|tailwind|vite|css|next)/.test(n)) return "frontend";
-  if (
-    /(^go$|golang|java|python|type|script|\bsql\b|postgres|rust|kotlin|swift)/.test(
-      n,
-    )
-  )
-    return "lang";
-  if (
-    /(kubernetes|docker|linux|terraform|aws|gcp|azure|cloud|prometheus|grafana|infra)/.test(
-      n,
-    )
-  )
-    return "infra";
-  return "dist";
-}
-
-/* Skill name (normalised) → real full-colour logo component.
-   Anything not listed here falls back to a coloured monogram square.
-   Only these are imported, so the bundle stays tiny (tree-shaken). */
-type IconComp = ComponentType<{ size?: number; className?: string }>;
-
-const ICONS: Record<string, IconComp> = {
-  go: Go,
-  java: Java,
-  python: Python,
-  typescript: TypeScript,
-  postgresql: PostgreSQL,
-  kubernetes: Kubernetes,
-  docker: Docker,
-  linux: Linux,
-  terraform: Terraform,
-  gcp: GoogleCloud,
-  grafana: Grafana,
-  kafka: Kafka,
-  cloudflare: Cloudflare,
-  react: ReactIcon,
-  tailwindcss: TailwindCSS,
-  vitejs: ViteJS,
-};
-
-function resolveIcon(name: string): IconComp | null {
-  const key = name.toLowerCase().replace(/[_\s]+/g, "");
-  return ICONS[key] ?? null;
-}
-
-/* Stable hue from the skill name — used to colour the monogram fallback. */
-function hueOf(name: string): number {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
-  return h;
-}
-
-function monogram(name: string): string {
-  const clean = name.replace(/[^a-zA-Z0-9]/g, "");
-  return clean.slice(0, 2).toUpperCase() || "?";
-}
 
 function SkillTile({ skill }: { skill: Skill }) {
   const label = skill.name.replace(/_/g, " ");

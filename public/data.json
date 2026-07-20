@@ -257,6 +257,11 @@
       "category": "dist"
     },
     {
+      "name": "RabbitMQ",
+      "level": 81,
+      "category": "dist"
+    },
+    {
       "name": "Cloudflare",
       "level": 80,
       "category": "dist"
@@ -282,9 +287,24 @@
       "category": "frontend"
     },
     {
-      "name": "ViteJS",
+      "name": "Vite",
       "level": "77",
       "category": "frontend"
+    },
+    {
+      "name": "Vitest",
+      "level": "77",
+      "category": "frontend"
+    },
+    {
+      "name": "Claude",
+      "level": "77",
+      "category": "agent"
+    },
+    {
+      "name": "Copilot",
+      "level": "77",
+      "category": "agent"
     }
   ]
 }
