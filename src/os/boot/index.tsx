@@ -1,4 +1,4 @@
-import { AppleIcon } from "./Icons";
+import { AppleLight } from "developer-icons";
 
 import styles from "./Boot.module.css";
 
@@ -20,7 +20,7 @@ export function BootScreen({ leaving }: { leaving: boolean }) {
     >
       <div className={styles.stack}>
         {/* <div className={styles.icon} aria-hidden="true" /> */}
-        <AppleIcon className={styles.icon} aria-hidden="false" />
+        <AppleLight className={styles.icon} aria-hidden="false" />
 
         <div className={styles.bar}>
           <i className={leaving ? styles.fillDone : styles.fill} />
