@@ -1,4 +1,7 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+
+import styles from "./Terminal.module.css";
 
 /**
  * Classic Matrix "digital rain" — triggered by the `matrix` command.
@@ -85,33 +88,11 @@ export function MatrixRain({ onDone }: { onDone: () => void }) {
     };
   }, [onDone]);
 
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        background: "#000",
-        cursor: "pointer",
-      }}
-      aria-hidden="true"
-    >
-      <canvas ref={canvasRef} />
-      <div
-        style={{
-          position: "fixed",
-          bottom: 20,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          color: "#28c840",
-          fontSize: 12,
-          opacity: 0.8,
-          letterSpacing: "0.15em",
-        }}
-      >
-        press any key to return
-      </div>
-    </div>
+  return createPortal(
+    <div className={styles["matrix-overlay"]} aria-hidden="true">
+      <canvas ref={canvasRef} className={styles["matrix-canvas"]} />
+      <div className={styles["matrix-hint"]}>press any key to return</div>
+    </div>,
+    document.body,
   );
 }
