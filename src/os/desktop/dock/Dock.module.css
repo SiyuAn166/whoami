@@ -47,6 +47,7 @@
   transition:
     transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.25s ease;
+  user-select: none;
 }
 
 .dock :focus {
