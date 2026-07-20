@@ -36,14 +36,17 @@
   text-align: left;
   cursor: pointer;
   transition: background-color 0.12s;
+  outline: none;
 }
 
 .finder-item:hover {
   background: var(--fg-faint);
+  outline: none;
 }
 
 .finder-item.is-selected {
   background: var(--sel-bg);
+  outline: none;
 }
 
 .finder-item-icon {
@@ -87,12 +90,15 @@
     font-size: 12px;
     padding: 6px 12px 8px;
   }
+
   .finder-item {
     gap: 12px;
     padding: 11px 12px;
     font-size: 15px;
     border-radius: 8px;
+    outline: none;
   }
+
   .finder-item-icon {
     width: 22px;
     height: 22px;
@@ -104,6 +110,7 @@
     transform: translateX(-100%);
     opacity: 0.5;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
