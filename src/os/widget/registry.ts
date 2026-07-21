@@ -34,7 +34,7 @@ export const WIDGETS = CATALOG;
 /** Widgets placed on the desktop on first load */
 export const DEFAULT_ACTIVE_WIDGET_IDS: string[] = [
   // bootstrapWidget.id,
-  weatherWidget.id,
+  // weatherWidget.id,
   contactWidget.id,
   // clockWidget.id,
   // skillsWidget.id,
