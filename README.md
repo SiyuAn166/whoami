@@ -1,8 +1,9 @@
 # whoami — macOS Desktop Portfolio
 
-A **macOS desktop simulator** built with **React 19 + TypeScript + Tailwind CSS v3** (Vite). The entire portfolio is presented as an interactive desktop environment with menu bar, dock, and windowed applications.
+A **macOS desktop simulator** built with **React 19 + TypeScript + Tailwind CSS v3** (Vite).
+The entire portfolio is presented as an interactive desktop environment with a boot sequence, menu bar, dock, control center, context menus, draggable windows, and a Notification-Center-style widget layer.
 
-All content is **100% data-driven** via a single `data.json` file. Update it to customize system metadata, identity, experience, projects, and skills — no component code changes required.
+All portfolio content is **100% data-driven** via a single `data.json` file — update it to customize system metadata, identity, experience, projects, and skills; no component code changes required.
 
 ---
 
@@ -19,14 +20,19 @@ Open [http://localhost:5173](http://localhost:5173).
 
 ## How It Works
 
-The desktop environment renders with a **menu bar**, **dock**, and **windowed applications**. All portfolio content (identity, experience, projects, skills) is loaded from a single JSON file at runtime.
+On load, a short **boot sequence** plays, then the desktop environment renders with a **menu bar**, **dock**, **desktop icons**, a **widget layer**, and **windowed applications**. All portfolio content (identity, experience, projects, skills) is loaded from a single JSON file at runtime.
 
 ### Core Elements
 
-- **Menu Bar** — System metadata (time, session, system tag) and appearance toggle (☀/☾)
+- **Boot** — macOS-style startup sequence before the desktop appears
+- **Menu Bar** — System metadata (time, session, system tag), and Control Center entry
+- **Control Center** — Volume, display/lens filters, and quick toggles
 - **Dock** — Application launcher at the bottom
-- **Windows** — Draggable, resizable, focusable application windows with title bars and controls
-- **Wallpaper** — Optional custom background (defaults to macOS gradient)
+- **Desktop Icons** — Launch apps directly from the desktop
+- **Right-Click Menu** — Context menu on the desktop (change wallpaper, add widgets, etc.)
+- **Windows** — Draggable, resizable, focusable application windows with macOS traffic-light controls (grey/unfocused, colored on focus)
+- **Widget Layer** — Add/remove/drag Notification-Center-style widgets via the Widget Gallery; layout persists to `localStorage`. Includes a **Weather** widget (IP-based geolocation → live Open-Meteo forecast, condition-driven sky gradient, hardcoded fallback) alongside clock, calendar, contact, skills, sticky, and featured widgets
+- **Wallpaper** — Custom background with a built-in Wallpaper Gallery (defaults to a macOS-style gradient)
 
 ### Data-Driven Everything
 
@@ -40,45 +46,32 @@ Every field shown below is live-rendered in the desktop UI. Update the JSON to c
 
 ```jsonc
 {
-  // ─── meta ────────────────────────────────────────────────────────────────
+  // ─── meta ──────────────────────────────────────────────────────────────
   "meta": {
     // System identification string shown in the menu bar (top-left).
     // e.g. "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64"
     "systemTag": "string",
-
-    // Live system time shown in the menu bar (HH:MM:SS format).
-    // Updated every 1 second in the UI.
+    // Live system time shown in the menu bar (HH:MM:SS format). Updated every 1s.
     "time": "string",
-
     // Active session identifier, e.g. "ttys000"
     "session": "string",
-
     // macOS welcome banner line 1, e.g. "macOS Sequoia 15.5"
     "bannerTitle": "string",
-
     // macOS welcome banner line 2, e.g. "Darwin 24.5.0 arm64"
     "bannerSystem": "string",
-
     // Copyright footer, e.g. "© 2026 Your Name"
     "copyright": "string",
-
     // Location + coordinates shown in the footer.
-    // Format: "City, Country · Coordinates" 
-    // e.g. "Vancouver, BC · 49.28° N, 123.12° W"
+    // Format: "City, Country · Coordinates" e.g. "Vancouver, BC · 49.28° N, 123.12° W"
     "location": "string",
-
-    // Optional URL to a custom desktop wallpaper.
-    // If omitted, uses a generated macOS Big Sur–style gradient.
+    // Optional URL to a custom desktop wallpaper. If omitted, uses a generated gradient.
     "wallpaper"?: "string",
-
     // Array of contact link objects shown when `contact` command is run.
     "contactLinks"?: [
       { "label": "Email", "value": "email@example.com" },
       { "label": "LinkedIn", "value": "linkedin.com/in/your-profile" }
     ],
-
-    // Command registry: maps command names to output strings.
-    // Special value "__CLEAR__" triggers terminal clear.
+    // Command registry: maps command names to output strings. "__CLEAR__" clears terminal.
     "commands"?: {
       "whoami": "Your Name :: Your Role",
       "help": "Available commands: help, whoami, clear, ...",
@@ -86,11 +79,8 @@ Every field shown below is live-rendered in the desktop UI. Update the JSON to c
       "pwd": "/Users/your-name",
       "exit": "[Process completed]"
     },
-
-    // Optional URL to a resume PDF file.
-    // If provided, a "Resume" link appears in the identity section.
+    // Optional URL to a resume PDF file. If provided, a "Resume" link appears.
     "resumeUrl"?: "resume.pdf",
-
     // Nested namespace for terminal commands (alternative structure).
     "commandStrings"?: {
       "identity": "whoami",
@@ -99,104 +89,48 @@ Every field shown below is live-rendered in the desktop UI. Update the JSON to c
       "skills": "kubectl get skills -n siyu"
     }
   },
-
-  // ─── identity ────────────────────────────────────────────────────────────
+  // ─── identity ──────────────────────────────────────────────────────────
   "identity": {
-    // Full name displayed as the H1 hero title.
     "title": "Siyu An",
-
-    // Optional short headline (role subtitle).
     "headline"?: "Software Engineer · cloud-platform engineering & operations",
-
-    // Bio paragraph shown below the title.
     "tagline": "I am a Software Engineer specializing in..."
   },
-
   // ─── experience ──────────────────────────────────────────────────────────
   // Array of job/role entries. Ordered newest → oldest (current role first).
-  // Displayed in table format in the Terminal or Finder.
   "experience": [
     {
-      // Unix-style permission string (aesthetic only), e.g. "drwxr-xr-x"
-      "permissions": "string",
-
-      // Owner column, typically "siyu" or "admin"
-      "owner": "string",
-
-      // File size (aesthetic), e.g. "2048B"
-      "size": "string",
-
-      // Date in short form, e.g. "08/2024"
-      "timestamp": "string",
-
-      // Entry name shown in table view, e.g. "INFOBLOX"
-      "name": "string",
-
-      // If true, this role is highlighted as the current/active one.
-      "current"?: "boolean",
-
-      // Full job title, e.g. "Software Engineer"
-      "title"?: "string",
-
-      // Company or organization name, e.g. "Infoblox Canada Inc."
-      "company"?: "string",
-
-      // Human-readable date range, e.g. "08/2024 -> PRESENT"
-      "dateRange"?: "string",
-
-      // Array of bullet-point achievements / responsibilities.
-      "highlights"?: [
-        "Achievement 1",
-        "Achievement 2"
-      ],
-
-      // Optional URL (e.g., company site or research publication DOI)
-      "url"?: "string"
+      "permissions": "string",   // Unix-style permission string (aesthetic), e.g. "drwxr-xr-x"
+      "owner": "string",          // Owner column, typically "siyu" or "admin"
+      "size": "string",           // File size (aesthetic), e.g. "2048B"
+      "timestamp": "string",      // Date in short form, e.g. "08/2024"
+      "name": "string",           // Entry name shown in table view, e.g. "INFOBLOX"
+      "current"?: "boolean",      // If true, highlighted as the current/active role
+      "title"?: "string",         // Full job title, e.g. "Software Engineer"
+      "company"?: "string",       // Company/organization, e.g. "Infoblox Canada Inc."
+      "dateRange"?: "string",     // Human-readable range, e.g. "08/2024 -> PRESENT"
+      "highlights"?: ["Achievement 1", "Achievement 2"],
+      "url"?: "string"            // Optional URL (company site or publication DOI)
     }
     // ... more entries
   ],
-
-  // ─── projects ────────────────────────────────────────────────────────────
-  // Array of project portfolio entries.
-  // Each renders as a card with ASCII-art styling.
+  // ─── projects ──────────────────────────────────────────────────────────
   "projects": [
     {
-      // Project system name, e.g. "GOARC_MCP"
-      "name": "string",
-
-      // Semantic version, e.g. "v0.1.0"
-      "version": "string",
-
-      // Status label, e.g. "ACTIVE", "BETA", "ARCHIVED"
-      "status": "string",
-
-      // One-to-two sentence description.
-      "description": "string",
-
-      // Tech badges shown below description.
-      // Use underscores instead of spaces, e.g. "Go_Lang", "Kubernetes"
-      "tags": ["string", "string"],
-
-      // License identifier, e.g. "MIT_License"
-      "license"?: "string",
-
-      // Optional URL opened when clicking the project card.
-      "url"?: "string"
+      "name": "string",           // Project system name, e.g. "GOARC_MCP"
+      "version": "string",        // Semantic version, e.g. "v0.1.0"
+      "status": "string",         // Status label, e.g. "ACTIVE", "BETA", "ARCHIVED"
+      "description": "string",    // One-to-two sentence description.
+      "tags": ["string"],         // Tech badges (use underscores), e.g. "Go_Lang"
+      "license"?: "string",       // License identifier, e.g. "MIT_License"
+      "url"?: "string"            // Optional URL opened when clicking the project card
     }
     // ... up to 4 projects recommended
   ],
-
-  // ─── skills ──────────────────────────────────────────────────────────────
-  // Array of skill/proficiency entries.
-  // Each renders as an animated progress bar in the Finder or Terminal output.
+  // ─── skills ──────────────────────────────────────────────────────────
   "skills": [
     {
-      // Skill name, e.g. "Go_Lang", "Kubernetes"
-      "name": "string",
-
-      // Proficiency level: 0–100 (integer).
-      // Rendered as a percentage bar and numerical label.
-      "level": "number"
+      "name": "string",           // Skill name, e.g. "Go_Lang", "Kubernetes"
+      "level": "number"           // Proficiency 0–100 (integer). Rendered as a bar.
     }
     // ... 6–10 skills recommended
   ]
@@ -213,8 +147,8 @@ A production-ready `data.json` with real portfolio content is at [`public/data.j
 
 ## Theming
 
-The desktop ships in **dark mode** by default (matching macOS Sequoia Pro terminal profile).  
-The **appearance toggle** (☀ / ☾) in the menu bar switches between light and dark themes — persisted to localStorage.
+The desktop ships in **dark mode** by default (matching macOS Sequoia Pro terminal profile).
+The **appearance toggle** in the click menu switches between light and dark themes — persisted to localStorage.
 
 Colors are driven by CSS custom properties defined in [`src/styles/tokens.css`](src/styles/tokens.css):
 
@@ -228,7 +162,7 @@ Colors are driven by CSS custom properties defined in [`src/styles/tokens.css`](
 --warn / --error  /* macOS yellow / red */
 ```
 
-Traffic light button colors (red `#ff5f57`, yellow `#febc2e`, green `#28c840`) match real macOS window controls.
+Traffic light button colors (red `#ff5f57`, yellow `#febc2e`, green `#28c840`) match real macOS window controls. When a window is unfocused, the traffic lights render as neutral grey with no glyphs, and restore their color + glyphs on hover/focus.
 
 ---
 
@@ -236,33 +170,51 @@ Traffic light button colors (red `#ff5f57`, yellow `#febc2e`, green `#28c840`) m
 
 ```
 src/
-├── config.ts                    ← Data source URL
+├── config.ts                       ← Data source URL
+├── App.tsx                         ← Root component
+├── main.tsx                        ← Entry point
 ├── types/
-│   └── portfolio.ts             ← TypeScript interfaces for data.json
+│   └── portfolio.ts                ← TypeScript interfaces for data.json
 ├── styles/
-│   ├── tokens.css               ← Design tokens (colors, spacing, typography)
-│   ├── base.css                 ← Global resets
-│   ├── keyframes.css            ← Animations
-│   └── misc.css                 ← Utility styles
+│   ├── tokens.css                  ← Design tokens (colors, spacing, typography)
+│   ├── base.css                    ← Global resets
+│   ├── keyframes.css               ← Animations
+│   └── misc.css                    ← Utility styles
 ├── hooks/
-│   ├── use-portfolio-data.ts    ← Fetch and cache portfolio JSON
-│   ├── use-theme.ts             ← Theme toggle with localStorage
-│   └── use-intersection-observer.ts ← Scroll-based animations
-├── App.tsx                      ← Root component
-├── main.tsx                     ← Entry point
-├── os/                          ← Operating system UI layer
-│   ├── desktop/                 ← Desktop, menu bar, dock (each own kebab-case dir, index.tsx entrance)
-│   ├── window/                  ← Window management (drag, resize, focus)
-│   └── widget/                  ← System widgets (each widget its own dir, index.tsx entrance)
-├── apps/                        ← Windowed applications
-│   ├── registry.ts              ← App definitions
-│   ├── terminal/                ← Terminal app (index.tsx entrance)
-│   ├── finder/                  ← File browser app (index.tsx entrance)
-│   ├── preview/                 ← Document viewer app (index.tsx entrance)
-│   └── arcade/                  ← Arcade hub + games (tetris/, puyo/), index.tsx entrance
+│   ├── use-portfolio-data.ts       ← Fetch and cache portfolio JSON
+│   ├── use-theme.ts                ← Theme toggle with localStorage
+│   └── use-intersection-observer.ts← Scroll-based animations
+├── os/                             ← Operating-system UI layer
+│   ├── boot/                       ← Startup boot sequence
+│   ├── control-center/             ← Control Center (volume, lens filters, toggles)
+│   ├── desktop/                    ← Desktop shell
+│   │   ├── menu-bar/               ← Top menu bar (clock, icons, theme toggle)
+│   │   ├── dock/                   ← App launcher dock
+│   │   ├── icon/                   ← Desktop icons
+│   │   ├── click-menu/             ← Right-click context menu
+│   │   └── wallpaper/              ← Wallpaper + Wallpaper Gallery
+│   ├── window/                     ← Window management (drag, resize, focus, traffic lights)
+│   └── widget/                     ← Widget system
+│       ├── WidgetFrame / WidgetLayer  ← Frame + draggable layer
+│       ├── registry.ts             ← Widget catalog
+│       ├── use-active-widgets.ts   ← Active-widget persistence (localStorage)
+│       ├── gallery/                ← Widget Gallery ("Add Widgets")
+│       └── clock/ calendar/ weather/ contact/ skills/ sticky/ featured/ terminal/ bootstrap/
+├── apps/                           ← Windowed applications
+│   ├── registry.ts                 ← App definitions
+│   ├── terminal/                   ← Terminal app (shell/, vfs.ts, MatrixRain)
+│   ├── finder/                     ← File browser app
+│   ├── preview/                    ← Document viewer app
+│   ├── arcade/                     ← Arcade hub + games (tetris/, puyo/)
+│   └── section/                    ← Portfolio sections
+│       └── about-me/ experience/ identity/ projects/ skills/ reveal/
 public/
-└── data.json                    ← Portfolio data
+├── data.json                       ← Portfolio data
+├── resume.pdf                      ← Resume asset
+└── favicon.svg
 ```
+
+> Each `os/` subsystem and widget lives in its own kebab-case directory with an `index.tsx`/`index.ts` entrance. Each arcade game (`tetris/`, `puyo/`) has its own README with game-specific details.
 
 ---
 
@@ -282,24 +234,10 @@ public/
 
 ---
 
-## Development
-
-### Scripts
-
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Start Vite dev server at [http://localhost:5173](http://localhost:5173) |
-| `npm run build` | Compile TypeScript + bundle for production into `dist/` |
-| `npm run preview` | Preview the production build locally |
-| `npm run typecheck` | Run TypeScript type checker |
-| `npm run lint` | Run ESLint on source code |
-| `npm run lint:fix` | Auto-fix linting issues |
-| `npm run format` | Auto-format code (Prettier) |
-| `npm run check` | Run format + lint + typecheck (full CI suite) |
-
-### Customizing Content
+## Customizing Content
 
 Edit [`public/data.json`](public/data.json) to update:
+
 - System metadata (time, session, system tag, location)
 - Identity (name, headline, tagline)
 - Experience (job history with highlights)
