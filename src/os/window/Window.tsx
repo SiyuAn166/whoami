@@ -193,7 +193,7 @@ export function Window({
         fullscreen ? " " + styles.isFullscreen : ""
       }${fullscreen && chromeRevealed ? " " + styles.chromeRevealed : ""}${
         state === "minimized" ? " " + styles.isMinimized : ""
-      }${state === "closed" ? " " + styles.isClosed : ""}`}
+      }${state === "closed" ? " " + styles.isClosed : ""}${focused ? "" : " " + styles.isUnfocused}`}
       inert={!visible}
       onPointerDownCapture={onFocus}
       style={{

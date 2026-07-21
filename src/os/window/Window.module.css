@@ -220,3 +220,42 @@
   background: rgba(0, 0, 0, 0.42);
   background-clip: content-box;
 }
+
+/* Unfocused window → traffic lights are three neutral grey dots with no
+   glyphs, matching macOS. Hover over the group still reveals the controls. */
+.is-unfocused .traffic-light {
+  background: var(--tl-inactive, rgba(255, 255, 255, 0.18));
+  border-color: transparent;
+  color: rgba(0, 0, 0, 0) !important;
+}
+
+.is-unfocused .traffic-light > svg {
+  opacity: 0;
+}
+
+.is-unfocused .traffic-lights:hover .traffic-light.tl-close {
+  background: #ff5f57;
+  border: 0.5px solid #e0443e;
+}
+
+.is-unfocused .traffic-lights:hover .traffic-light.tl-min {
+  background: #febc2e;
+  border: 0.5px solid #dea123;
+}
+
+.is-unfocused .traffic-lights:hover .traffic-light.tl-max {
+  background: #28c840;
+  border: 0.5px solid #1aab29;
+}
+
+.is-unfocused .traffic-lights:hover .traffic-light {
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.is-unfocused .traffic-lights:hover .traffic-light > svg {
+  opacity: 1;
+}
+
+[data-theme="light"] .is-unfocused .traffic-light {
+  background: var(--tl-inactive, rgba(0, 0, 0, 0.18));
+}
