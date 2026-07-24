@@ -1,4 +1,4 @@
-import { resolveAsset } from "./utils";
+import { resolveAsset } from "../utils";
 
 export function PreviewFooter({ url }: { url?: string }) {
   const href = resolveAsset(url);

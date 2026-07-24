@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { resolveAsset } from "../../utils";
+
 import type { ExperienceEntry } from "../../../types/portfolio";
 
 import revealStyles from "../reveal/RevealSection.module.css";
@@ -358,13 +360,13 @@ function ExpIcon({
     return (
       <span className={`${cls} ${styles.expIcLogo}`} aria-hidden>
         <img
-          src={entry.logo.light}
+          src={resolveAsset(entry.logo.light) ?? undefined}
           alt=""
           className={styles.expLogoLight}
           onError={() => setBroken(true)}
         />
         <img
-          src={entry.logo.dark}
+          src={resolveAsset(entry.logo.dark) ?? undefined}
           alt=""
           className={styles.expLogoDark}
           onError={() => setBroken(true)}
