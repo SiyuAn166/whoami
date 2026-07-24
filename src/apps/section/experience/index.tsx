@@ -345,6 +345,44 @@ const TONE_CLASS = {
   arch: styles.expTArch,
 };
 
+function ExpIcon({
+  entry,
+  className,
+}: {
+  entry: ExperienceEntry;
+  className?: string;
+}) {
+  const cls = className ? `${styles.expIc} ${className}` : styles.expIc;
+  const [broken, setBroken] = useState(false);
+  if (entry.logo && !broken) {
+    return (
+      <span className={`${cls} ${styles.expIcLogo}`} aria-hidden>
+        <img
+          src={entry.logo.light}
+          alt=""
+          className={styles.expLogoLight}
+          onError={() => setBroken(true)}
+        />
+        <img
+          src={entry.logo.dark}
+          alt=""
+          className={styles.expLogoDark}
+          onError={() => setBroken(true)}
+        />
+      </span>
+    );
+  }
+  return (
+    <span
+      className={cls}
+      style={{ ["--exp-h" as string]: hueOf(entry.name) }}
+      aria-hidden
+    >
+      {monogram(entry.name)}
+    </span>
+  );
+}
+
 function FinderExperience({ entries }: { entries: ExperienceEntry[] }) {
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -385,13 +423,7 @@ function ExperienceRow({
   return (
     <li className={`${styles.expRow} ${TONE_CLASS[tone]}`}>
       <button type="button" className={styles.expRowBtn} onClick={onOpen}>
-        <span
-          className={styles.expIc}
-          style={{ ["--exp-h" as string]: hueOf(entry.name) }}
-          aria-hidden
-        >
-          {monogram(entry.name)}
-        </span>
+        <ExpIcon entry={entry} />
         <span className={styles.expRowMain}>
           <span className={styles.expRowTop}>
             <span className={styles.expRowTitle}>{title}</span>
@@ -450,13 +482,7 @@ function ExperienceDetail({
       </button>
 
       <header className={styles.expHero}>
-        <span
-          className={`${styles.expIc} ${styles.expHeroIc}`}
-          style={{ ["--exp-h" as string]: hueOf(entry.name) }}
-          aria-hidden
-        >
-          {monogram(entry.name)}
-        </span>
+        <ExpIcon entry={entry} className={styles.expHeroIc} />
         <div className={styles.expHeroMeta}>
           <div className={styles.expHeroTitleRow}>
             <h2 className={styles.expHeroTitle}>{title}</h2>

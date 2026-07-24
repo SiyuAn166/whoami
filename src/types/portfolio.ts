@@ -53,6 +53,11 @@ export interface ExperienceEntry {
   title?: string;
   /** Company or organization display name */
   company?: string;
+  /** Company logo, swapped by theme: dark-theme SVG vs light-theme SVG */
+  logo?: {
+    light: string;
+    dark: string;
+  };
   /** Human-readable date range, e.g. "MAR 2024 – Present" */
   dateRange?: string;
   /** Bullet-point achievements / responsibilities shown in the expanded panel */

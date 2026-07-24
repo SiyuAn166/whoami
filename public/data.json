@@ -50,6 +50,10 @@
       "current": true,
       "title": "Software Engineer",
       "company": "Infoblox Canada Inc.",
+      "logo": {
+        "light": "/logos/infoblox-light.svg",
+        "dark": "/logos/infoblox-dark.svg"
+      },
       "dateRange": "08/2024 -> PRESENT",
       "highlights": [
         "Engineered a high-throughput DNS logging pipeline in Go (DNSTAP + syslog over TCP/TLS) with WAL-backed buffering to handle backpressure at 10K QPS, reducing log loss from 1% to <0.3% and cutting router CPU usage by 42%.",
@@ -68,6 +72,10 @@
       "current": false,
       "title": "Data Engineer Co-op",
       "company": "Simon Fraser University's Big Data Hub",
+      "logo": {
+        "light": "/logos/sfu-light.svg",
+        "dark": "/logos/sfu-dark.svg"
+      },
       "dateRange": "05/2023 -> 08/2023",
       "researchUrl": "https://doi.org/10.1109/IEEEDATA.2024.3471469",
       "highlights": [

@@ -73,6 +73,36 @@
   background: hsl(var(--h) 62% 52%);
 }
 
+/* ── logo tile: real company mark, swapped by theme ── */
+.exp-ic-logo {
+  background: var(--exp-surface);
+  border: 0.5px solid var(--exp-hairline);
+  padding: 0 2px;
+}
+
+.exp-logo-light,
+.exp-logo-dark {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.exp-logo-light {
+  display: none;
+}
+
+.exp-logo-dark {
+  display: block;
+}
+
+[data-theme="light"] .exp-logo-light {
+  display: block;
+}
+
+[data-theme="light"] .exp-logo-dark {
+  display: none;
+}
+
 /* ══════════════ LIST — Notes/Mail hairline rows ══════════════ */
 .exp-list {
   list-style: none;
