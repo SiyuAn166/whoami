@@ -7,7 +7,7 @@
 // so the folder drops in with no /public and no tsconfig flags. puyo.json's
 // meta.image points at another skin, so we bind its frames to puyo_aqua.png.
 
-import { Assets, Spritesheet, Texture } from "pixi.js";
+import { Assets, Rectangle, Spritesheet, Texture } from "pixi.js";
 
 import { COLOR_KEYS } from "../lib/config";
 
@@ -97,6 +97,46 @@ export function frame(name: string): Texture {
 /** Layout-atlas texture (field borders, next window). EMPTY if unavailable. */
 export function layoutFrame(name: string): Texture {
   return layoutSheet?.textures[name] ?? Texture.EMPTY;
+}
+
+const insetCache = new Map<string, Texture>();
+
+/**
+ * Layout-atlas texture with one or more edges of its sampled frame shaved
+ * inward by a pixel or two. Some layout.json frames are packed edge-to-edge
+ * with no padding against a differently-coloured neighbour (e.g.
+ * next_border_1p.png sits flush against the blue field_border_left_tophalf
+ * strip) — under linear texture filtering that neighbour bleeds through as a
+ * thin coloured fringe on the sampled sprite's edge. Moving the sampled UV
+ * rect a pixel away from the seam removes the neighbour from the sample
+ * entirely; this only trims a sliver of the sprite's own edge, not its
+ * apparent on-screen size.
+ */
+export function layoutFrameNoBleed(
+  name: string,
+  edges: { left?: number; right?: number; top?: number; bottom?: number },
+): Texture {
+  const key = `${name}:${edges.left ?? 0},${edges.right ?? 0},${edges.top ?? 0},${edges.bottom ?? 0}`;
+  const cached = insetCache.get(key);
+  if (cached) return cached;
+  const base = layoutFrame(name);
+  if (base === Texture.EMPTY) return base;
+  const f = base.frame;
+  const left = edges.left ?? 0;
+  const right = edges.right ?? 0;
+  const top = edges.top ?? 0;
+  const bottom = edges.bottom ?? 0;
+  const tex = new Texture({
+    source: base.source,
+    frame: new Rectangle(
+      f.x + left,
+      f.y + top,
+      f.width - left - right,
+      f.height - top - bottom,
+    ),
+  });
+  insetCache.set(key, tex);
+  return tex;
 }
 
 /** Chain-font texture (chain_0.png .. chain_9.png, chain_text.png). */

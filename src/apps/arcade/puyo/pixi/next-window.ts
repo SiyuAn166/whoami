@@ -2,7 +2,7 @@
 // window chrome, and draws the upcoming two pairs as puyo sprites inside it.
 import { Container, Graphics, Sprite } from "pixi.js";
 
-import { frame, hasLayout, layoutFrame, puyoFrame } from "./assets";
+import { frame, hasLayout, layoutFrameNoBleed, puyoFrame } from "./assets";
 
 import type { Color } from "../lib/types";
 
@@ -16,7 +16,12 @@ export class NextWindow extends Container {
     super();
 
     if (hasLayout()) {
-      const border = new Sprite(layoutFrame("next_border_1p.png"));
+      // The atlas packs next_border_1p.png flush against a blue field-border
+      // strip on its right edge (zero padding) — shave that edge off so it
+      // can't bleed through as a stray blue line under linear filtering.
+      const border = new Sprite(
+        layoutFrameNoBleed("next_border_1p.png", { right: 1 }),
+      );
       this.addChild(border);
     } else {
       const g = new Graphics();

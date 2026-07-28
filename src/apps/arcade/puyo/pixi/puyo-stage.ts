@@ -238,8 +238,14 @@ export class PuyoStage {
   }
 
   /** Wire the in-canvas control buttons to the game hook. */
-  bindControls(onToggle: () => void, onRestart: () => void): void {
-    this.controls?.bind(onToggle, onRestart);
+  bindControls(
+    onToggle: () => void,
+    onRestart: () => void,
+    onColorCount: (n: 3 | 4 | 5) => void,
+    onUndo: () => void,
+    onRedo: () => void,
+  ): void {
+    this.controls?.bind(onToggle, onRestart, onColorCount, onUndo, onRedo);
   }
 
   /** Reflect the current play/practice mode on the toggle. */
@@ -250,6 +256,16 @@ export class PuyoStage {
   /** Update the Best Chain readout under the control buttons. */
   setBestChain(n: number): void {
     this.controls?.setBestChain(n);
+  }
+
+  /** Sync the colour-count slider (e.g. to the default on init). */
+  setColorCount(n: 3 | 4 | 5): void {
+    this.controls?.setColorCount(n);
+  }
+
+  /** Enable/disable the undo/redo buttons per history-line position. */
+  setUndoRedoAvailable(canUndo: boolean, canRedo: boolean): void {
+    this.controls?.setUndoRedoAvailable(canUndo, canRedo);
   }
 
   /**

@@ -14,6 +14,7 @@ import {
 } from "../lib/config";
 import {
   applyGravity,
+  cloneGrid,
   emptyGrid,
   hardDropPiece,
   isAllClear,
@@ -25,11 +26,25 @@ import {
   rotate as rotatePiece,
   stepDown,
 } from "../lib/engine";
-import { ColorBag } from "../lib/rng";
+import { ColorBag, randomColorSubset } from "../lib/rng";
 import { sfx } from "../lib/sound";
 import { PuyoStage } from "../pixi/puyo-stage";
 
+import type { ColorBagSnapshot } from "../lib/rng";
 import type { ChainStep, Color, Grid, Mode, Piece } from "../lib/types";
+
+/** Default colour-count the game starts with (slider default). */
+const DEFAULT_COLOR_COUNT: 3 | 4 | 5 = 4;
+
+/** A point on the practice-mode undo/redo history line: the board state right
+ *  after a drop finished (chain resolved), ready to spawn the next pair. */
+interface HistorySnapshot {
+  grid: Grid;
+  queue: [Color, Color][];
+  score: number;
+  maxChain: number;
+  bag: ColorBagSnapshot;
+}
 
 // Fixed logic timestep: step the control loop at a constant 60 Hz so DAS/ARR,
 // gravity and lock delay are frame-perfect regardless of the display refresh
@@ -101,6 +116,13 @@ interface GameState {
   resolveFinal: Grid;
   // runtime mode: "play" = auto gravity, "practice" = 0 gravity. Toggled live.
   mode: Mode;
+  // Active colour count for the running game (set at restart) vs. the value
+  // staged on the slider (applied on the next restart, per the UI contract).
+  colorCount: 3 | 4 | 5;
+  pendingColorCount: 3 | 4 | 5;
+  // Practice-mode undo/redo history line: index 0 = game start (empty board).
+  history: HistorySnapshot[];
+  historyIndex: number;
 }
 
 // Where the just-locked pair comes to rest after gravity, as "r,c" keys.
@@ -181,6 +203,35 @@ function resetLock(g: GameState): void {
     g.lockResets++;
   }
   g.lockAccum = 0;
+}
+
+// ---- undo/redo history (practice mode) ------------------------------------
+// A snapshot of everything needed to resume the game exactly as it was: the
+// settled board, the upcoming-pairs queue and the colour-bag's pool/pointer.
+function snapshotOf(g: GameState): HistorySnapshot {
+  return {
+    grid: cloneGrid(g.grid),
+    queue: g.queue.map((p) => [...p] as [Color, Color]),
+    score: g.score,
+    maxChain: g.maxChain,
+    bag: g.bag.exportState(),
+  };
+}
+
+// Record the board right after a drop finished (chain resolved), truncating
+// any redo branch beyond the current point — a fresh drop from a rewound
+// state starts a new history line, like any undo/redo stack.
+function pushHistory(g: GameState): void {
+  g.history = g.history.slice(0, g.historyIndex + 1);
+  g.history.push(snapshotOf(g));
+  g.historyIndex = g.history.length - 1;
+}
+
+function syncHistoryButtons(stage: PuyoStage | null, g: GameState): void {
+  stage?.setUndoRedoAvailable(
+    g.historyIndex > 0,
+    g.historyIndex < g.history.length - 1,
+  );
 }
 
 export function usePuyoGame(initialMode: Mode = "play") {
@@ -343,6 +394,8 @@ export function usePuyoGame(initialMode: Mode = "play") {
     g.garbageSent = Math.floor(g.chainScore / TARGET_POINT);
     stageRef.current?.setGarbage(g.garbageSent);
     g.steps = [];
+    pushHistory(g);
+    syncHistoryButtons(stageRef.current, g);
     spawnNext();
   }, [spawnNext]);
 
@@ -638,12 +691,15 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const stage = new PuyoStage();
     stageRef.current = stage;
 
-    const bag = new ColorBag();
+    const bag = new ColorBag({
+      colors: randomColorSubset(DEFAULT_COLOR_COUNT),
+    });
+    const initialQueue: [Color, Color][] = [bag.pair(), bag.pair(), bag.pair()];
     gs.current = {
       grid: emptyGrid(),
       piece: null,
       bag,
-      queue: [bag.pair(), bag.pair(), bag.pair()],
+      queue: initialQueue,
       status: "loading",
       score: 0,
       chain: 0,
@@ -669,7 +725,13 @@ export function usePuyoGame(initialMode: Mode = "play") {
       predrop: null,
       resolveFinal: emptyGrid(),
       mode: initialMode,
+      colorCount: DEFAULT_COLOR_COUNT,
+      pendingColorCount: DEFAULT_COLOR_COUNT,
+      history: [],
+      historyIndex: 0,
     };
+    // History root: the empty board the first drop lands on.
+    gs.current.history = [snapshotOf(gs.current)];
 
     (async () => {
       if (!hostRef.current) return;
@@ -678,11 +740,13 @@ export function usePuyoGame(initialMode: Mode = "play") {
       stage.setGhostEnabled(true); // ghost + clear-preview on in both play and practice
       if (cancelled) return;
       stage.onTick(tick);
-      stage.bindControls(toggleMode, restart);
+      stage.bindControls(toggleMode, restart, setPendingColorCount, undo, redo);
       stage.setMode(gs.current!.mode);
+      stage.setColorCount(gs.current!.pendingColorCount);
       stage.puyo.syncStatic(gs.current!.grid);
       stage.setScore(0);
       stage.setBestChain(gs.current!.maxChain);
+      syncHistoryButtons(stage, gs.current!);
       spawnNext();
     })();
 
@@ -763,6 +827,60 @@ export function usePuyoGame(initialMode: Mode = "play") {
     syncHud();
   }, [syncHud]);
 
+  // Stage the colour count for the *next* restart — the slider only takes
+  // effect once Restart is pressed (the board keeps playing until then).
+  const setPendingColorCount = useCallback((n: 3 | 4 | 5) => {
+    const g = gs.current;
+    if (!g) return;
+    g.pendingColorCount = n;
+  }, []);
+
+  // Jump to a point on the undo/redo history line, then respawn the pair that
+  // was next at that point — a deterministic replay of the saved queue +
+  // colour-bag state, so the board and RNG stay perfectly in sync.
+  const restoreHistory = useCallback(() => {
+    const g = gs.current;
+    const stage = stageRef.current;
+    if (!g || !stage) return;
+    const snap = g.history[g.historyIndex];
+    g.grid = cloneGrid(snap.grid);
+    g.queue = snap.queue.map((p) => [...p] as [Color, Color]);
+    g.score = snap.score;
+    g.maxChain = snap.maxChain;
+    g.bag.importState(snap.bag);
+    g.chainScore = 0;
+    g.garbageSent = 0;
+    g.steps = [];
+    g.predrop = null;
+    g.piece = null;
+    stage.hideActive();
+    stage.puyo.syncStatic(g.grid);
+    stage.setScore(g.score);
+    stage.setBestChain(g.maxChain);
+    stage.setGarbage(0);
+    stage.hideChain();
+    syncHistoryButtons(stage, g);
+    spawnNext();
+  }, [spawnNext]);
+
+  // Undo/redo only apply to practice mode, where there's no gravity/lock
+  // pressure forcing the board forward — moving along the history line is
+  // otherwise a no-op (buttons are hidden outside practice mode).
+  const undo = useCallback(() => {
+    const g = gs.current;
+    if (!g || g.mode !== "practice" || g.historyIndex <= 0) return;
+    g.historyIndex--;
+    restoreHistory();
+  }, [restoreHistory]);
+
+  const redo = useCallback(() => {
+    const g = gs.current;
+    if (!g || g.mode !== "practice" || g.historyIndex >= g.history.length - 1)
+      return;
+    g.historyIndex++;
+    restoreHistory();
+  }, [restoreHistory]);
+
   // ---- touch / imperative actions (mobile) -------------------------------
   // These mirror the keyboard handlers but are driven by pointer gestures in
   // Game.tsx. Each is a no-op unless a piece is under player control, so they
@@ -816,9 +934,12 @@ export function usePuyoGame(initialMode: Mode = "play") {
   const restart = useCallback(() => {
     const g = gs.current;
     if (!g) return;
+    // The colour-count slider only takes effect here: pick a fresh random
+    // subset of that size out of all 5 colours for the new game.
+    g.colorCount = g.pendingColorCount;
     g.grid = emptyGrid();
     g.piece = null;
-    g.bag = new ColorBag();
+    g.bag = new ColorBag({ colors: randomColorSubset(g.colorCount) });
     g.queue = [g.bag.pair(), g.bag.pair(), g.bag.pair()];
     g.score = 0;
     g.chain = 0;
@@ -835,12 +956,17 @@ export function usePuyoGame(initialMode: Mode = "play") {
     g.arrAccum = 0;
     g.acc = 0;
     g.lockResets = 0;
+    // Fresh history line: the new (possibly recoloured) empty board is the
+    // new root, with nothing to undo/redo yet.
+    g.history = [snapshotOf(g)];
+    g.historyIndex = 0;
     stageRef.current?.puyo.syncStatic(g.grid);
     stageRef.current?.setScore(0);
     stageRef.current?.setGarbage(0);
     stageRef.current?.setBestChain(0);
     stageRef.current?.hideChain();
     stageRef.current?.resumeLoop();
+    syncHistoryButtons(stageRef.current, g);
     spawnNext();
   }, [spawnNext]);
 

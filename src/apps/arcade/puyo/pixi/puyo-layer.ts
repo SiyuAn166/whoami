@@ -95,8 +95,10 @@ export class PuyoLayer extends Container {
         const k = (t - 0.5) / 0.5; // 0..1
         s.texture = frame(burstFrame(color, k < 0.5 ? 0 : 1));
         s.alpha = 1 - k;
-        const sc = 1 + k * 0.4;
-        s.scale.set(SCALE_X * sc * (1 - k), SCALE_Y * sc * (1 - k));
+        // Splash outward from the cell centre: scale grows as it fades, like an
+        // expanding bubble/shockwave (not shrinking back into the centre).
+        const sc = 1 + k * 0.6;
+        s.scale.set(SCALE_X * sc, SCALE_Y * sc);
       }
     }
   }

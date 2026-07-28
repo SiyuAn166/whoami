@@ -29,27 +29,67 @@ import type { Color } from "./types";
 
 export const POOL_SIZE = 256;
 
-export function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+/** Stateful mulberry32 stream, so its internal state can be snapshotted for
+ *  undo/redo (ColorBag.exportState/importState) without reseeding. */
+class Rng {
+  private a: number;
+  constructor(seed: number) {
+    this.a = seed >>> 0;
+  }
+  next(): number {
+    this.a |= 0;
+    this.a = (this.a + 0x6d2b79f5) | 0;
+    let t = Math.imul(this.a ^ (this.a >>> 15), 1 | this.a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+  }
+  getState(): number {
+    return this.a;
+  }
+  setState(a: number): void {
+    this.a = a;
+  }
+}
+
+export function mulberry32(seed: number): () => number {
+  const r = new Rng(seed);
+  return () => r.next();
+}
+
+/** Fisher-Yates sample of `n` distinct colours out of ALL_COLORS (1..5),
+ *  returned in ascending order. Used to pick the game's colour palette when
+ *  colorCount < ALL_COLORS.length, so the game doesn't always use the same
+ *  first-N colours. */
+export function randomColorSubset(n: number): Color[] {
+  const pool = [...ALL_COLORS];
+  const count = Math.max(3, Math.min(n, pool.length));
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count).sort((a, b) => a - b);
 }
 
 export interface ColorBagOptions {
   seed?: number;
   /** Number of distinct colours in the main pool (default NUM_COLORS = 5). */
   colorCount?: number;
+  /** Explicit colour set (overrides colorCount, used to pick a random subset
+   *  of ALL_COLORS rather than always the first colorCount). */
+  colors?: Color[];
   /** Opening pairs copied from the 3-colour pool (default 2 = first 4 puyos). */
   openingPairs?: number;
 }
 
+/** Snapshot of a ColorBag's mutable state, for undo/redo. */
+export interface ColorBagSnapshot {
+  pool: Color[];
+  pointer: number;
+  rngState: number;
+}
+
 export class ColorBag {
-  private rand: () => number;
+  private rng: Rng;
   private readonly colors5: Color[];
   private readonly colors3: Color[];
   private readonly openingSlots: number;
@@ -61,17 +101,19 @@ export class ColorBag {
     // Back-compat: `new ColorBag(seed)` still works.
     const o: ColorBagOptions = typeof opts === "number" ? { seed: opts } : opts;
     const seed = o.seed ?? (Math.random() * 2 ** 32) >>> 0;
-    this.rand = mulberry32(seed);
+    this.rng = new Rng(seed);
 
-    const colorCount = Math.max(
-      3,
-      Math.min(o.colorCount ?? NUM_COLORS, ALL_COLORS.length),
-    );
+    const explicit = o.colors;
+    const colorCount = explicit
+      ? Math.max(3, Math.min(explicit.length, ALL_COLORS.length))
+      : Math.max(3, Math.min(o.colorCount ?? NUM_COLORS, ALL_COLORS.length));
     const openingPairs = Math.max(0, o.openingPairs ?? 2);
 
     // Colours 0..4 map onto ALL_COLORS (1..5). Pool3 is the first 3 of them.
-    this.colors5 = ALL_COLORS.slice(0, colorCount);
-    this.colors3 = ALL_COLORS.slice(0, Math.min(3, colorCount));
+    this.colors5 = explicit
+      ? [...explicit].sort((a, b) => a - b).slice(0, colorCount)
+      : ALL_COLORS.slice(0, colorCount);
+    this.colors3 = this.colors5.slice(0, Math.min(3, colorCount));
     this.openingSlots = Math.min(openingPairs * 2, POOL_SIZE);
 
     this.buildBlock();
@@ -87,7 +129,7 @@ export class ColorBag {
   /** Reverse Fisher-Yates over one continuous stream; j in [0, i] (unbiased). */
   private shufflePool(pool: Color[]): void {
     for (let i = POOL_SIZE - 1; i > 0; i--) {
-      const j = Math.floor(this.rand() * (i + 1)); // standard Fisher-Yates: j in [0, i]
+      const j = Math.floor(this.rng.next() * (i + 1)); // standard Fisher-Yates: j in [0, i]
       const tmp = pool[i];
       pool[i] = pool[j];
       pool[j] = tmp;
@@ -131,5 +173,21 @@ export class ColorBag {
     const trigger = this.pool[this.pointer + 1];
     this.pointer += 2;
     return [axis, trigger];
+  }
+
+  /** Snapshot the mutable pool/pointer/rng state (for undo/redo history). */
+  exportState(): ColorBagSnapshot {
+    return {
+      pool: this.pool.slice(),
+      pointer: this.pointer,
+      rngState: this.rng.getState(),
+    };
+  }
+
+  /** Restore a previously exported snapshot in place. */
+  importState(s: ColorBagSnapshot): void {
+    this.pool = s.pool.slice();
+    this.pointer = s.pointer;
+    this.rng.setState(s.rngState);
   }
 }
