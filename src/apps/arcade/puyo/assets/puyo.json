@@ -2856,6 +2856,30 @@
         "y": 0.5
       }
     },
+    "garbage_blip.png": {
+      "frame": {
+        "x": 1080,
+        "y": 360,
+        "w": 64,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 60
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
     "red_blip.png": {
       "frame": {
         "x": 1080,

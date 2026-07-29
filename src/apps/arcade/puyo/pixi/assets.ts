@@ -1,10 +1,11 @@
-// Loads the three self-contained spritesheets used by the Puyo app:
+// Loads the spritesheets used by the Puyo app:
 //   - puyo_aqua.png  + puyo.json        (the puyo pieces; shared Nexus atlas)
 //   - layout.png     + layout.json      (the field frame / next window borders)
 //   - chain_font.png + chain_font.json  (the chain-count popup digits)
+//   - button.png     + button.json      (Practice/Play toggle + Restart icons)
 //
-// All six files live in ../assets and are bundled by Vite via import.meta.url,
-// so the folder drops in with no /public and no tsconfig flags. puyo.json's
+// All files live in ../assets and are bundled by Vite via import.meta.url, so
+// the folder drops in with no /public and no tsconfig flags. puyo.json's
 // meta.image points at another skin, so we bind its frames to puyo_aqua.png.
 
 import { Assets, Rectangle, Spritesheet, Texture } from "pixi.js";
@@ -21,12 +22,30 @@ const chainUrl = new URL("../assets/chain_font.png", import.meta.url).href;
 const chainAtlasUrl = new URL("../assets/chain_font.json", import.meta.url)
   .href;
 const fieldBgUrl = new URL("../assets/field_lgn.png", import.meta.url).href;
+const buttonUrl = new URL("../assets/button.png", import.meta.url).href;
+const buttonAtlasUrl = new URL("../assets/button.json", import.meta.url).href;
 
 let puyoSheet: Spritesheet | null = null;
 let layoutSheet: Spritesheet | null = null;
 let chainSheet: Spritesheet | null = null;
 let fieldBgTex: Texture | null = null;
+let buttonBase: Texture | null = null;
+let buttonData: ButtonJson | null = null;
 let loading: Promise<void> | null = null;
+
+// ---- Button spritesheet (Practice/Play toggle + Restart) ------------------
+// button.png/.json: pause_play_00..08 (256x256) and restart_00..11 (256x256),
+// real RGBA transparency. Loaded by hand (not via Spritesheet) so we can read
+// the JSON's own per-frame `duration` and `animations` clips directly — both
+// button animations must follow the authored timing/order, not a guess.
+interface ButtonFrameEntry {
+  frame: { x: number; y: number; w: number; h: number };
+  duration: number;
+}
+interface ButtonJson {
+  frames: Record<string, ButtonFrameEntry>;
+  animations: Record<string, string[]>;
+}
 
 async function buildSheet(
   pngUrl: string,
@@ -63,6 +82,17 @@ export async function loadAssets(): Promise<void> {
     } catch {
       fieldBgTex = null;
     }
+    try {
+      const [base, data] = await Promise.all([
+        Assets.load(buttonUrl) as Promise<Texture>,
+        fetch(buttonAtlasUrl).then((r) => r.json()) as Promise<ButtonJson>,
+      ]);
+      buttonBase = base;
+      buttonData = data;
+    } catch {
+      buttonBase = null;
+      buttonData = null;
+    }
   })();
   return loading;
 }
@@ -75,6 +105,9 @@ export function hasChainFont(): boolean {
 }
 export function hasFieldBg(): boolean {
   return !!fieldBgTex;
+}
+export function hasButtonSheet(): boolean {
+  return !!buttonBase && !!buttonData;
 }
 export function fieldBgTexture(): Texture | null {
   return fieldBgTex;
@@ -142,6 +175,44 @@ export function layoutFrameNoBleed(
 /** Chain-font texture (chain_0.png .. chain_9.png, chain_text.png). */
 export function chainFrame(name: string): Texture {
   return chainSheet?.textures[name] ?? Texture.EMPTY;
+}
+
+const buttonTexCache = new Map<string, Texture>();
+
+/** Button spritesheet frame ("pause_play_00".."pause_play_08",
+ *  "restart_00".."restart_11"). Its x/y/w/h come straight from button.json,
+ *  not a hardcoded rect. */
+export function buttonFrame(name: string): Texture {
+  const cached = buttonTexCache.get(name);
+  if (cached) return cached;
+  if (!buttonBase || !buttonData) return Texture.EMPTY;
+  const entry = buttonData.frames[name];
+  if (!entry) return Texture.EMPTY;
+  const { x, y, w, h } = entry.frame;
+  const tex = new Texture({
+    source: buttonBase.source,
+    frame: new Rectangle(x, y, w, h),
+  });
+  buttonTexCache.set(name, tex);
+  return tex;
+}
+
+/** An ordered button animation clip: frame names + their authored per-frame
+ *  durations (ms), both read from button.json. */
+export interface ButtonClip {
+  frames: string[];
+  durations: number[];
+}
+
+/** "pause_to_play", "play_to_pause" or "restart". null if the atlas failed to
+ *  load or doesn't define that clip. */
+export function buttonClip(name: string): ButtonClip | null {
+  const data = buttonData;
+  if (!data) return null;
+  const frames = data.animations[name];
+  if (!frames) return null;
+  const durations = frames.map((f) => data.frames[f]?.duration ?? 83);
+  return { frames, durations };
 }
 
 /** Frame name for a settled colour + connection mask (0..15). */

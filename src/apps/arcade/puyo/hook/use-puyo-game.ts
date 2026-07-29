@@ -827,14 +827,6 @@ export function usePuyoGame(initialMode: Mode = "play") {
     syncHud();
   }, [syncHud]);
 
-  // Stage the colour count for the *next* restart — the slider only takes
-  // effect once Restart is pressed (the board keeps playing until then).
-  const setPendingColorCount = useCallback((n: 3 | 4 | 5) => {
-    const g = gs.current;
-    if (!g) return;
-    g.pendingColorCount = n;
-  }, []);
-
   // Jump to a point on the undo/redo history line, then respawn the pair that
   // was next at that point — a deterministic replay of the saved queue +
   // colour-bag state, so the board and RNG stay perfectly in sync.
@@ -969,6 +961,18 @@ export function usePuyoGame(initialMode: Mode = "play") {
     syncHistoryButtons(stageRef.current, g);
     spawnNext();
   }, [spawnNext]);
+
+  // Difficulty selector: picking a level restarts the game immediately with
+  // that colour count — no separate Restart click needed.
+  const setPendingColorCount = useCallback(
+    (n: 3 | 4 | 5) => {
+      const g = gs.current;
+      if (!g) return;
+      g.pendingColorCount = n;
+      restart();
+    },
+    [restart],
+  );
 
   return {
     hostRef,

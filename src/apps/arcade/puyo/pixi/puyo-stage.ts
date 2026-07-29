@@ -165,7 +165,7 @@ export class PuyoStage {
 
     this.app.ticker.add((ticker) => {
       this.fx.update(ticker.deltaTime);
-      this.controls.update(ticker.deltaTime);
+      this.controls.update(ticker.deltaMS);
       this.chainCounter.update(ticker.deltaTime, ticker.deltaMS);
       if (this.tickCb) this.tickCb(ticker.deltaMS);
     });

@@ -1,71 +1,85 @@
-// In-canvas control panel: the play/practice toggle, a colour-count slider, a
-// restart button, and (practice-only) undo/redo buttons — all drawn in Pixi so
-// they scale with the board. Sits just below the next window.
-// The toggle thumb slides between states; the restart puyo eases on hover /
-// press and plays the game's puyo-pop (bubble-clear) burst when clicked:
-// a white flash, a burst-frame scale-up/fade, plus scatter debris particles —
-// mirroring PuyoLayer.renderPops + FxLayer.spawnBurst. Driven by update().
+// In-canvas control panel: the play/practice toggle, a restart button, a
+// difficulty (colour-count) selector, and (practice-only) undo/redo buttons —
+// all drawn in Pixi so they scale with the board. Sits just below the next
+// window.
+// Both the toggle and the restart button are sprite-sheet animations from
+// button.png/.json: the toggle clacks between Pause/Play frames on mode
+// change, and restart plays its own pop-and-reform clip on tap. Both read
+// their frame rects, per-frame durations and clip order straight from the
+// JSON (see assets.ts) and are driven every tick by update().
 import { Container, Graphics, Sprite, Text } from "pixi.js";
 
-import { burstFrame, frame, puyoFrame } from "./assets";
-import { updateParticles } from "./particles";
+import { buttonClip, buttonFrame, frame } from "./assets";
 
-import type { Color, Mode } from "../lib/types";
-import type { Particle } from "./particles";
+import type { Mode } from "../lib/types";
+import type { ButtonClip } from "./assets";
 
 const PANEL_W = 153;
-// Shared content width: the colour-count slider and undo/redo row line up to
-// this width. The play/practice toggle is deliberately smaller (TOGGLE_W) —
-// see below.
+// Shared content width/height: the difficulty dots and undo/redo row line up
+// to this width; the toggle icon below is sized off TOGGLE_H too.
 const CONTENT_W = 116;
-const TOGGLE_W = 90; // smaller than CONTENT_W: toggle is a compact pill, not a full-width control
 const TOGGLE_H = 46;
-const THUMB_SCALE = 0.63;
-const R_SIZE = 44; // restart puyo display size (native puyo is 64px)
-const R_COLOR = 3; // blue puyo used as the restart button face
-const POP_DUR = 26; // pop duration in frames (~0.45s at 60fps)
-const R_BASE = R_SIZE / 64; // sprite scale for the 64px atlas frame
 
-// Colour-count slider: styled like the play/practice toggle — a capsule that
-// recolours per selection, with a puyo thumb sliding to one of 3 fixed stops
-// (3/4/5 colours), no in-between values.
-const SLIDER_COUNTS = [3, 4, 5] as const;
-type SliderCount = (typeof SLIDER_COUNTS)[number];
-const SLIDER_COLOR: Record<SliderCount, Color> = { 3: 1, 4: 4, 5: 5 }; // red/yellow/purple
-const SLIDER_CAPSULE_COLOR: Record<
-  SliderCount,
-  { fill: number; stroke: number }
-> = {
-  3: { fill: 0x2a1414, stroke: 0xe0605c }, // red
-  4: { fill: 0x2a2410, stroke: 0xe0c85c }, // yellow
-  5: { fill: 0x1a1533, stroke: 0x9a7ee0 }, // purple
+// button.json clip playback speed multiplier: the authored per-frame
+// durations read as sluggish at real-world speed, so the clips play this many
+// times faster (relative per-frame proportions stay intact — nothing here is
+// a made-up timing, just a per-button speed scale).
+const TOGGLE_CLIP_SPEED = 6;
+const RESTART_CLIP_SPEED = 2;
+
+// Play/practice toggle: button.png/.json's pause_play_00..08 frames (256x256,
+// real alpha). Rests on the icon inviting the next action — pause_play_08
+// (Play) in practice, pause_play_00 (Pause) in play — and clacks through the
+// atlas's own clip on every real mode change: "play_to_pause" (08->00) when
+// switching to play, "pause_to_play" (00->08) switching back.
+const TOGGLE_ICON_BASE = TOGGLE_H / 256; // sprite scale for the native 256px frame
+const TOGGLE_REST: Record<Mode, string> = {
+  practice: "pause_play_08",
+  play: "pause_play_00",
 };
-const SLIDER_STOP_X: Record<SliderCount, number> = {
-  3: TOGGLE_H / 2,
-  4: CONTENT_W / 2,
-  5: CONTENT_W - TOGGLE_H / 2,
+
+// Restart: button.png/.json's restart_00..11 frames — a puyo that pops into
+// scattered bubbles and reforms. Rests on restart_00 and plays the "restart"
+// clip once on every tap (frame rects/durations/order read from the JSON).
+const R_SIZE = 78; // restart icon display size
+const R_BASE = R_SIZE / 256; // sprite scale for the native 256px frame
+const RESTART_REST = "restart_00";
+
+// Toggle + restart share one row: toggle on the left, restart on the right,
+// the pair centred on CONTENT_W so it lines up with the difficulty/undo rows
+// below.
+const ROW_GAP = CONTENT_W - TOGGLE_H - R_SIZE; // gap between the two buttons
+const ROW_H = Math.max(TOGGLE_H, R_SIZE); // shared row height
+const ROW_X = (PANEL_W - CONTENT_W) / 2; // row's left edge
+
+// Difficulty selector: 5 puyo "_blip" dots (green/yellow/red = easy/normal/
+// hard). Level n fills the first n dots with that level's colour; the rest
+// show the neutral garbage_blip. Only dots 3-5 are clickable and pick the
+// difficulty directly (3, 4 or 5 colours) — dots 1-2 are always filled and
+// not independently selectable, since 3 is the minimum colour count. No
+// animation: textures just swap on selection.
+type Difficulty = 3 | 4 | 5;
+const DIFF_COLOR_NAME: Record<Difficulty, string> = {
+  3: "green",
+  4: "yellow",
+  5: "red",
 };
-const SLIDER_HIT_R = 20; // generous tap target around each stop
+const DIFF_DOTS = 5;
+const DIFF_DOT_SIZE = 40;
+const DIFF_DOT_GAP = -14; // negative: bounding boxes overlap, but each blip frame
+// has transparent padding around the drawn circle, so the dots themselves just
+// sit close together. 5*40 + 4*-14 = 144, fits inside PANEL_W (153).
+const DIFF_ROW_W = DIFF_DOTS * DIFF_DOT_SIZE + (DIFF_DOTS - 1) * DIFF_DOT_GAP;
+const DIFF_ROW_X = (PANEL_W - DIFF_ROW_W) / 2; // centred on the panel, not CONTENT_W: bigger dots need the extra width
+const DIFF_BASE = DIFF_DOT_SIZE / 64; // sprite scale for the native 64x60 blip frame
+const DIFF_Y = ROW_H + 24;
+const DIFF_HOVER_SCALE = 1.2; // clickable dots (3/4/5) grow on hover, snap on press
+const DIFF_PRESS_SCALE = 0.92;
 
 // Undo/redo row (practice only).
 const HIST_BTN_W = 54;
 const HIST_BTN_H = 40;
 const HIST_GAP = CONTENT_W - HIST_BTN_W * 2;
-
-const LABEL_STYLE = {
-  fontFamily: "'Trebuchet MS', system-ui, sans-serif",
-  fontSize: 16,
-  fontWeight: "600" as const,
-  fill: 0xdbe7ff,
-} as const;
-
-const SMALL_LABEL_STYLE = {
-  fontFamily: "'Trebuchet MS', system-ui, sans-serif",
-  fontSize: 13,
-  fontWeight: "600" as const,
-  fill: 0x9aa7d0,
-  letterSpacing: 1,
-} as const;
 
 const HIST_ICON_STYLE = {
   fontFamily: "'Trebuchet MS', system-ui, sans-serif",
@@ -93,6 +107,38 @@ const BEST_VALUE_STYLE = {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+/** Plays one button.json clip: advances by real elapsed ms against each
+ *  frame's authored duration, stopping (no loop) on the clip's last frame. */
+class ClipPlayer {
+  clip: ButtonClip | null = null;
+  index = 0;
+  elapsedMs = 0;
+  playing = false;
+
+  start(clip: ButtonClip): void {
+    this.clip = clip;
+    this.index = 0;
+    this.elapsedMs = 0;
+    this.playing = true;
+  }
+
+  /** Advance by `dtMs`; returns the current frame name, or null if idle. */
+  step(dtMs: number): string | null {
+    if (!this.playing || !this.clip) return null;
+    const { frames, durations } = this.clip;
+    this.elapsedMs += dtMs;
+    while (
+      this.index < frames.length - 1 &&
+      this.elapsedMs >= durations[this.index]
+    ) {
+      this.elapsedMs -= durations[this.index];
+      this.index++;
+    }
+    if (this.index >= frames.length - 1) this.playing = false;
+    return frames[this.index];
+  }
+}
+
 export class ControlPanel extends Container {
   private onToggle?: () => void;
   private onRestart?: () => void;
@@ -100,22 +146,14 @@ export class ControlPanel extends Container {
   private onUndo?: () => void;
   private onRedo?: () => void;
 
-  private toggle = new Container();
-  private capsule = new Graphics();
-  private thumb = new Sprite();
+  private toggleIcon = new Sprite();
   private restart = new Sprite();
-  private fx = new Container(); // scatter debris for the restart pop
-  private particles: Particle[] = [];
-  private modeLabel: Text;
   private bestValue: Text;
   private mode: Mode = "practice";
 
-  private colorSlider = new Container();
-  private colorTrack = new Graphics();
-  private colorThumb = new Sprite();
-  private colorCountLabel: Text;
-  private colorThumbX = 0;
-  private colorThumbTargetX = 0;
+  private diffDots: Sprite[] = [];
+  private diffScale: number[] = [1, 1, 1, 1, 1]; // current eased hover scale, per dot
+  private diffTarget: number[] = [1, 1, 1, 1, 1]; // target hover scale, per dot
 
   private undoRow = new Container();
   private undoBtn = new Container();
@@ -126,110 +164,82 @@ export class ControlPanel extends Container {
   private redoEnabled = false;
 
   // animation state
-  private thumbX = 0;
-  private thumbTargetX = 0;
-  private restartScale = 1;
-  private restartTarget = 1;
-  private restartPress = false;
-  private restartPop = 0; // frames remaining in the pop; 0 = idle
+  private toggleClip = new ClipPlayer();
+  private restartClip = new ClipPlayer();
 
   constructor() {
     super();
 
-    // ---- Toggle: capsule + sliding puyo thumb (slide only, no scaling) -----
-    this.toggle.x = (PANEL_W - TOGGLE_W) / 2;
-    this.toggle.eventMode = "static";
-    this.toggle.cursor = "pointer";
-    this.toggle.on("pointertap", () => this.onToggle?.());
-    this.toggle.addChild(this.capsule);
-    this.thumb.anchor.set(0.5);
-    this.thumb.scale.set(THUMB_SCALE);
-    this.thumb.y = TOGGLE_H / 2;
-    this.toggle.addChild(this.thumb);
-    this.addChild(this.toggle);
+    // ---- Toggle: Pause/Play icon, clacks on tap (see setMode) -------------
+    this.toggleIcon.texture = buttonFrame(TOGGLE_REST[this.mode]);
+    this.toggleIcon.anchor.set(0.5);
+    this.toggleIcon.scale.set(TOGGLE_ICON_BASE);
+    this.toggleIcon.x = ROW_X + TOGGLE_H / 2;
+    this.toggleIcon.y = ROW_H / 2;
+    this.toggleIcon.eventMode = "static";
+    this.toggleIcon.cursor = "pointer";
+    this.toggleIcon.on("pointertap", () => {
+      if (this.toggleClip.playing) return; // ignore repeat taps mid-animation
+      this.onToggle?.();
+    });
+    this.addChild(this.toggleIcon);
 
-    this.modeLabel = new Text({ text: "Practice", style: LABEL_STYLE });
-    this.modeLabel.anchor.set(0.5, 0);
-    this.modeLabel.x = PANEL_W / 2;
-    this.modeLabel.y = TOGGLE_H + 8;
-    this.addChild(this.modeLabel);
-
-    // ---- Restart: the blue in-game puyo sprite as the button face ----------
-    this.restart.texture = frame(puyoFrame(R_COLOR, 0)); // blue_0
+    // ---- Restart: pop-and-reform icon, plays its clip on every tap --------
+    this.restart.texture = buttonFrame(RESTART_REST);
     this.restart.anchor.set(0.5);
     this.restart.scale.set(R_BASE);
-    this.restart.x = PANEL_W / 2;
-    this.restart.y = TOGGLE_H + 8 + 24 + R_SIZE / 2;
+    this.restart.x = ROW_X + TOGGLE_H + ROW_GAP + R_SIZE / 2;
+    this.restart.y = ROW_H / 2;
     this.restart.eventMode = "static";
     this.restart.cursor = "pointer";
-    this.restart.on("pointerover", () =>
-      this.setRestart(true, this.restartPress),
-    );
-    this.restart.on("pointerout", () => this.setRestart(false, false));
-    this.restart.on("pointerdown", () => this.setRestart(true, true));
-    this.restart.on("pointerup", () => this.setRestart(true, false));
-    this.restart.on("pointerupoutside", () => this.setRestart(false, false));
     this.restart.on("pointertap", () => {
       this.onRestart?.();
-      this.popRestart(); // bubble-clear burst on click
+      const clip = buttonClip("restart");
+      if (clip) {
+        this.restartClip.start(clip);
+        this.restart.texture = buttonFrame(clip.frames[0]);
+      }
     });
     this.addChild(this.restart);
-    this.addChild(this.fx); // debris drawn above the button face
 
-    const rLabel = new Text({ text: "Restart", style: LABEL_STYLE });
-    rLabel.anchor.set(0.5, 0);
-    rLabel.x = PANEL_W / 2;
-    rLabel.y = this.restart.y + R_SIZE / 2 + 8;
-    this.addChild(rLabel);
+    // ---- Difficulty selector: 5 blip dots, right below toggle/restart -----
+    for (let i = 0; i < DIFF_DOTS; i++) {
+      const dot = new Sprite();
+      dot.anchor.set(0.5);
+      dot.scale.set(DIFF_BASE);
+      dot.x =
+        DIFF_ROW_X + i * (DIFF_DOT_SIZE + DIFF_DOT_GAP) + DIFF_DOT_SIZE / 2;
+      dot.y = DIFF_Y;
+      this.diffDots.push(dot);
+      this.addChild(dot);
 
-    // ---- Colour-count slider: 3 fixed stops (3/4/5), puyo-thumb handle -----
-    const colorCountLabelTop = new Text({
-      text: "COLOURS",
-      style: SMALL_LABEL_STYLE,
-    });
-    colorCountLabelTop.anchor.set(0.5, 0);
-    colorCountLabelTop.x = PANEL_W / 2;
-    colorCountLabelTop.y = rLabel.y + 30;
-    this.addChild(colorCountLabelTop);
-
-    this.colorSlider.x = (PANEL_W - CONTENT_W) / 2;
-    this.colorSlider.y = colorCountLabelTop.y + 22;
-    this.colorSlider.addChild(this.colorTrack); // capsule bg, drawn per-selection below
-    this.colorThumb.anchor.set(0.5);
-    this.colorThumb.scale.set(THUMB_SCALE);
-    this.colorThumb.y = TOGGLE_H / 2;
-    this.colorSlider.addChild(this.colorThumb);
-    this.addChild(this.colorSlider);
-
-    for (const n of SLIDER_COUNTS) {
-      const hit = new Container();
-      hit.x = SLIDER_STOP_X[n];
-      hit.y = TOGGLE_H / 2;
-      hit.hitArea = {
-        contains: (x: number, y: number) =>
-          x * x + y * y <= SLIDER_HIT_R * SLIDER_HIT_R,
-      };
-      hit.eventMode = "static";
-      hit.cursor = "pointer";
-      hit.on("pointertap", () => this.selectColorCount(n));
-      this.colorSlider.addChild(hit);
+      const level = i + 1;
+      if (level >= 3) {
+        dot.eventMode = "static";
+        dot.cursor = "pointer";
+        dot.on("pointerover", () => {
+          this.diffTarget[i] = DIFF_HOVER_SCALE;
+        });
+        dot.on("pointerout", () => {
+          this.diffTarget[i] = 1;
+        });
+        dot.on("pointerdown", () => {
+          this.diffTarget[i] = DIFF_PRESS_SCALE;
+        });
+        dot.on("pointerup", () => {
+          this.diffTarget[i] = DIFF_HOVER_SCALE;
+        });
+        dot.on("pointerupoutside", () => {
+          this.diffTarget[i] = 1;
+        });
+        dot.on("pointertap", () => this.selectDifficulty(level as Difficulty));
+      }
     }
-
-    this.colorCountLabel = new Text({
-      text: "4 colours",
-      style: SMALL_LABEL_STYLE,
-    });
-    this.colorCountLabel.anchor.set(0.5, 0);
-    this.colorCountLabel.x = PANEL_W / 2;
-    this.colorCountLabel.y = this.colorSlider.y + TOGGLE_H + 8;
-    this.addChild(this.colorCountLabel);
-    this.selectColorCount(4, /* silent */ true);
-    this.colorThumbX = this.colorThumbTargetX; // no slide on first paint
-    this.colorThumb.x = this.colorThumbX;
+    this.selectDifficulty(4, /* silent */ true);
 
     // ---- Undo / redo (practice only) ---------------------------------------
     this.undoRow.x = (PANEL_W - CONTENT_W) / 2;
-    this.undoRow.y = this.colorCountLabel.y + 24;
+    this.undoRow.y = DIFF_Y + 24;
     this.buildHistButton(this.undoBtn, this.undoBg, "↺", 0);
     this.buildHistButton(this.redoBtn, this.redoBg, "↻", HIST_BTN_W + HIST_GAP);
     this.undoBtn.on("pointertap", () => {
@@ -255,9 +265,6 @@ export class ControlPanel extends Container {
     this.bestValue.y = bestLabel.y + 38;
     this.addChild(this.bestValue);
 
-    this.applyToggle();
-    this.thumbX = this.thumbTargetX; // no slide on first paint
-    this.thumb.x = this.thumbX;
     this.applyModeVisibility();
   }
 
@@ -282,71 +289,20 @@ export class ControlPanel extends Container {
     btn.cursor = "pointer";
   }
 
-  private setRestart(hover: boolean, press: boolean): void {
-    this.restartPress = press;
-    this.restartTarget = press ? 0.9 : hover ? 1.08 : 1;
-  }
-
-  /** Kick off a pop: start the burst timer + throw scatter debris (FxLayer). */
-  private popRestart(): void {
-    this.restartPop = POP_DUR;
-    const cx = this.restart.x;
-    const cy = this.restart.y;
-    const n = 6;
-    for (let i = 0; i < n; i++) {
-      const sp = new Sprite(frame(puyoFrame(R_COLOR, 0)));
-      sp.anchor.set(0.5);
-      sp.scale.set(R_BASE * 0.42);
-      sp.x = cx;
-      sp.y = cy;
-      this.fx.addChild(sp);
-      const ang = (Math.PI * 2 * i) / n + Math.random() * 0.6;
-      const spd = 1.8 + Math.random() * 2.0;
-      this.particles.push({
-        sprite: sp,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd - 1.4,
-        life: 0,
-        max: 22 + Math.random() * 10,
-      });
-    }
-  }
-
-  /** Set capsule colour + thumb texture + target slide position for the mode. */
-  private applyToggle(): void {
-    const play = this.mode === "play";
-    this.capsule
-      .clear()
-      .roundRect(0, 0, TOGGLE_W, TOGGLE_H, TOGGLE_H / 2)
-      .fill({ color: play ? 0x14240c : 0x1a1533 })
-      .stroke({ color: play ? 0x6ede4f : 0x786ebe, width: 2, alpha: 0.6 });
-    this.thumb.texture = frame(puyoFrame(play ? 2 : 5, 0)); // green=play, purple=practice
-    const pad = TOGGLE_H / 2;
-    this.thumbTargetX = play ? TOGGLE_W - pad : pad;
-    this.modeLabel.text = play ? "Play" : "Practice";
-  }
-
   /** Undo/redo only makes sense in practice mode; hide the row otherwise. */
   private applyModeVisibility(): void {
     this.undoRow.visible = this.mode === "practice";
   }
 
-  /** Set capsule colour for the selected stop — mirrors applyToggle(). */
-  private applyColorCapsule(n: SliderCount): void {
-    const c = SLIDER_CAPSULE_COLOR[n];
-    this.colorTrack
-      .clear()
-      .roundRect(0, 0, CONTENT_W, TOGGLE_H, TOGGLE_H / 2)
-      .fill({ color: c.fill })
-      .stroke({ color: c.stroke, width: 2, alpha: 0.6 });
-  }
-
-  /** Move the slider thumb to a stop and (unless silent) notify the hook. */
-  private selectColorCount(n: SliderCount, silent = false): void {
-    this.colorThumbTargetX = SLIDER_STOP_X[n];
-    this.colorThumb.texture = frame(puyoFrame(SLIDER_COLOR[n], 0));
-    this.colorCountLabel.text = `${n} colours`;
-    this.applyColorCapsule(n);
+  /** Fill dots 1..n with the level's colour, the rest as neutral garbage. */
+  private selectDifficulty(n: Difficulty, silent = false): void {
+    const colorName = DIFF_COLOR_NAME[n];
+    for (let i = 0; i < DIFF_DOTS; i++) {
+      const filled = i < n;
+      this.diffDots[i].texture = frame(
+        filled ? `${colorName}_blip.png` : "garbage_blip.png",
+      );
+    }
     if (!silent) this.onColorCount?.(n);
   }
 
@@ -362,11 +318,9 @@ export class ControlPanel extends Container {
     this.bestValue.text = n > 0 ? `×${n}` : "–";
   }
 
-  /** Sync the slider to the current pending colour-count (e.g. on init). */
+  /** Sync the difficulty dots to the current colour-count (e.g. on init). */
   setColorCount(n: 3 | 4 | 5): void {
-    this.selectColorCount(n, /* silent */ true);
-    this.colorThumbX = this.colorThumbTargetX;
-    this.colorThumb.x = this.colorThumbX;
+    this.selectDifficulty(n, /* silent */ true);
   }
 
   /** Enable/disable the undo and redo buttons (history-line bounds). */
@@ -376,55 +330,21 @@ export class ControlPanel extends Container {
     this.applyHistEnabled();
   }
 
-  /** Per-frame animation. dt is ticker.deltaTime (~1 at 60fps). */
-  update(dt: number): void {
-    this.thumbX = lerp(this.thumbX, this.thumbTargetX, Math.min(1, dt * 0.28));
-    this.thumb.x = this.thumbX;
+  /** Per-frame animation. dtMs is the real elapsed ms (ticker.deltaMS), used
+   *  to advance the toggle/restart clips on their own authored per-frame
+   *  durations rather than a guess. */
+  update(dtMs: number): void {
+    const toggleFrame = this.toggleClip.step(dtMs * TOGGLE_CLIP_SPEED);
+    if (toggleFrame) this.toggleIcon.texture = buttonFrame(toggleFrame);
 
-    this.colorThumbX = lerp(
-      this.colorThumbX,
-      this.colorThumbTargetX,
-      Math.min(1, dt * 0.35),
-    );
-    this.colorThumb.x = this.colorThumbX;
+    const restartFrame = this.restartClip.step(dtMs * RESTART_CLIP_SPEED);
+    if (restartFrame) this.restart.texture = buttonFrame(restartFrame);
 
-    updateParticles(this.fx, this.particles, dt);
-
-    if (this.restartPop > 0) {
-      // Bubble-pop: flash white, then swap to the burst frames while scaling
-      // up + fading out (mirrors PuyoLayer.renderPops), then snap the face
-      // back so it's ready for the next click.
-      this.restartPop = Math.max(0, this.restartPop - dt);
-      const t = 1 - this.restartPop / POP_DUR; // 0..1
-      this.restart.rotation = 0;
-      if (t < 0.5) {
-        this.restart.texture = frame(puyoFrame(R_COLOR, 0));
-        this.restart.alpha = Math.floor(t * 12) % 2 === 0 ? 1 : 0.35;
-        this.restart.scale.set(R_BASE);
-      } else {
-        const k = (t - 0.5) / 0.5; // 0..1
-        this.restart.texture = frame(burstFrame(R_COLOR, k < 0.5 ? 0 : 1));
-        this.restart.alpha = 1 - k;
-        // Splash outward as it fades, matching PuyoLayer.renderPops.
-        const sc = 1 + k * 0.6;
-        this.restart.scale.set(R_BASE * sc);
-      }
-      if (this.restartPop <= 0) {
-        this.restart.texture = frame(puyoFrame(R_COLOR, 0));
-        this.restart.alpha = 1;
-        this.restartScale = 1;
-        this.restartTarget = this.restartPress ? 0.9 : 1;
-        this.restart.scale.set(R_BASE);
-      }
-      return;
+    const k = Math.min(1, dtMs / 60);
+    for (let i = 0; i < DIFF_DOTS; i++) {
+      this.diffScale[i] = lerp(this.diffScale[i], this.diffTarget[i], k);
+      this.diffDots[i].scale.set(DIFF_BASE * this.diffScale[i]);
     }
-
-    this.restartScale = lerp(
-      this.restartScale,
-      this.restartTarget,
-      Math.min(1, dt * 0.3),
-    );
-    this.restart.scale.set(R_BASE * this.restartScale);
   }
 
   bind(
@@ -442,8 +362,24 @@ export class ControlPanel extends Container {
   }
 
   setMode(mode: Mode): void {
+    const changed = mode !== this.mode;
     this.mode = mode;
-    this.applyToggle(); // thumb slides to the new target via update()
+    if (changed) {
+      // Clack through to the new rest icon (see update()): "play_to_pause"
+      // (pause_play_08->00) into play, "pause_to_play" reversed back.
+      const clip = buttonClip(
+        mode === "play" ? "play_to_pause" : "pause_to_play",
+      );
+      if (clip) {
+        this.toggleClip.start(clip);
+        this.toggleIcon.texture = buttonFrame(clip.frames[0]);
+      } else {
+        this.toggleIcon.texture = buttonFrame(TOGGLE_REST[mode]);
+      }
+    } else {
+      this.toggleClip.playing = false;
+      this.toggleIcon.texture = buttonFrame(TOGGLE_REST[mode]);
+    }
     this.applyModeVisibility();
   }
 }
