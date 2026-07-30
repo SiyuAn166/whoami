@@ -129,43 +129,6 @@
       ],
       "license": "MIT_License",
       "url": "https://github.com/SiyuAn166/goarc-mcp"
-    },
-    {
-      "name": "HELIX_ORM",
-      "version": "v1.4.2",
-      "status": "STABLE",
-      "description": "Type-safe database abstraction layer for Go with automatic migration generation and zero-reflection query building.",
-      "tags": [
-        "Go_Lang",
-        "PostgreSQL",
-        "SQLite"
-      ],
-      "license": "Apache-2.0",
-      "url": "https://github.com"
-    },
-    {
-      "name": "CIPHER_STREAM",
-      "version": "v0.9.0",
-      "status": "BETA",
-      "description": "Zero-knowledge encrypted real-time messaging protocol with forward secrecy and post-quantum key exchange.",
-      "tags": [
-        "TypeScript",
-        "WebCrypto",
-        "WASM"
-      ],
-      "license": "GPL-3.0"
-    },
-    {
-      "name": "KERNEL_WATCH",
-      "version": "v3.0.1",
-      "status": "ARCHIVED",
-      "description": "Linux kernel module for real-time syscall tracing and anomaly detection. Sub-microsecond latency overhead.",
-      "tags": [
-        "C_Lang",
-        "eBPF",
-        "Linux"
-      ],
-      "license": "GPL-2.0"
     }
   ],
   "skills": [
