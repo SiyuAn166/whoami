@@ -51,13 +51,28 @@ const BOUNCE_LEN = SHORT_BOUNCE.length;
 // as separate events. Dropping popMs much below ~700 collapses them again.
 // Blink count is exact and independent of the window length: raise POP_BLINKS
 // for a faster stutter, move the two boundaries to re-balance the three beats.
-const POP_BLINKS = 3;
+const POP_BLINKS = 4;
 const POP_SHOCK_AT = 0.43;
 /** Exported so the game loop can fire debris + sound on the same frame the
  *  burst beat begins, keeping visuals and audio in lockstep. */
 export const POP_BURST_AT = 0.69;
 // Alpha the sprite dips to on the "off" half of each blink.
 const POP_BLINK_DIM = 0.3;
+/** Split of the burst beat between the two burst frames: burst_0 plays for the
+ *  first BURST_SPLIT of the beat, burst_1 for the rest. Deliberately under 0.5
+ *  because burst_1 is the wider, more broken-up frame and needs the longer
+ *  hold to register as its own beat. */
+const BURST_SPLIT = 0.38;
+/** Fraction of the burst beat held at full opacity before the fade starts.
+ *  Without this the fade runs across the whole beat, so burst_1 - which only
+ *  starts at BURST_SPLIT - never appears above ~50% alpha and the
+ *  burst_0 -> burst_1 progression is invisible. Both frames need opaque screen
+ *  time; the fade belongs at the END of the beat, not spread over all of it. */
+const BURST_HOLD = 0.55;
+/** Peak extra scale of the expanding burst sprite at the end of the beat.
+ *  Modest, because the outward motion is carried by FxLayer's droplets - the
+ *  sprite only needs to swell enough to feel like it is rupturing. */
+const BURST_GROW = 0.45;
 
 export class PuyoLayer extends Container {
   private sprites: Sprite[] = [];
@@ -126,11 +141,16 @@ export class PuyoLayer extends Container {
       } else {
         // Beat 3: burst.
         const k = (t - POP_BURST_AT) / (1 - POP_BURST_AT); // 0..1
-        s.texture = frame(burstFrame(color, k < 0.5 ? 0 : 1));
-        s.alpha = 1 - k;
+        // Two distinct frames, both of which must actually be seen: burst_0 is
+        // the initial rupture, burst_1 the wider break-up.
+        s.texture = frame(burstFrame(color, k < BURST_SPLIT ? 0 : 1));
+        // Hold full opacity through the frame swap, then fade over the tail, so
+        // the swap reads as an animation rather than as a change inside an
+        // already-vanishing sprite.
+        s.alpha = k < BURST_HOLD ? 1 : 1 - (k - BURST_HOLD) / (1 - BURST_HOLD);
         // Splash outward from the cell centre: scale grows as it fades, like an
         // expanding bubble/shockwave (not shrinking back into the centre).
-        const sc = 1 + k * 0.6;
+        const sc = 1 + k * BURST_GROW;
         s.scale.set(SCALE_X * sc, SCALE_Y * sc);
       }
     }

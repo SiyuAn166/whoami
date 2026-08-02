@@ -130,7 +130,7 @@ export const TIMING = {
   // blink x3 -> shocked hold -> burst. At 450ms each blink half-step was under
   // 2 frames and the shocked hold only 4, so the three beats read as one flash.
   // 900ms gives each blink half-step ~4 frames and the shocked hold ~9.
-  popMs: 550,
+  popMs: 650,
   dropPerRowMs: 80, // linear fall: ms per row (constant-speed gravity)
   bounceFrameMs: 22, // ms per squash/stretch frame on landing
   bounceMs: 308, // total landing bounce = 14 frames * bounceFrameMs
