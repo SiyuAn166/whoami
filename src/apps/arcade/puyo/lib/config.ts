@@ -12,16 +12,49 @@ export const COLS = 6;
 export const ROWS = 14;
 /**
  * Hidden rows at the top (puyos here never pop and are not drawn).
- * Two rows of overflow headroom above the visible field: every column
- * except the death-X column (SPAWN_COL) may rest puyos here. The death
- * column tops out the instant a puyo settles on the visible top cell
- * (grid[HIDDEN_ROWS][SPAWN_COL]), so it can never use this headroom.
+ *
+ * The two hidden rows have DIFFERENT rules (Puyo Puyo Champions / VS physics):
+ *
+ *   row 1 = GHOST_ROW  (13th row) - puyos rest here permanently but never
+ *           connect and never clear. They fall in once space opens below.
+ *           This row has volume: it blocks lateral movement.
+ *
+ *   row 0 = VANISH_ROW (14th row) - a puyo coming to rest here vanishes
+ *           immediately. Kept permanently clear by the engine, so it doubles
+ *           as the travel corridor above a stack that reaches the ghost row.
+ *
+ * The death column tops out the instant a puyo settles on the visible top
+ * cell (grid[HIDDEN_ROWS][SPAWN_COL]), so it never uses this headroom.
  */
 export const HIDDEN_ROWS = 2;
 /** Spawn column (0-indexed 3rd column, classic PPT spawn). */
 export const SPAWN_COL = 2;
-/** Axis spawn row: above the death-X (outside the frame), classic PPT spawn. */
-export const SPAWN_ROW = HIDDEN_ROWS - 1;
+/**
+ * 14th row (index 0): a puyo coming to rest here vanishes immediately.
+ * Official Champions/VS technique - used to discard colours you don't want.
+ */
+export const VANISH_ROW = 0;
+/**
+ * 13th row: the Ghost Puyo row. Puyos rest here permanently but never connect
+ * and never clear; they drop in once space opens below.
+ */
+export const GHOST_ROW = HIDDEN_ROWS - 1;
+/**
+ * Axis spawn row: the vanish row, NOT the ghost row.
+ *
+ * The axis must spawn and travel in the vanish row because that row is the
+ * only one guaranteed clear. The ghost row has volume - a single ghost puyo
+ * in any column would otherwise block the pair from moving across it, making
+ * it impossible to reach a column to dump unwanted colours. Spawning here is
+ * safe: pieces only vanish when they come to REST in row 0, and a piece
+ * spawned here immediately falls, so it never settles in the vanish row.
+ */
+export const SPAWN_ROW = VANISH_ROW;
+
+/** Rows that take part in grouping / clearing (excludes both hidden rows). */
+export function isPlayableRow(r: number): boolean {
+  return r >= HIDDEN_ROWS;
+}
 
 // ---- Colours --------------------------------------------------------------
 /** Atlas frame prefixes, indexed by Color (1..5). Index 0 unused. */

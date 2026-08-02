@@ -11,6 +11,7 @@ import {
   POP_MIN,
   ROWS,
   SPAWN_COL,
+  VANISH_ROW,
 } from "./config";
 
 import type {
@@ -138,12 +139,15 @@ function placeCell(g: Grid, r: number, c: number, color: Color) {
   let rr = Math.max(r, 0);
   if (rr >= ROWS) rr = ROWS - 1;
   if (g[rr][c] === 0) {
+    // 14th row: a puyo coming to rest here vanishes instead of being stored.
+    if (rr <= VANISH_ROW) return;
     g[rr][c] = color;
     return;
   }
   // Reserved cell taken (satellite pushed up): drop to nearest empty above.
   for (let k = rr - 1; k >= 0; k--) {
     if (g[k][c] === 0) {
+      if (k <= VANISH_ROW) return; // pushed past the ghost row -> gone
       g[k][c] = color;
       return;
     }
@@ -151,7 +155,11 @@ function placeCell(g: Grid, r: number, c: number, color: Color) {
 }
 
 // ---- Gravity --------------------------------------------------------------
-/** Settle floating puyos to the bottom of each column. Returns new grid. */
+/**
+ * Settle floating puyos to the bottom of each column. Returns new grid.
+ * Anything that would come to rest in the vanish row (14th) is discarded, so
+ * that row stays permanently clear and remains usable as a travel corridor.
+ */
 export function applyGravity(g: Grid): Grid {
   const out = emptyGrid();
   for (let c = 0; c < COLS; c++) {
@@ -159,6 +167,7 @@ export function applyGravity(g: Grid): Grid {
     for (let r = ROWS - 1; r >= 0; r--) {
       const v = g[r][c];
       if (v !== 0) {
+        if (write <= VANISH_ROW) break; // column full through the ghost row
         out[write][c] = v;
         write--;
       }

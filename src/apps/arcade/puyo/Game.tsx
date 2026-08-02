@@ -4,22 +4,39 @@
 import { useEffect, useRef } from "react";
 
 import { GameOverOverlay, PauseOverlay } from "./components/Overlays";
+import { usePuyoAi } from "./hook/use-puyo-ai";
 import { usePuyoGame } from "./hook/use-puyo-game";
 
 import styles from "./Puyo.module.css";
 
 export function Game({ onQuit }: { onQuit?: () => void }) {
+  const puyo = usePuyoGame("practice");
   const {
     hostRef,
     hud,
     pause,
     resume,
     restart,
+    toggleMode,
     touchMove,
     touchRotate,
     touchStepDown,
     hitControls,
-  } = usePuyoGame("practice");
+  } = puyo;
+
+  const ai = usePuyoAi(puyo);
+
+  // Practice mode has no gravity/lock timer and never tops out, so the AI
+  // would just grind into a jammed board forever with no game-over signal.
+  // Force play mode on whenever the AI is running so gravity, lock delay,
+  // and topout actually work.
+  useEffect(() => {
+    if (ai.running && puyo.mode !== "play") toggleMode();
+    // puyo.mode is a live getter over gs.current, not React state — reading
+    // it here doesn't need to be a dependency, only ai.running toggling
+    // should re-run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ai.running, toggleMode]);
 
   const stageWrapRef = useRef<HTMLDivElement | null>(null);
 
