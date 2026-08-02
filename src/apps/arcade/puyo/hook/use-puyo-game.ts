@@ -26,8 +26,9 @@ import {
   rotate as rotatePiece,
   stepDown,
 } from "../lib/engine";
-import { ColorBag } from "../lib/rng";
+import { ColorBag, randomColorSubset } from "../lib/rng";
 import { sfx } from "../lib/sound";
+import { POP_BURST_AT } from "../pixi/puyo-layer";
 import { PuyoStage } from "../pixi/puyo-stage";
 
 import type { ColorBagSnapshot } from "../lib/rng";
@@ -111,6 +112,8 @@ interface GameState {
   stepIndex: number;
   phase: Phase;
   phaseT: number;
+  /** Guards the one-shot debris+sound trigger inside the pop phase. */
+  popBurstFired: boolean;
   phaseDur: number;
   predrop: { from: Grid; to: Grid; bounce: Set<string> } | null;
   resolveFinal: Grid;
@@ -120,11 +123,6 @@ interface GameState {
   // staged on the slider (applied on the next restart, per the UI contract).
   colorCount: 3 | 4 | 5;
   pendingColorCount: 3 | 4 | 5;
-  /** Seed of the ColorBag driving the current game. When set via
-   *  `restart(seed)` the whole colour sequence is reproducible; when the game
-   *  starts or restarts normally this holds the randomly chosen seed so the
-   *  run can always be replayed afterwards. */
-  seed: number;
   // Practice-mode undo/redo history line: index 0 = game start (empty board).
   history: HistorySnapshot[];
   historyIndex: number;
@@ -368,11 +366,12 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.maxChain = Math.max(g.maxChain, step.chain);
       stageRef.current?.setBestChain(g.maxChain);
       stageRef.current?.puyo.syncStatic(step.before);
-      stageRef.current?.fx.spawnBurst(step.popped);
-      if (step.chain >= 1) {
-        stageRef.current?.showChain(step.chain);
-        sfx.chain(step.chain);
-      }
+      // Debris + pop sound are deliberately NOT fired here. The pop phase runs
+      // blink -> shocked -> burst, so shards and the explosion sound must wait
+      // until the burst beat actually starts (see POP_BURST_AT in puyo-layer).
+      // tickPop below fires them once per step when that beat is reached.
+      g.popBurstFired = false;
+      if (step.chain >= 1) stageRef.current?.showChain(step.chain);
       g.score += step.score;
       g.chainScore += step.score;
       stageRef.current?.setScore(g.score);
@@ -562,6 +561,14 @@ export function usePuyoGame(initialMode: Mode = "play") {
         } else if (g.phase === "pop") {
           const step = g.steps[g.stepIndex];
           stage.puyo.renderPops(step.popped, t);
+          // Fire debris + explosion sound exactly once, on the frame the burst
+          // beat begins. POP_BURST_AT is re-exported from the render layer so
+          // the two stay in lockstep if the pop timeline is retuned.
+          if (!g.popBurstFired && t >= POP_BURST_AT) {
+            g.popBurstFired = true;
+            stage.fx.spawnBurst(step.popped);
+            if (step.chain >= 1) sfx.chain(step.chain);
+          }
           if (t >= 1) {
             stage.puyo.syncStatic(step.afterPop);
             // Only enter the drop phase when something actually falls. On steps
@@ -696,10 +703,8 @@ export function usePuyoGame(initialMode: Mode = "play") {
     const stage = new PuyoStage();
     stageRef.current = stage;
 
-    const initialSeed = (Math.random() * 2 ** 32) >>> 0;
     const bag = new ColorBag({
-      seed: initialSeed,
-      colorCount: DEFAULT_COLOR_COUNT,
+      colors: randomColorSubset(DEFAULT_COLOR_COUNT),
     });
     const initialQueue: [Color, Color][] = [bag.pair(), bag.pair(), bag.pair()];
     gs.current = {
@@ -728,13 +733,13 @@ export function usePuyoGame(initialMode: Mode = "play") {
       stepIndex: 0,
       phase: "pop",
       phaseT: 0,
+      popBurstFired: false,
       phaseDur: 0,
       predrop: null,
       resolveFinal: emptyGrid(),
       mode: initialMode,
       colorCount: DEFAULT_COLOR_COUNT,
       pendingColorCount: DEFAULT_COLOR_COUNT,
-      seed: initialSeed,
       history: [],
       historyIndex: 0,
     };
@@ -931,102 +936,44 @@ export function usePuyoGame(initialMode: Mode = "play") {
     return stageRef.current?.hitControls(x, y) ?? false;
   }, []);
 
-  // `restart()`   -> fresh random seed (normal behaviour).
-  // `restart(233)` -> deterministic run: the whole colour sequence is a pure
-  //                   function of (seed, colorCount), so the same call always
-  //                   replays the identical game. This is what `puyo.seed(n)`
-  //                   uses, and it matches the bench harness exactly because
-  //                   both build their pairs from `new ColorBag({seed,
-  //                   colorCount})`.
-  const restart = useCallback(
-    (seed?: number) => {
-      const g = gs.current;
-      if (!g) return;
-      // The colour-count slider only takes effect here.
-      g.colorCount = g.pendingColorCount;
-      g.seed =
-        seed === undefined ? (Math.random() * 2 ** 32) >>> 0 : seed >>> 0;
-      g.grid = emptyGrid();
-      g.piece = null;
-      g.bag = new ColorBag({ seed: g.seed, colorCount: g.colorCount });
-      g.queue = [g.bag.pair(), g.bag.pair(), g.bag.pair()];
-      g.score = 0;
-      g.chain = 0;
-      g.maxChain = 0;
-      g.chainScore = 0;
-      g.garbageSent = 0;
-      g.steps = [];
-      g.predrop = null;
-      g.softDrop = false;
-      g.dir = 0;
-      g.dirStack = [];
-      g.bufferedRot = 0;
-      g.dasAccum = 0;
-      g.arrAccum = 0;
-      g.acc = 0;
-      g.lockResets = 0;
-      // Fresh history line: the new (possibly recoloured) empty board is the
-      // new root, with nothing to undo/redo yet.
-      g.history = [snapshotOf(g)];
-      g.historyIndex = 0;
-      stageRef.current?.puyo.syncStatic(g.grid);
-      stageRef.current?.setScore(0);
-      stageRef.current?.setGarbage(0);
-      stageRef.current?.setBestChain(0);
-      stageRef.current?.hideChain();
-      stageRef.current?.resumeLoop();
-      syncHistoryButtons(stageRef.current, g);
-      spawnNext();
-    },
-    [spawnNext],
-  );
-
-  // ---- console handle ----------------------------------------------------
-  // Mounted on window.puyo so a bench seed can be replayed on screen:
-  //
-  //     puyo.seed(233)        // restart deterministically, current colour count
-  //     puyo.seed(233, 4)     // restart deterministically with 4 colours
-  //     puyo.currentSeed      // seed of the running game (replay it later)
-  //     puyo.restart()        // fresh random seed, as before
-  //
-  // The colour stream is `new ColorBag({ seed, colorCount })`, which is exactly
-  // how the bench harness builds its pairs — so the same seed yields the same
-  // sequence in both, move for move.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handle = {
-      seed: (seed: number, colorCount?: 3 | 4 | 5) => {
-        const g = gs.current;
-        if (!g) return undefined;
-        if (colorCount !== undefined) g.pendingColorCount = colorCount;
-        restart(seed >>> 0);
-        return seed >>> 0;
-      },
-      restart: () => restart(),
-      get currentSeed() {
-        return gs.current?.seed ?? 0;
-      },
-      get colorCount() {
-        return gs.current?.colorCount ?? 4;
-      },
-      get grid() {
-        return gs.current?.grid ?? [];
-      },
-      get queue() {
-        return gs.current?.queue ?? [];
-      },
-      get score() {
-        return gs.current?.score ?? 0;
-      },
-      get maxChain() {
-        return gs.current?.maxChain ?? 0;
-      },
-    };
-    (window as unknown as Record<string, unknown>).puyo = handle;
-    return () => {
-      delete (window as unknown as Record<string, unknown>).puyo;
-    };
-  }, [restart]);
+  const restart = useCallback(() => {
+    const g = gs.current;
+    if (!g) return;
+    // The colour-count slider only takes effect here: pick a fresh random
+    // subset of that size out of all 5 colours for the new game.
+    g.colorCount = g.pendingColorCount;
+    g.grid = emptyGrid();
+    g.piece = null;
+    g.bag = new ColorBag({ colors: randomColorSubset(g.colorCount) });
+    g.queue = [g.bag.pair(), g.bag.pair(), g.bag.pair()];
+    g.score = 0;
+    g.chain = 0;
+    g.maxChain = 0;
+    g.chainScore = 0;
+    g.garbageSent = 0;
+    g.steps = [];
+    g.predrop = null;
+    g.softDrop = false;
+    g.dir = 0;
+    g.dirStack = [];
+    g.bufferedRot = 0;
+    g.dasAccum = 0;
+    g.arrAccum = 0;
+    g.acc = 0;
+    g.lockResets = 0;
+    // Fresh history line: the new (possibly recoloured) empty board is the
+    // new root, with nothing to undo/redo yet.
+    g.history = [snapshotOf(g)];
+    g.historyIndex = 0;
+    stageRef.current?.puyo.syncStatic(g.grid);
+    stageRef.current?.setScore(0);
+    stageRef.current?.setGarbage(0);
+    stageRef.current?.setBestChain(0);
+    stageRef.current?.hideChain();
+    stageRef.current?.resumeLoop();
+    syncHistoryButtons(stageRef.current, g);
+    spawnNext();
+  }, [spawnNext]);
 
   // Difficulty selector: picking a level restarts the game immediately with
   // that colour count — no separate Restart click needed.
@@ -1040,32 +987,12 @@ export function usePuyoGame(initialMode: Mode = "play") {
     [restart],
   );
 
-  // Restart into a deterministic, reproducible game. Exposed on the console as
-  // `puyo.seed(233)` so a bench run can be watched move-by-move on screen.
-  const seedGame = useCallback(
-    (seed: number, colorCount?: 3 | 4 | 5) => {
-      const g = gs.current;
-      if (!g) return;
-      if (colorCount !== undefined) g.pendingColorCount = colorCount;
-      restart(seed >>> 0);
-      return seed >>> 0;
-    },
-    [restart],
-  );
-
   return {
     hostRef,
     hud,
     pause,
     resume,
     restart,
-    seed: seedGame,
-    get currentSeed() {
-      return gs.current?.seed ?? 0;
-    },
-    get colorCount() {
-      return gs.current?.colorCount ?? 4;
-    },
     toggleMode,
     touchMove,
     touchRotate,

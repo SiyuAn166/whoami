@@ -10,7 +10,13 @@ import {
   TIMING,
 } from "../lib/config";
 import { connectionMask } from "../lib/engine";
-import { bounceFrame, burstFrame, frame, puyoFrame } from "./assets";
+import {
+  bounceFrame,
+  burstFrame,
+  frame,
+  puyoFrame,
+  shockedFrame,
+} from "./assets";
 import { cellX, cellY } from "./coords";
 
 import type { Color, Grid } from "../lib/types";
@@ -35,6 +41,23 @@ const SHORT_BOUNCE = [
   "0",
 ];
 const BOUNCE_LEN = SHORT_BOUNCE.length;
+
+// Pop timeline, as a fraction of the pop phase. Three beats, in order:
+//   0    -> 0.60 : blink POP_BLINKS times on the normal texture  (~690ms)
+//   0.42 -> 0.66 : wide-eyed "shocked" hold, full alpha, no scale  (~216ms)
+//   0.78 -> 1    : burst frames, fade out + scale up             (~253ms)
+// Durations assume TIMING.popMs = 900. Each blink half-step is then ~63ms
+// (~4 frames @60fps) and the shocked hold ~13 frames, so the three beats read
+// as separate events. Dropping popMs much below ~700 collapses them again.
+// Blink count is exact and independent of the window length: raise POP_BLINKS
+// for a faster stutter, move the two boundaries to re-balance the three beats.
+const POP_BLINKS = 3;
+const POP_SHOCK_AT = 0.43;
+/** Exported so the game loop can fire debris + sound on the same frame the
+ *  burst beat begins, keeping visuals and audio in lockstep. */
+export const POP_BURST_AT = 0.69;
+// Alpha the sprite dips to on the "off" half of each blink.
+const POP_BLINK_DIM = 0.3;
 
 export class PuyoLayer extends Container {
   private sprites: Sprite[] = [];
@@ -87,12 +110,22 @@ export class PuyoLayer extends Container {
     for (const { r, c, color } of popped) {
       const s = this.at(r, c);
       s.visible = true;
-      if (t < 0.5) {
-        // Flash white-ish by toggling alpha rapidly.
-        s.alpha = Math.floor(t * 12) % 2 === 0 ? 1 : 0.35;
+      if (t < POP_SHOCK_AT) {
+        // Beat 1: blink exactly POP_BLINKS times on the puyo's normal texture.
+        // Split the window into 2*POP_BLINKS half-steps (bright, dim, bright...)
+        // so the count holds even if POP_SHOCK_AT is retuned.
+        const half = Math.floor((t / POP_SHOCK_AT) * POP_BLINKS * 2);
+        s.alpha = half % 2 === 0 ? 1 : POP_BLINK_DIM;
+        s.scale.set(SCALE_X, SCALE_Y);
+      } else if (t < POP_BURST_AT) {
+        // Beat 2: realisation. The puyo goes wide-eyed just before it bursts.
+        // Held fully opaque at rest scale so the expression reads clearly.
+        s.texture = frame(shockedFrame(color));
+        s.alpha = 1;
         s.scale.set(SCALE_X, SCALE_Y);
       } else {
-        const k = (t - 0.5) / 0.5; // 0..1
+        // Beat 3: burst.
+        const k = (t - POP_BURST_AT) / (1 - POP_BURST_AT); // 0..1
         s.texture = frame(burstFrame(color, k < 0.5 ? 0 : 1));
         s.alpha = 1 - k;
         // Splash outward from the cell centre: scale grows as it fades, like an

@@ -225,6 +225,23 @@ export function burstFrame(color: Color, i: 0 | 1): string {
   return `${COLOR_KEYS[color]}_burst_${i}.png`;
 }
 
+/** Wide-eyed "shocked" frame shown for the instant before a puyo bursts.
+ *  Falls back to the settled unconnected frame if the skin lacks it. */
+export function shockedFrame(color: Color): string {
+  const name = `${COLOR_KEYS[color]}_shocked.png`;
+  if (puyoSheet && puyoSheet.textures[name]) return name;
+  return `${COLOR_KEYS[color]}_0.png`;
+}
+
+/** Debris shard thrown out when a puyo bursts. The atlas ships one
+ *  `<color>_particle.png` per colour; falls back to the plain settled frame so
+ *  a skin without shard art still renders something rather than a blank box. */
+export function particleFrame(color: Color): string {
+  const name = `${COLOR_KEYS[color]}_particle.png`;
+  if (puyoSheet && puyoSheet.textures[name]) return name;
+  return `${COLOR_KEYS[color]}_0.png`;
+}
+
 /** Landing squash/stretch frame name (suffix "h" | "v" | "0"). Falls back to
  *  the plain _0 frame if the skin's atlas lacks the squash frames. */
 export function bounceFrame(color: Color, suffix: string): string {
