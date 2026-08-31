@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  observeWindowVisible,
+  windowActive,
+  windowVisible,
+} from "../../window-active";
+import {
   ARR,
   DAS,
   gravityMs,
@@ -73,6 +78,7 @@ export function useTetrisGame(
   stageRef: React.MutableRefObject<TetrisStage | null>,
   soundRef: React.MutableRefObject<SoundBank | null>,
   ready: boolean,
+  hostRef: React.RefObject<HTMLElement | null>,
 ) {
   const gs = useRef<GameState | null>(null);
   const [hud, setHud] = useState<HudSnapshot>({
@@ -444,24 +450,33 @@ export function useTetrisGame(
     return () => st.offTick();
   }, [ready, stageRef]);
 
-  // pause the Pixi loop when the tab is hidden
+  // Run the loop only while the tab is visible AND the window isn't minimized
+  // to the dock — a hidden game shouldn't burn frames.
   useEffect(() => {
     if (!ready) return;
     const onVis = () => {
       const g = gs.current;
-      if (document.hidden) stageRef.current?.pauseLoop();
+      const live = !document.hidden && windowVisible(hostRef.current);
+      if (!live) stageRef.current?.pauseLoop();
       else if (g && g.status !== "paused" && g.status !== "gameover")
         stageRef.current?.resumeLoop();
     };
+    const unobserve = observeWindowVisible(hostRef.current, onVis);
     document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, [ready, stageRef]);
+    return () => {
+      unobserve();
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [ready, stageRef, hostRef]);
 
   // ---- keyboard ----
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       const g = gs.current;
       if (!g) return;
+      // Listener is on `window`: ignore keys unless the Arcade window is the
+      // focused one, or a background game swallows Space/arrows site-wide.
+      if (!windowActive(hostRef.current)) return;
       soundRef.current?.resume();
       // while paused, swallow all keys except Esc (which resumes)
       if (g.status === "paused") {
@@ -555,6 +570,7 @@ export function useTetrisGame(
   }, [
     hardDrop,
     holdPiece,
+    hostRef,
     softDrop,
     soundRef,
     tryMove,

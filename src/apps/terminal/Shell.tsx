@@ -60,37 +60,29 @@ export function Shell({ data, theme, setTheme }: ShellProps) {
   });
 
   // ── Boot sequence: MOTD only ─────────────────────────────────────────────
-  // StrictMode-safe: the first (discarded) dev mount is cancelled before it
-  // marks `booted`, so the real mount runs the sequence exactly once.
+  // StrictMode-safe: the ref survives the discarded dev mount, so the MOTD is
+  // printed exactly once.
   const bootedRef = useRef(false);
   useEffect(() => {
     if (bootedRef.current) return;
-    let cancelled = false;
-
-    if (!cancelled) {
-      bootedRef.current = true;
-      const motd = (
-        <div style={{ color: "var(--fg-dim)" }}>
-          <div>Last login: {nowString()} on ttys000</div>
-          <div style={{ marginTop: 4 }}>
-            Welcome to{" "}
-            <span style={{ color: "var(--accent)" }}>
-              {USER}@{HOST}
-            </span>
-            . Type <span style={{ color: "var(--info)" }}>help</span> or click a
-            chip below to explore.
-          </div>
+    bootedRef.current = true;
+    const motd = (
+      <div style={{ color: "var(--fg-dim)" }}>
+        <div>Last login: {nowString()} on ttys000</div>
+        <div style={{ marginTop: 4 }}>
+          Welcome to{" "}
+          <span style={{ color: "var(--accent)" }}>
+            {USER}@{HOST}
+          </span>
+          . Type <span style={{ color: "var(--info)" }}>help</span> or click a
+          chip below to explore.
         </div>
-      );
-      setLines((l) => [
-        ...l,
-        { id: (idRef.current += 1), prompt: null, cmd: null, output: motd },
-      ]);
-    }
-
-    return () => {
-      cancelled = true;
-    };
+      </div>
+    );
+    setLines((l) => [
+      ...l,
+      { id: (idRef.current += 1), prompt: null, cmd: null, output: motd },
+    ]);
   }, []);
 
   // Keep the live input width synced to its text (transparent caret + custom cursor),

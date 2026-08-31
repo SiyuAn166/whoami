@@ -18,7 +18,7 @@ export const Game: React.FC<GameProps> = ({ onQuit }) => {
   const [booted, setBooted] = useState(false);
 
   const { hud, reset, togglePause, tryMove, tryRotate, softDrop } =
-    useTetrisGame(stageRef, soundRef, booted);
+    useTetrisGame(stageRef, soundRef, booted, hostRef);
 
   useEffect(() => {
     let disposed = false;

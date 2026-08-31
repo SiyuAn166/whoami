@@ -187,6 +187,7 @@ export class TetrisStage {
 
   destroy() {
     try {
+      this.fx?.destroy(); // stop rAF loops before their targets are freed
       this.app.destroy(true, { children: true, texture: true });
     } catch {
       /* noop */

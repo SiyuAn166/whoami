@@ -1,14 +1,4 @@
 export interface Meta {
-  /** Short system tag, e.g. "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64" */
-  systemTag: string;
-  /** Current system time string, auto-updating every second. Format: YYYY-MM-DD HH:MM:SS */
-  time: string;
-  /** Active session identifier */
-  session: string;
-  /** OS line of the welcome banner, e.g. "macOS Sequoia 15.5" */
-  bannerTitle: string;
-  /** Kernel line of the welcome banner, e.g. "Darwin 24.5.0 arm64" */
-  bannerSystem: string;
   /** Copyright line shown in the footer, e.g. "© 2026 ARCHITECT_TTY_SESSION" */
   copyright: string;
   /** Location + crypto shown in footer, e.g. "Loc: 49.28° N, 123.12° W // Enc: AES-256-GCM" */
@@ -91,22 +81,10 @@ export interface Skill {
   category?: "lang" | "infra" | "dist" | "frontend";
 }
 
-export interface CommandStrings {
-  /** Command string for identity section */
-  identity: string;
-  /** Command string for experience section */
-  experience: string;
-  /** Command string for projects section */
-  projects: string;
-  /** Command string for skills section */
-  skills: string;
-}
-
 export interface PortfolioData {
   meta: Meta;
   identity: Identity;
   experience: ExperienceEntry[];
   projects: Project[];
   skills: Skill[];
-  commandStrings?: CommandStrings;
 }

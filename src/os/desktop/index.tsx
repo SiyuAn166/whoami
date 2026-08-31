@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { getApp } from "../../apps/registry";
+import { cssUrl } from "../../apps/utils";
 import { usePortfolioData } from "../../hooks/use-portfolio-data";
 import { useTheme } from "../../hooks/use-theme";
 import { DEFAULT_ACTIVE_WIDGET_IDS } from "../widget/registry";
@@ -117,6 +118,10 @@ function DesktopReady({
   if (!anyFullscreen && chromeRevealed) setChromeRevealed(false);
   const chromeHidden = anyFullscreen && !chromeRevealed;
 
+  // Wallpaper may be a user photo URL from the remote gist — quoted + rejected
+  // if it could break out of `url(...)`.
+  const photo = cssUrl(data.meta.wallpaper);
+
   const widgetCtx = { data, theme, setTheme, openApp: wm.openApp };
   const focusedApp = wm.instances.find((w) => w.id === wm.focusedId);
   const menuBarAppName =
@@ -125,11 +130,11 @@ function DesktopReady({
   return (
     <DesktopClickMenu
       className={styles.macDesktop}
-      wallpaper={data.meta.wallpaper ? undefined : wallpaper}
+      wallpaper={photo ? undefined : wallpaper}
       style={
-        data.meta.wallpaper
+        photo
           ? {
-              backgroundImage: `url(${data.meta.wallpaper})`,
+              backgroundImage: photo,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }
@@ -146,7 +151,7 @@ function DesktopReady({
           Wallpaper.tsx / wallpapers.css) so it renders as one unified picture
           here and in the Change-Wallpaper gallery. A user PHOTO wallpaper
           instead paints on the root + a tint overlay. */}
-      {data.meta.wallpaper ? (
+      {photo ? (
         <div className={wallpaperStyles.wallpaperTint} aria-hidden />
       ) : (
         <Wallpaper id={wallpaper} />

@@ -38,12 +38,18 @@ interface UseWindowManagerResult {
 
 let nextInstanceId = 1;
 
+/** Highest-stacked window still on screen — who gets focus when one closes. */
+function topmostVisible(list: WindowInstance[]): string | null {
+  const visible = list.filter((w) => w.state !== "minimized");
+  if (!visible.length) return null;
+  return visible.reduce((a, b) => (b.zIndex > a.zIndex ? b : a)).id;
+}
+
 export function useWindowManager(
   ctx: AppRenderContext,
 ): UseWindowManagerResult {
   const [instances, setInstances] = useState<WindowInstance[]>([]);
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const [openCount, setOpenCount] = useState(0);
 
   const topZ = useCallback(
     () => (instances.length ? Math.max(...instances.map((w) => w.zIndex)) : 0),
@@ -69,7 +75,7 @@ export function useWindowManager(
       if (singleton) {
         const existing = instances.find((w) => w.appId === appId);
         if (existing) {
-          if (existing.state === "minimized" || existing.state === "closed") {
+          if (existing.state === "minimized") {
             // Restore a hidden window, honoring the requested state.
             setInstances((list) =>
               list.map((w) =>
@@ -96,7 +102,9 @@ export function useWindowManager(
         }
       }
       const id = `${appId}-${nextInstanceId++}`;
-      const rect = defaultRect(app.defaultSize, app.minSize, openCount);
+      // Cascade offset counts live windows, so it resets as they are closed
+      // instead of drifting new windows off the bottom-right corner forever.
+      const rect = defaultRect(app.defaultSize, app.minSize, instances.length);
       const instance: WindowInstance = {
         id,
         appId,
@@ -109,9 +117,8 @@ export function useWindowManager(
       };
       setInstances((list) => [...list, instance]);
       setFocusedId(id);
-      setOpenCount((c) => c + 1);
     },
-    [instances, openCount, focus, topZ],
+    [instances, focus, topZ],
   );
 
   const updateInstance = (id: string, patch: Partial<WindowInstance>) =>
@@ -119,12 +126,20 @@ export function useWindowManager(
       list.map((w) => (w.id === id ? { ...w, ...patch } : w)),
     );
 
-  const close = (id: string) => updateInstance(id, { state: "closed" });
+  // Drop the instance outright — a kept-around "closed" record would retain its
+  // PNG snapshot, and focus has to move on to the next window down.
+  const close = (id: string) => {
+    const rest = instances.filter((w) => w.id !== id);
+    setInstances(rest);
+    if (focusedId === id) setFocusedId(topmostVisible(rest));
+  };
 
   // Minimize to the dock. We first snapshot the live window to a PNG so the
   // dock tray shows a real thumbnail of its contents (like macOS), THEN flip
   // it to the minimized state so the genie animation plays on the real window.
   const minimize = (id: string) => {
+    if (focusedId === id)
+      setFocusedId(topmostVisible(instances.filter((w) => w.id !== id)));
     const commit = (snapshot?: string) =>
       setInstances((list) =>
         list.map((w) =>
@@ -205,38 +220,35 @@ export function useWindowManager(
 
   const setRect = (id: string, rect: Rect) => updateInstance(id, { rect });
 
-  const isOpen = (appId: string) =>
-    instances.some((w) => w.appId === appId && w.state !== "closed");
+  const isOpen = (appId: string) => instances.some((w) => w.appId === appId);
 
   const render = (opts?: {
     chromeRevealed?: boolean;
     onRevealChange?: (revealed: boolean) => void;
   }) =>
-    instances
-      .filter((w) => w.state !== "closed")
-      .map((w) => {
-        const app = getApp(w.appId);
-        if (!app) return null;
-        return (
-          <Window
-            key={w.id}
-            instance={w}
-            focused={focusedId === w.id}
-            onFocus={() => focus(w.id)}
-            onClose={() => close(w.id)}
-            onMinimize={() => minimize(w.id)}
-            onToggleMax={() => toggleMax(w.id)}
-            onToggleMaximize={() => toggleMaximize(w.id)}
-            onRectChange={(rect) => setRect(w.id, rect)}
-            chromeRevealed={opts?.chromeRevealed}
-            onRevealChange={opts?.onRevealChange}
-            toolbar={app.renderToolbar?.(ctx)}
-            footer={app.renderFooter?.(ctx)}
-          >
-            {app.render(ctx, () => close(w.id))}
-          </Window>
-        );
-      });
+    instances.map((w) => {
+      const app = getApp(w.appId);
+      if (!app) return null;
+      return (
+        <Window
+          key={w.id}
+          instance={w}
+          focused={focusedId === w.id}
+          onFocus={() => focus(w.id)}
+          onClose={() => close(w.id)}
+          onMinimize={() => minimize(w.id)}
+          onToggleMax={() => toggleMax(w.id)}
+          onToggleMaximize={() => toggleMaximize(w.id)}
+          onRectChange={(rect) => setRect(w.id, rect)}
+          chromeRevealed={opts?.chromeRevealed}
+          onRevealChange={opts?.onRevealChange}
+          toolbar={app.renderToolbar?.(ctx)}
+          footer={app.renderFooter?.(ctx)}
+        >
+          {app.render(ctx, () => close(w.id))}
+        </Window>
+      );
+    });
 
   const minimized = instances.filter((w) => w.state === "minimized");
 

@@ -1,13 +1,13 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { CloseIcon, MinimizeIcon, ZoomIcon } from "./Icons";
 import {
   clamp,
   clampRect,
-  COARSE,
   dockHeight,
   fullscreenRect,
   HANDLES,
+  isCoarse,
   maxedRect,
   MENUBAR_H,
   MIN_H,
@@ -18,6 +18,9 @@ import {
 } from "./types";
 
 import styles from "./Window.module.css";
+
+// Suppresses text selection while a window is being dragged or resized.
+const DRAGGING_CLASS = "window-dragging";
 
 interface WindowProps {
   instance: WindowInstance;
@@ -70,11 +73,11 @@ export function Window({
   const [interacting, setInteracting] = useState(false);
   const { state, rect, minSize, resizable = true } = instance;
 
-  // When the window becomes non-visible (minimized/closed) it is marked
-  // `inert`. Focus must not remain inside an inert subtree, so move it out
-  // to <body> first — otherwise assistive tech loses the focused control.
+  // A minimized window is marked `inert`. Focus must not remain inside an inert
+  // subtree, so move it out to <body> first — otherwise assistive tech loses
+  // the focused control.
   useEffect(() => {
-    if (state === "minimized" || state === "closed") {
+    if (state === "minimized") {
       const el = document.querySelector<HTMLElement>(
         `[data-window-id="${instance.id}"]`,
       );
@@ -86,21 +89,44 @@ export function Window({
   const fullscreen = state === "fullscreen";
   // Both maximized and fullscreen pin the window — no drag/resize.
   const locked = maximized || fullscreen;
-  const visible =
-    state === "normal" || state === "maximized" || state === "fullscreen";
+  const visible = state !== "minimized";
   const geo = fullscreen ? fullscreenRect() : maximized ? maxedRect() : rect;
 
-  // Keep the window within the viewport when the browser is resized.
+  // Latest props for listeners that must not re-subscribe on every drag frame.
+  const latest = useRef({ rect, minSize, onRectChange });
   useEffect(() => {
-    const onResize = () => onRectChange(clampRect(rect, minSize));
+    latest.current = { rect, minSize, onRectChange };
+  });
+
+  // Keep the window within the viewport when the browser is resized. Reads the
+  // rect through the ref — closing over it would clamp against a pre-drag
+  // position and teleport the window back.
+  useEffect(() => {
+    const onResize = () => {
+      const l = latest.current;
+      l.onRectChange(clampRect(l.rect, l.minSize));
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rect.w, rect.h]);
+  }, []);
+
+  // A gesture paints straight to the DOM and commits to React state once, on
+  // release. Pushing every pointermove through state re-rendered every open
+  // app's content 60 times a second.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef<Rect | null>(null);
+  const paint = (r: Rect) => {
+    const el = rootRef.current;
+    if (!el) return;
+    el.style.left = `${r.x}px`;
+    el.style.top = `${r.y}px`;
+    el.style.width = `${r.w}px`;
+    el.style.height = `${r.h}px`;
+  };
 
   // Drag the window by its title bar.
   const onTitlePointerDown = (e: React.PointerEvent) => {
-    if (locked || COARSE) return;
+    if (locked || isCoarse()) return;
     // Never start a drag from an interactive control in the titlebar
     // (traffic lights, toolbar buttons, etc).
     if (
@@ -115,31 +141,36 @@ export function Window({
       r0 = { ...rect };
     setInteracting(true);
     const dockH = dockHeight();
+    pendingRef.current = null;
     const move = (ev: PointerEvent) => {
       const { vw, vh } = vp();
-      onRectChange({
+      pendingRef.current = {
         ...r0,
         x: clamp(r0.x + ev.clientX - sx, 0, vw - r0.w),
         y: clamp(r0.y + ev.clientY - sy, MENUBAR_H, vh - dockH - r0.h),
-      });
+      };
+      paint(pendingRef.current);
     };
     const up = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
-      document.body.style.userSelect = "";
+      document.body.classList.remove(DRAGGING_CLASS);
       setInteracting(false);
+      const committed = pendingRef.current;
+      pendingRef.current = null;
+      if (committed) onRectChange(committed);
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
-    document.body.style.userSelect = "none";
+    document.body.classList.add(DRAGGING_CLASS);
     e.preventDefault();
   };
 
   // Resize the window from an edge/corner handle.
   const startResize = (dir: string) => (e: React.PointerEvent) => {
-    if (locked || COARSE) return;
+    if (locked || isCoarse()) return;
     e.stopPropagation();
     e.preventDefault();
     onFocus();
@@ -152,6 +183,7 @@ export function Window({
       B = dir.includes("s");
     setInteracting(true);
     const dockH = dockHeight();
+    pendingRef.current = null;
     const move = (ev: PointerEvent) => {
       const { vw, vh } = vp();
       const minW = Math.min(minSize?.w ?? MIN_W, vw - 16),
@@ -171,29 +203,36 @@ export function Window({
         y = clamp(r0.y + dy, MENUBAR_H, bottom - minH);
         h = bottom - y;
       }
-      onRectChange({ x, y, w, h });
+      pendingRef.current = { x, y, w, h };
+      paint(pendingRef.current);
     };
     const up = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
-      document.body.style.userSelect = "";
+      document.body.classList.remove(DRAGGING_CLASS);
       setInteracting(false);
+      const committed = pendingRef.current;
+      pendingRef.current = null;
+      if (committed) onRectChange(committed);
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
-    document.body.style.userSelect = "none";
+    document.body.classList.add(DRAGGING_CLASS);
   };
 
   return (
     <div
+      ref={rootRef}
       data-window-id={instance.id}
+      // Read by window-level key handlers inside apps (see arcade/window-active).
+      data-window-focused={focused ? "true" : "false"}
       className={`${styles.macWindow}${maximized ? " " + styles.isMaximized : ""}${
         fullscreen ? " " + styles.isFullscreen : ""
       }${fullscreen && chromeRevealed ? " " + styles.chromeRevealed : ""}${
         state === "minimized" ? " " + styles.isMinimized : ""
-      }${state === "closed" ? " " + styles.isClosed : ""}${focused ? "" : " " + styles.isUnfocused}`}
+      }${focused ? "" : " " + styles.isUnfocused}`}
       inert={!visible}
       onPointerDownCapture={onFocus}
       style={{
@@ -230,7 +269,7 @@ export function Window({
         }}
         onPointerEnter={() => fullscreen && onRevealChange?.(true)}
         onPointerLeave={() => fullscreen && onRevealChange?.(false)}
-        style={{ cursor: locked || COARSE ? "default" : "grab" }}
+        style={{ cursor: locked || isCoarse() ? "default" : "grab" }}
       >
         <div className={styles.trafficLights}>
           <button
@@ -277,7 +316,7 @@ export function Window({
       {footer}
       {state === "normal" &&
         resizable &&
-        !COARSE &&
+        !isCoarse() &&
         HANDLES.map((hd) => (
           <div
             key={hd.dir}

@@ -3,6 +3,7 @@
 // carries a play/pause button that toggles gravity (play <-> practice) live.
 import { useEffect, useRef } from "react";
 
+import { windowActive } from "../window-active";
 import { GameOverOverlay, PauseOverlay } from "./components/Overlays";
 import { usePuyoAi } from "./hook/use-puyo-ai";
 import { usePuyoGame } from "./hook/use-puyo-game";
@@ -42,6 +43,7 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (!windowActive(hostRef.current)) return;
       if (e.code === "Escape" || e.code === "KeyP") {
         e.preventDefault();
         if (hud.status === "control") pause();
@@ -50,7 +52,7 @@ export function Game({ onQuit }: { onQuit?: () => void }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [hud.status, pause, resume]);
+  }, [hud.status, pause, resume, hostRef]);
 
   // Touch controls: horizontal drag steps columns (~1 column-width each),
   // vertical drag steps the pair down one row per cell-height dragged

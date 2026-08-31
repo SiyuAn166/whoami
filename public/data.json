@@ -1,10 +1,5 @@
 {
   "meta": {
-    "systemTag": "macOS Sequoia 15.5 · Darwin 24.5.0 · arm64",
-    "time": "12:00:00 08/03/2026",
-    "session": "ttys000",
-    "bannerTitle": "macOS Sequoia 15.5",
-    "bannerSystem": "Darwin 24.5.0 arm64",
     "copyright": "© 2026 Siyu An",
     "location": "Vancouver, BC · 49.28° N, 123.12° W",
     "resumeUrl": "resume.pdf",
@@ -28,12 +23,6 @@
       "uname": "Darwin portfolio 24.5.0 Darwin Kernel Version 24.5.0 arm64",
       "exit": "[Process completed]"
     }
-  },
-  "commandStrings": {
-    "identity": "whoami",
-    "experience": "kubectl get roles -n siyu",
-    "projects": "kubectl get projects -n siyu",
-    "skills": "kubectl get skills -n siyu"
   },
   "identity": {
     "title": "Siyu An",

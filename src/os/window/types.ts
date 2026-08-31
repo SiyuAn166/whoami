@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react";
 
-export type WindowState =
-  "normal" | "maximized" | "fullscreen" | "minimized" | "closed";
+export type WindowState = "normal" | "maximized" | "fullscreen" | "minimized";
 
 export interface Rect {
   x: number;
@@ -85,7 +84,9 @@ export function dockHeight(): number {
   return DOCK_H;
 }
 
-export const COARSE =
+/** Queried per gesture, not once at import — a hybrid laptop can switch
+ * between trackpad and touch mid-session. */
+export const isCoarse = () =>
   typeof window !== "undefined" &&
   !!window.matchMedia &&
   window.matchMedia("(pointer: coarse)").matches;

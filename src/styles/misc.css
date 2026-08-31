@@ -52,3 +52,73 @@
   background: var(--fg-faint);
   outline: none;
 }
+
+/* ─── Pre-desktop screens (data loading / load failure / render crash) ──
+   Referenced by Desktop and ErrorBoundary. */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 24px;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(6px);
+  font-family: Monaco, Consolas, "Courier New", monospace;
+  font-size: 13px;
+}
+
+.boot-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg-dim);
+}
+
+.boot-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.boot-error {
+  max-width: 32rem;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.boot-error-title {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.boot-error-msg {
+  color: var(--fg-dim);
+  word-break: break-word;
+}
+
+.boot-retry {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border: 1px solid var(--border-hi);
+  border-radius: 6px;
+  background: var(--bg-elev);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.boot-retry:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Set on <body> while a window is dragged or resized (see os/window/Window). */
+.window-dragging {
+  user-select: none;
+}

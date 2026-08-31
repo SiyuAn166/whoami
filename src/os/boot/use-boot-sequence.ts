@@ -26,16 +26,19 @@ export function useBootSequence() {
     if (SKIP_BOOT) return;
     let done = false;
     const start = performance.now();
+    const timers: number[] = [];
 
     const finish = () => {
       if (done) return;
       done = true;
       const elapsed = performance.now() - start;
       const wait = Math.max(0, MIN_MS - elapsed);
-      window.setTimeout(() => {
-        setLeaving(true); // start CSS fade-out
-        window.setTimeout(() => setBooting(false), FADE_MS); // then unmount
-      }, wait);
+      timers.push(
+        window.setTimeout(() => {
+          setLeaving(true); // start CSS fade-out
+          timers.push(window.setTimeout(() => setBooting(false), FADE_MS));
+        }, wait),
+      );
     };
 
     // 1) fonts ready (avoids text reflow flash)
@@ -55,8 +58,8 @@ export function useBootSequence() {
     });
 
     // hard safety cap
-    const cap = window.setTimeout(finish, MAX_MS);
-    return () => window.clearTimeout(cap);
+    timers.push(window.setTimeout(finish, MAX_MS));
+    return () => timers.forEach(window.clearTimeout);
   }, []);
 
   return { booting, leaving };

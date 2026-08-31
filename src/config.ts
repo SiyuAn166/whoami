@@ -13,4 +13,8 @@
  * - Store the production value in GitHub Actions Variables
  * - Changes to the Gist content are reflected on page load because the app fetches the JSON at runtime
  */
-export const GIST_URL = import.meta.env.VITE_GIST_URL || "/data.json";
+export const GIST_URL =
+  import.meta.env.VITE_GIST_URL ||
+  // Base-aware: a bare "/data.json" 404s when the site is served from a
+  // subpath (GitHub Pages deploys under /whoami/).
+  `${import.meta.env.BASE_URL}data.json`;

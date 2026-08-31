@@ -22,8 +22,9 @@ export function installVolumeHook(): void {
   const origConnect = AudioNode.prototype.connect;
   // Per-context master gain. WeakMap so contexts can be GC'd freely.
   const masters = new WeakMap<BaseAudioContext, GainNode>();
-  // Strong refs to live gains so we can update them on volume change.
-  const live = new Set<GainNode>();
+  // Weak refs so a dead AudioContext (and its gain) can still be collected —
+  // a strong Set here would cancel out the WeakMap above.
+  const live = new Set<WeakRef<GainNode>>();
 
   function masterFor(ctx: BaseAudioContext): GainNode {
     let g = masters.get(ctx);
@@ -35,7 +36,7 @@ export function installVolumeHook(): void {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (origConnect as any).call(g, ctx.destination);
       masters.set(ctx, g);
-      live.add(g);
+      live.add(new WeakRef(g));
     }
     return g;
   }
@@ -65,7 +66,12 @@ export function installVolumeHook(): void {
 
   // Live-update every master gain when the Control Center slider moves.
   subscribeMasterVolume((v) => {
-    live.forEach((g) => {
+    live.forEach((ref) => {
+      const g = ref.deref();
+      if (!g) {
+        live.delete(ref);
+        return;
+      }
       try {
         g.gain.value = v;
       } catch {

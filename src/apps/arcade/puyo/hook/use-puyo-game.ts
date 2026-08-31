@@ -4,6 +4,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  observeWindowVisible,
+  windowActive,
+  windowVisible,
+} from "../../window-active";
+import {
   ALL_CLEAR_BONUS,
   HIDDEN_ROWS,
   ROWS,
@@ -615,6 +620,9 @@ export function usePuyoGame(initialMode: Mode = "play") {
       const g = gs.current;
       const stage = stageRef.current;
       if (!g || !stage) return;
+      // Listener is on `window`: ignore keys unless the Arcade window is the
+      // focused one, or a background game swallows Space/arrows site-wide.
+      if (!windowActive(hostRef.current)) return;
       sfx.unlock();
 
       // Movement/soft-drop keys are tracked in EVERY state (see pressDir): held
@@ -776,14 +784,19 @@ export function usePuyoGame(initialMode: Mode = "play") {
       g.arrAccum = 0;
       g.bufferedRot = 0;
     };
-    const onVisibility = () => {
-      if (document.hidden) stageRef.current?.pauseLoop();
+    // Run the loop only while the tab is visible AND the window isn't
+    // minimized to the dock — a hidden game shouldn't burn frames.
+    const syncLoop = () => {
+      const live = !document.hidden && windowVisible(hostRef.current);
+      if (!live) stageRef.current?.pauseLoop();
       else if (
         gs.current?.status !== "paused" &&
         gs.current?.status !== "gameover"
       )
         stageRef.current?.resumeLoop();
     };
+    const onVisibility = syncLoop;
+    const unobserve = observeWindowVisible(hostRef.current, syncLoop);
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -795,6 +808,7 @@ export function usePuyoGame(initialMode: Mode = "play") {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
       document.removeEventListener("visibilitychange", onVisibility);
+      unobserve();
       stage.destroy();
       stageRef.current = null;
       gs.current = null;

@@ -35,8 +35,30 @@ export class FxLayer {
   private headTex = bakeHead();
   private live: Text[] = [];
 
+  private frames = new Set<number>();
+  private disposed = false;
+
   constructor() {
     this.root.addChild(this.toasts);
+  }
+
+  // Tracked rAF: these loops mutate Graphics/Text that stage.destroy() frees,
+  // so a frame queued past teardown would touch destroyed Pixi objects.
+  private raf(step: () => void) {
+    if (this.disposed) return;
+    const id = requestAnimationFrame(() => {
+      this.frames.delete(id);
+      if (!this.disposed) step();
+    });
+    this.frames.add(id);
+  }
+
+  /** Cancel every in-flight animation. Call before destroying the Pixi app. */
+  destroy() {
+    this.disposed = true;
+    this.frames.forEach((id) => cancelAnimationFrame(id));
+    this.frames.clear();
+    this.live = [];
   }
 
   // Left-to-right bright sweep over the rows being cleared.
@@ -82,9 +104,9 @@ export class FxLayer {
         onDone();
         return;
       }
-      requestAnimationFrame(step);
+      this.raf(step);
     };
-    requestAnimationFrame(step);
+    this.raf(step);
   }
 
   toast(msg: string, color = 0xffe36e) {
@@ -121,9 +143,9 @@ export class FxLayer {
         return;
       }
       t.alpha = p < 0.75 ? 1 : 1 - (p - 0.75) / 0.25;
-      requestAnimationFrame(step);
+      this.raf(step);
     };
-    requestAnimationFrame(step);
+    this.raf(step);
   }
 
   private relayout(rowH: number, topY: number) {
